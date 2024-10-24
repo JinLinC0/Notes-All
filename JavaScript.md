@@ -5457,6 +5457,92 @@ for (const key in u) {
 
 > 对类进行遍历，只能得到其类中的属性，不能遍历类中的方法，因为对于类，系统设置其方法是不允许被遍历的
 
+#### 在严格模式下运行
+
+我们推荐在写代码的时候在严格模式下进行，可以有效的提高我们的代码质量，类默认情况下就是在严格模式下执行的，不需要我们进行特殊的声明：
+
+```js
+class Hd {
+    show() {
+        function test() {
+            console.log(this);
+        }
+        test();
+    }
+}
+let hd = new Hd();
+hd.show();   // undefined
+```
+
+> 如果是函数，在非严格模式下执行时，直接调用方法中的`this`，其对应的时一个`windows`窗口；在严格模式下执行，其对应的是一个`undefined`
+
+#### 静态属性
+
+在函数中，给构造函数创建的属性（分配给构造函数的属性），我们称之为静态属性
+
+先了解一下对象属性，将属性分配给不同的对象后，改变一个对象的该属性值，另外对象的该属性值不会发生变化：
+
+```js
+class Request {
+    host = 'www.baidu.com';
+}
+let obj = new Request();
+console.log(obj);  // Request {host:'www.baidu.com'}
+let obj2 = new Request();
+obj.host = 'www.abc.com';
+console.log(obj2.host);  // 'www.baidu.com'
+```
+
+如果我们构造的是一个静态属性，这个属性就不会随着对象的创建而出现在对象中，只有打印这个类才能看到这个静态属性，一般情况下，如果想要一个值可以给所有的对象使用，我们可以将这个值设置为一个静态属性（这样只需写一份即可，可以减少我们的内存占用）：
+
+```js
+class Request {
+    static host = 'www.baidu.com';
+}
+let obj = new Request();
+console.log(obj);  // Request {}
+console.dir(Request);  // 可以看到声明的host静态属性
+```
+
+> 静态属性在前端开发的时候，一般写接口请求时用到的比较多，后台的地址一般是固定的，我们可以将后台的地址设置为一个静态属性：
+>
+> ```js
+> class Request {
+>     static host = 'www.baidu.com';
+>     api(url) {
+>         return Request.host + `/${url}`;
+>     }
+> }
+> let obj = new Request();
+> console.log(obj.api("a"));  // www.baidu.com/a
+> ```
+
+#### 静态方法
+
+在函数中，直接将方法定义到构造函数中的方法，叫做静态方法
+
+在类中使用静态方法和普通方法：
+
+```js
+class User {
+    // 定义普通方法
+    show() {
+        console.log('show')
+    }
+    // 定义静态方法
+    static change() {
+        console.log('change')
+    }
+}
+let hd = new User();
+console.log(hd); // 可以在通过类构造出对象的原型链__proto__中找到show这个普通方法
+User.change();  // change  静态方法只能通过类进行调用
+```
+
+
+
+静态的方法和属性不会被实例所继承，只能在构造函数或类中找到
+
 ***
 
 ### 错误
