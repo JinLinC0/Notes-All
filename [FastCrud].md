@@ -524,3 +524,20 @@ const crudOptions = {
 ```
 
 只有在需要用到行数据(`row`)、表单数据(`form`)参与动态计算的地方，才使用`compute`和`asyncCompute`，其他时候使用`ref`或`computed`
+
+### 给弹出框添加滚动条
+
+```tsx
+editForm: {
+    wrapper: {
+      style: {
+        maxHeight: '80vh',
+        minWidth: '50vw',
+        overflowY: 'auto',
+        scrollbarColor: 'rgb(20, 20, 20) #000',
+        scrollbarWidth: 'thin',
+      }
+    },
+},
+```
+
