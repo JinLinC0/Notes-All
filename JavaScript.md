@@ -846,25 +846,29 @@ console.log(arrayRandomValue(students, 1, 3));
 
 #### 日期
 
+日期通常有两种表现形式：标准时间（当前计算机时间的年月日和时分秒）和时间戳（从1970年0时0分0秒到此刻的所经过的毫秒数）
+
+`JS`中创建日期通常有两种方式：
+
 ```js
-//创建日期的两种方式
-//方式一
+// 方式一，通过构造函数进行创建
 const date = new Date();
-console.log(date);  //返回当前的时间
-console.log(typeof date);  //返回object
-console.log(date * 1);  //返回时间戳，从1970年0时0分0秒到此刻的所经过的毫秒数
-//方式二
+console.log(date);  // 返回当前的时间
+console.log(typeof date);  // 返回object
+console.log(date * 1);  // 返回时间戳
+
+// 方式二
 const date = Date();
-console.log(date);  //返回当前的时间
-console.log(typeof date);  //返回string
-console.log(date * 1); //返回NaN，因为字符串乘以数字返回NaN
+console.log(date);  // 返回当前的时间
+console.log(typeof date);  // 返回string
+console.log(date * 1); // 返回NaN，因为字符串乘以数字返回NaN
 ```
 
 直接获取时间戳：
 
 ```js
 const date = Date.now();
-console.log(date);  //获取时间戳
+console.log(date);  // 获取时间戳
 ```
 
 ##### 标准时间和时间戳的类型转换
@@ -873,13 +877,13 @@ console.log(date);  //获取时间戳
 
 ```js
 const date = new Date("2024-5-24 19:31:20");
-//方式一
+// 方式一
 console.log(date * 1);
-//方式二
+// 方式二
 console.log(Number(date));
-//方式三
+// 方式三
 console.log(date.valueOf());
-//方式四
+// 方式四
 console.log(date.getTime());
 ```
 
@@ -888,7 +892,7 @@ console.log(date.getTime());
 ```js
 const date = new Date("2024-5-24 19:31:20");
 const timestamp = date.valueOf();
-//方式一
+// 时间戳转换为标准时间
 console.log(new Date(timestamp));
 ```
 
@@ -896,14 +900,18 @@ console.log(new Date(timestamp));
 
 ```js
 const date = new Date("2024-5-24 19:31:20");
-console.log(date.getFullYear());  //获取日期的年份
-console.log(date.getMonth() + 1);  //获取日期的月份
-console.log(date.getDate());  //获取日期的日
-console.log(date.getHours());  //获取日期的小时
-console.log(date.getMinutes());  //获取日期的分钟
-console.log(date.getSeconds());  //获取日期的秒数
+console.log(date.getFullYear());  // 获取日期的年份
+console.log(date.getMonth() + 1);  // 获取日期的月份
+console.log(date.getDate());  // 获取日期的日
+console.log(date.getHours());  // 获取日期的小时
+console.log(date.getMinutes());  // 获取日期的分钟
+console.log(date.getSeconds());  // 获取日期的秒数
+```
 
-//频繁使用，封装成函数
+如果需要频繁的使用，一般封装成函数：
+
+```js
+// 将标准时间转化为任何输入想要的形式
 function dateFormat(date, format = "YYYY-MM-DD HH:mm:ss"){
     const config = {
         YYYY: date.getFullYear(),
@@ -918,74 +926,86 @@ function dateFormat(date, format = "YYYY-MM-DD HH:mm:ss"){
     }
     return format;
 }
-console.log(dateFormat(date, "YYYY年MM月DD日"))  //结果为2024年5月24日
+
+// 测试
+const date = new Date("2024-5-24 19:31:20");
+console.log(dateFormat(date, "YYYY年MM月DD日"))  // 结果显示为：2024年5月24日
 ```
 
-专门用处理日期的第三方库：Moment.js
+专门用处理日期的第三方库：`Moment.js`
 
-使用：`console.log(moment().format("YYYY-MM-DD HH:mm:ss"));`根据设置的格式打印当前时间
+`console.log(moment().format("YYYY-MM-DD HH:mm:ss"));`根据设置的格式打印当前时间
 
 #### 数组
 
-数组（Array）字面量定义一个数组
+数组（`Array`）字面量定义一个数组
 
-JavaScript 数组用于在单一变量中存储多个值
+`JavaScript` 数组用于在单一变量中存储多个值
 
 创建数组的语法：`var array = [item1, item2, ...];`
 
-创建数组的声明可跨多行，通常以逗号进行换行
-
-可以引用数组名来访问完整的数组
+> 创建数组的声明可跨多行，通常在逗号的位置进行换行
+>
+> 可以引用数组名来访问完整的数组
 
 在创建数组的时候，需要额外注意：
 
 ```js
-let arr = new Array(6);  //这样创建的数组长度是6，每一个的值都是undefined，这是这种方式创造的缺陷
-//如果想要创造一个长度的数组，可以通过以下的方法：
-//方法一
+let arr = new Array(6);  // 这样创建的数组长度是6，每一个的值都是undefined，这是这种方式创造的缺陷
+```
+
+如果想要创造一个固定长度的数组，可以通过以下的方法：
+
+```js
+// 方法一
 let arr = [6];
-//方法二
+// 方法二
 let arr = Array.of(6);
 ```
 
-数组是一种特殊类型的对象。在 JavaScript 中对数组使用 `typeof` 运算符会返回 "object"
+- 数组是一种特殊类型的对象，在 `JavaScript` 中对数组使用 `typeof` 类型判断会返回 `object`
 
-JavaScript 不支持命名索引的数组，在 JavaScript 中，数组只能使用数字索引
 
-通过数字索引修改内容，会导致原数组中的内容进行修改，因为两者使用同一个内存地址
+- `JavaScript` 不支持命名索引的数组，数组只能使用数字去索引
 
-如果希望元素名为字符串（文本）则应该使用对象，如果希望元素名为数字则应该使用数组
+- 通过数字索引修改内容，会导致原数组中的内容进行修改，因为两者使用同一个内存地址
+
+
+- 如果希望元素名为字符串（文本）则应该使用对象，如果希望元素名为数字则应该使用数组，对象和数组的内容可以是数字或者字符串
+
 
 通过控制台查看数组，可以通过两种方式进行查看：
 
 ```js
 const array = [1, 2, 3];
-console.log(array);  //常规形式展现
-console.table(array);//以表格的形式展现，更加清晰直观
+console.log(array);    // 常规形式展现
+console.table(array);  // 以表格的形式展现，更加清晰直观
 ```
 
-##### const和var声明数组
+##### `const`和`var`声明数组
 
-通过const声明数组：`const cars = ["Saab", "Volvo", "BMW"];`
+通过`const`声明数组：`const cars = ["Saab", "Volvo", "BMW"];`
 
-用 `const` 声明的数组不能重新赋值，但是可以进行更改元素，因为修改的数组和原数组是共用内存地址的
+用 `const` 声明的数组不能重新赋值，但是可以通过索引进行元素的更改，因为修改的数组和原数组是共用内存地址的
 
 ```js
 const arr = [1, 2];
 arr[1] = 3;
-console.log(arr);  //结果显示为[1, 3]
+console.log(arr);  // 结果显示为[1, 3]
 ```
 
-对于数组，如果修改下标内容的范围超出了原数组的最大下标，这样添加位置也能添加内容，原数组之间的内容用undefined进行填充：一般情况下，都不会这样进行内容的追加，会通过其他数组方法进行追加
+对于数组，如果修改下标内容的范围超出了原数组的最大下标，这样添加位置也能添加内容，只是原数组之间的内容用`undefined`进行填充：
 
 ```js
 let name = ["jlc"];
 name[3] = "zhangshna";
-consloe.log(name.length);  //结果显示4
-console.log(name[2]); //结果显示undefined
+consloe.log(name.length);  // 结果显示4
+console.log(name[2]); // 结果显示undefined
 ```
 
-JavaScript `const` 变量在声明时必须赋值，声明后赋值是不起作用的，用 `var` 声明的数组可以随时初始化
+> 一般情况下，都不会这样进行内容的追加，会通过其他数组方法进行追加
+
+ `const` 变量在声明时必须赋值，声明后赋值是不起作用的，但是用 `var` 声明的数组可以随时初始化
 
 用 `const` 声明的数组具有块作用域，用 `var` 声明的数组没有块作用域
 
@@ -996,27 +1016,27 @@ JavaScript `const` 变量在声明时必须赋值，声明后赋值是不起作�
 ```js
 let a = [];
 let b = [];
-console.log(a == b);  //结果显示false  数组a和b的内存地址不一样
-//如果将a赋值给b
+console.log(a == b); // 结果显示false  数组a和b的内存地址不一样
+// 如果将a赋值给b
 let a = [];
 let b = a;
-console.log(a == b);  //结果显示true  a和b共用同一个内存地址
+console.log(a == b);  // 结果显示true  a和b共用同一个内存地址
 ```
 
 ##### 数组的嵌套
 
-可以在数组里面嵌套数组，引用的时候需要两个方括号
+可以在数组里面嵌套数组，在引用的时候需要两个方括号
 
 ```js
 let array = [["qqq"], ["www", "eee"]];
-console.log(array[1][0])  //结果显示www
+console.log(array[1][0])  // 结果显示www
 ```
 
 一般以后都是通过对象进行嵌套
 
 ```js
 let lessons = [{name: "jlc", age: 24}, {name: "jlc1", age: 23}]
-console.log(lessons[1].name)  //结果显示jlc1
+console.log(lessons[1].name)  // 结果显示jlc1
 ```
 
 ##### 数组的类型检测和转换
@@ -1030,42 +1050,49 @@ console.log(lessons[1].name)  //结果显示jlc1
 数组转换为字符串
 
 ```js
-//方法一
+// 方法一
 [1, 2, 3].toString()
-//方法二
+// 方法二
 String([1, 2, 3])
-//方法三
-[1, 2, 3].join(",")  //使用，将数组中的元素连接成字符串
+// 方法三
+[1, 2, 3].join(",")  
+// 结果都显示'1,2,3'
 ```
 
 将字符串转换为数组
 
 ```js
 let str = "baidu";
-//方法一
-str.split("")  //结果显示：["b","a","i","d","u"]
-//方法二，使用from静态方法
-Array.from(str); //结果显示：["b","a","i","d","u"]
+// 方法一
+str.split("")  // 结果显示：["b","a","i","d","u"]
+// 方法二，使用from静态方法
+Array.from(str); // 结果显示：["b","a","i","d","u"]
 ```
 
 ##### 数组的追加
 
 ###### 通过push方法
 
-```js
-//单个元素追加到数组中
-let arr1 = ["1", "2"];
-//方法一：通过下标索引
-arr1[arr1.length] = "3";
-//方法二：通过对象方法push
-arr1.push("3");
+单个元素追加到数组中
 
-//一个数字追加到另外一个数组中
+```js
+let arr = ["1", "2"];
+// 方法一：通过下标索引
+arr[arr.length] = "3";
+// 方法二：通过对象方法push
+arr.push("3");
+// 结果显示["1", "2", "3"]
+```
+
+一个数组追加到另外一个数组中
+
+```js
 let arr1 = ["1", "2"];
 let arr2 = ["3", "4"];
 for(const value of arr2){
     arr1.push(value);
 }
+// 结果显示["1", "2", "3", "4"]
 ```
 
 ###### 通过点语法
@@ -1073,47 +1100,52 @@ for(const value of arr2){
 ```js
 let arr1 = ["1", "2"];
 let arr2 = ["3", "4"];
-//方法一
+// 方法一
 arr1 = [...arr1, ...arr2];
-//方法二：通过push方法
+// 方法二：通过push方法
 arr1.push(...arr2);
 ```
 
-点语法还可以用在，如果想要将DOM元素按照数组方式操作，可以通过点语法将其转换为数组
+如果想要将`DOM`元素按照数组方式操作，可以通过点语法将其转换为数组
 
 ##### 解构语法
 
-对象和数组中使用解构语法较为常见，数组的解构语法：将右侧数组里面的值，平均赋值给左侧的变量；如果右边的数值元素比左边的多，可以使用点语法，将余下的数组元素都以数组的形式接受过来
+对象和数组中使用解构语法是较为常见的
+
+数组的解构语法：将右侧数组里面的值，平均赋值给左侧的变量；如果右边的数值元素比左边的多，可以使用点语法，将余下的数组元素都以数组的形式接受过来
 
 ```js
 let arr = ["jlc", "24"];
-//通过的将数组的值赋值给变量的方法
+// 传统形式的方法：通过的将数组的值赋值给变量的方法
 let name = arr[0];
 let age = arr[1];
-//通过解构语法
+
+// 通过解构语法
 let [name, year] = arr;
-let [, year] = arr; //只希望取到第二个数组元素
-//后面数组元素少，其赋值的变量显示undefined
-let [name, age, year] = arr;   //year打印的结果为undefined
-//也可以给year输入默认值
+let [, year] = arr; // 只希望取到第二个数组元素
+
+// 如果后面数组元素少，其赋值的变量显示undefined
+let [name, age, year] = arr;   // year打印的结果为undefined
+// 也可以给year输入默认值
 let [name, age, year = 2000] = arr;
-//解构和点语法的整合使用
-let [name, ...args] = arr;  //数组的第一个元素给了name变量，后面的元素以数组的形式全部给args
-//点语法放到变量的位置，就是吸收；放到值的位置，就是打散
+
+// 解构和点语法的整合使用
+let [name, ...args] = arr;  // 数组的第一个元素给了name变量，后面的元素以数组的形式全部给args
 ```
+
+> **点语法放到变量的位置，就是吸收；放到值的位置，就是打散**
 
 解构语法也可以用在字符串中：字符串转换为数组
 
 ```js
 const [...arr] = "jlc";
-console.log(arr);
-//结果显示为：["j","l","c"]
+console.log(arr);   // 结果显示为：["j","l","c"]
 ```
 
 解构语法在函数传值中的使用：
 
 ```js
-function show([name, year]){
+function show([name, year]) {
     console.log(name, year);
 }
 show(["jlc", 24])
@@ -1121,70 +1153,204 @@ show(["jlc", 24])
 
 ##### 数组的属性和方法
 
-|   属性/方法   |                             描述                             |
-| :-----------: | :----------------------------------------------------------: |
-|    length     |             属性返回数组的长度（数组元素的数目）             |
-|    push()     | 向数组添加新元素，添加到元素数组的最后，同时该方法返回新数组的长度，如：var x =  fruits.push("a"); x的值是新数组的长度 |
-|   unshift()   | 在开头向数组添加新元素，并“反向位移”旧元素，旧元素的索引变大，该方法返回新数组的长度(与push方法的返回值是一样的) |
-|    fill()     |                        数组元素的填充                        |
-|    join()     | 将所有数组元素结合为一个字符串，其中的参数表示连接符号，如：fruits.join(" * ")，数组元素以*连接成一个字符串 |
-|     pop()     | 从数组中删除最后一个元素，可以返回被弹出的值，var x = fruits.pop();x 的值就是被弹出的值 |
-|    shift()    | 删除首个数组元素，并把所有其他元素“位移”到更低的索引，该方法返回被“位移出”的字符串 |
-|   concat()    | 合并（连接）现有数组来创建一个新数组，如var myChildren = myGirls.concat(myBoys);表示连接数组myGirls和myBoys，将myBoys数组连接到myGirls数组后面，该方法不会更改现有数组，它总是返回一个新数组，该方法可以使用任意数量的数组参数：arr1.concat(arr2, arr3);方法括号中可以有多个数组，进行依次的追加 |
-|    slice()    | 数组的某个片段切出新数组，可接受两个参数，比如 (start, end)，从开始参数作为元素的索引选取元素，直到结束参数（不包括）为止，返回的是切出来的新数组，第二个参数可以省略，表示裁到最后，该方法不会对原数组进行改变，一般是将截取到的内容赋值给新的数组 |
-|   splice()    | 该方法法删除/截取功能：截取数组元素，会对原数组进行改变（直接从原数组中拿取截取片段），（start, length），第一个参数表示从哪个位置开始，第二个参数表示截取几个元素 |
-|   splice()    | 该方法的替换功能：向数组中移除元素后，添加新项，如：fruits.splice(2, 0, "Lemon", "Kiwi"); 第一个参数（2）定义了应添加新元素的位置(其参数就是新元素的索引值)；第二个参数（0）定义应删除后面多少元素；其余参数定义要添加的新元素 |
-| copyWithin()  | 复制数组元素，arr.copyWithin(2, 0, 2)，第一个参数表示要复制到哪个下标位置；第二个参数表示从哪个下标位置开始复制元素，第三个参数表示复制元素到哪个下标位置结束（这个下标的元素不包括） |
-|   indexof()   | 从左侧开始查找，查找数组中的元素（查找是一个严格类型匹配，值和类型都要一样），返回查找到相同元素的下标，找不到，则返回-1，该方法有两个参数，第一个参数表示要查找的内容，第二个参数表示从哪个下标位置开始查找 |
-| lastIndexof() | 从右侧开始查找，查找数组中的元素（查找是一个严格类型匹配，值和类型都要一样），返回距离右侧近的元素下标，该方法有两个参数，第一个参数表示要查找的内容，第二个参数表示从哪个下标位置开始查找 |
-|  includes()   |     查找数组中的元素，找到则返回true，找不到则返回false      |
-|    find()     |               查找相关的元素，并将其元素值返回               |
-|  findIndex()  |            查找相关的元素，并将其元素的索引值返回            |
-|  toString()   | 自动把数组转换为字符串，与直接展示数组有相同的结果，所有 JavaScript 对象都拥有 `toString()` 方法 |
-|    sort()     |                 以开头字母顺序对数组进行排序                 |
-|   reverse()   |                     反转数组中元素的顺序                     |
+|    属性/方法    |                             描述                             |
+| :-------------: | :----------------------------------------------------------: |
+|    `length`     |             属性返回数组的长度（数组元素的数目）             |
+|    `push()`     | 向数组添加新元素，添加到元素数组的最后，同时该方法返回新数组的长度，如：`var x =  fruits.push("a");` `x`的值是新数组的长度 |
+|   `unshift()`   | 在开头向数组添加新元素，并“反向位移”旧元素，旧元素的索引变大，该方法返回新数组的长度(与`push`方法的返回值是一样的) |
+|     fill()      | 数组元素的填充，可以全部填充一样的内容，也可以指定位置进行填充 |
+|    `join()`     | 将所有数组元素结合为一个字符串，其中的参数表示连接符号，如：`fruits.join(" * ")`，数组元素以`*`符号连接成一个字符串 |
+|     `pop()`     | 从数组中删除最后一个元素，可以返回被弹出的值，`var x = fruits.pop();`x 的值就是被弹出的值 |
+|    `shift()`    | 删除首个数组元素，并把所有其他元素“位移”到更低的索引，该方法返回被“位移出”的字符串 |
+|   `concat()`    | 合并（连接）现有数组来创建一个新数组，如`var myChildren = myGirls.concat(myBoys);`表示连接数组`myGirls`和`myBoys`，将`myBoys`数组连接到`myGirls`数组后面，该方法不会更改现有数组，它总是返回一个新数组，该方法可以使用任意数量的数组参数：`arr1.concat(arr2, arr3);`方法括号中可以有多个数组，进行依次的追加 |
+|    `slice()`    | 数组的某个片段切出新数组，可接受两个参数，比如` (start, end)`，从开始参数作为元素的索引选取元素，直到结束参数（不包括）为止，返回的是切出来的新数组，第二个参数可以省略，表示裁到最后，该方法不会对原数组进行改变，一般是将截取到的内容赋值给新的数组 |
+|   `splice()`    | 该方法法删除/截取功能：截取数组元素，会对原数组进行改变（直接从原数组中拿取截取片段），`（start, length）`，第一个参数表示从哪个位置开始，第二个参数表示截取几个元素 |
+|                 | `splice()`方法还有替换的功能：向数组中移除元素后，添加新项，如：`fruits.splice(2, 0, "Lemon", "Kiwi");` 第一个参数（2）定义了应添加新元素的位置(其参数就是新元素的索引值)；第二个参数（0）定义应删除后面多少元素；其余参数定义要添加的新元素 |
+| `copyWithin()`  | 复制数组元素，`arr.copyWithin(2, 0, 2)`，第一个参数表示要复制到哪个下标位置；第二个参数表示从哪个下标位置开始复制元素，第三个参数表示复制元素到哪个下标位置结束（这个下标的元素不包括） |
+|   `indexof()`   | 从左侧开始查找，查找数组中的元素（查找是一个严格类型匹配，值和类型都要一样），返回查找到相同元素的下标，找不到，则返回-1，该方法有两个参数，第一个参数表示要查找的内容，第二个参数表示从哪个下标位置开始查找 |
+| `lastIndexof()` | 从右侧开始查找，查找数组中的元素（查找是一个严格类型匹配，值和类型都要一样），返回距离右侧近的元素下标，该方法有两个参数，第一个参数表示要查找的内容，第二个参数表示从哪个下标位置开始查找 |
+|  `includes()`   | 查找数组中是否包含某个元素，找到则返回`true`，找不到则返回`false` |
+|    `find()`     |               查找相关的元素，并将其元素值返回               |
+|  `findIndex()`  |            查找相关的元素，并将其元素的索引值返回            |
+|  `toString()`   | 自动把数组转换为字符串，与直接展示数组有相同的结果，所有 `JavaScript` 对象都拥有 `toString()` 方法 |
+|    `sort()`     |                 以开头字母顺序对数组进行排序                 |
+|   `reverse()`   |                     反转数组中元素的顺序                     |
 
-通过索引数组重新赋值进行更改元素：`fruits[0] = "Kiwi"; // 把 fruits 的第一个元素改为 "Kiwi"`
+使用案例：
 
-在数组中删除元素，还可以通过以下的方式：`fruits.splice(0, 1); // 删除 fruits 中的第一个元素`
+- 通过索引数组重新赋值进行更改元素：
 
-通过一个比值函数对数字数组进行排序：
+  ```js
+  fruits[0] = "Kiwi"; // 把 fruits数组的第一个元素改为 "Kiwi"
+  ```
+
+- 通过`push()`和`unshift()`可以获取改变后数组的长度：
+
+  ```js
+  var = fruits = [1,2,3,4];
+  var x = fruits.push('a');
+  console.log(x);   // 5
+  console.log(fruits);   // [1, 2, 3, 4, 'a']
+  ```
+
+- 对于数组元素填充的方法`full()`：
+
+  ```js
+  // 在空数组中进行元素的填充，将给定长度的空数组，添加相同给定的元素
+  consloe.log(Array(3).fill("jlc"));//结果显示["jlc","jlc","jlc"]
+  // 也可以在特定的位置进行数组的填充
+  consloe.log([1,2,3,4,5].fill("jlc", 1, 3)); 
+  // 结果显示[1, "jlc", "jlc", 4, 5]
+  ```
+
+- `join()`方法的使用：
+
+  ```js
+  var = fruits = [1,2,3,4,'a'];
+  console.log(fruits.join("*"));  // '1*2*3*4*a'
+  ```
+
+- `splice()`方法进行数组元素的删除：
+
+  ```js
+  fruits.splice(0, 1); // 删除fruits数组中的第一个元素
+  // fruits就是切除原先第一个元素的数组
+  ```
+
+- `splice()`方法进行数组元素的替换：
+
+  ```js
+  var fruits = [1,2,3,4];
+  // 在索引为2的位置移除0个元素，在添加"Lemon", "Kiwi"两个内容
+  fruits.splice(2, 0, "Lemon", "Kiwi"); 
+  console.log(fruits);  //  [1, 2, 'Lemon', 'Kiwi', 3, 4]
+  ```
+
+- `copyWithin()`复制函数方法的使用：
+
+  ```js
+  var fruits = [1,2,3,4];
+  fruits.copyWithin(2,0,2);
+  console.log(fruits);   // [1, 2, 1, 2]
+  ```
+
+- `indexOf()` 方法在数组中搜索元素值并返回其位置（索引值），如果未找到项目，`Array.indexOf()` 返回 -1，如果项目多次出现，则返回第一次出现的位置
+
+  基本语法：`array.indexOf(item, start)`
+
+  `item`表示要检索的项目（内容）；`start`表示从哪里开始搜索，负值将从结尾开始的给定位置开始，并搜索到结尾
+
+  ```js
+  // 检索数组中的项目 "Apple"
+  var fruits = ["Apple", "Orange", "Apple", "Mango"];
+  var a = fruits.indexOf("Apple");
+  console.log(a);  // 0
+  ```
+
+  `Array.lastIndexOf()` 与 `Array.indexOf()` 类似，但是从数组结尾开始搜索
+
+- 查找元素`find()`方法的使用：
+
+  `find()` 方法返回通过自定义测试函数的第一个数组元素的值
+
+  该函数最多接受 3 个参数：项目值，项目索引，数组本身`（value, index, array）`
+
+  ```js
+  // 查找（返回）大于 18 的第一个元素的值
+  var numbers = [4, 9, 16, 25, 29];
+  
+  function myFunction(value, index, array) {
+    return value > 18;
+  }
+  
+  var first = numbers.find(myFunction);
+  console.log(first);  // 25
+  ```
+
+  `findIndex()` 方法返回通过自定义测试函数的第一个数组元素的索引
+
+  ```js
+  //查找大于 18 的第一个元素的索引
+  var numbers = [4, 9, 16, 25, 29];
+  
+  function myFunction(value, index, array) {
+    return value > 18;
+  }
+  
+  var first = numbers.findIndex(myFunction);
+  console.log(first);  // 3
+  ```
+
+  拓展案例：
+
+  ```js
+  let lessons = [{name: "js"}, {name: "css"}];
+  // 查找并返回值
+  let status = lessons.find(function(item){
+      return item.name == "js";
+  })
+  console.log(status);  // 结果显示 {name: "js"}
+  // 查找并返回其索引位置
+  let index = lessons.findIndex(function(item){
+      return item.name == "js";
+  })
+  console.log(index);  // 结果显示 0
+  ```
+
+  `find`方法的底层实现：
+
+  ```js
+  function find(array, callback){
+      for(const value of array){
+          if(callback(value)){
+              return value
+          }
+      }
+      return undefined;
+  }
+  // find方法的使用
+  let arr = [2, 3, 4];
+  console.log(find(arr, function(item){
+      return item == 2;
+  }));
+  // 结果显示为2
+  ```
+
+
+- 通过一个比值函数对数字数组进行排序：
+
+  ```js
+  var points = [40, 100, 1, 5, 25, 10];
+  points.sort(function(a, b){return a - b}); // 返回的数组顺序由小到大进行排序
+  points.sort(function(a, b){return b - a}); // 返回的数组顺序由大到小进行排序
+  points.sort(function(a, b){return 0.5 - Math.random()});  //返回的数组随机进行排序
+  ```
+
+  小案例：购物车内价格排序
+
+  ```js
+  let cart = [
+      {name: "iphone", price: 12000},
+      {name: "imac", price: 18000},
+      {name: "ipad", price: 2000},
+  ];
+  cart = cart.sort(function(a, b){
+      return b.price - a.price;
+  });
+  ```
+
+返回数组中的最大最小值：
 
 ```js
-var points = [40, 100, 1, 5, 25, 10];
-points.sort(function(a, b){return a - b});   //返回的数组顺序由小到大进行排序
-points.sort(function(a, b){return b - a});   //返回的数组顺序由大到小进行排序
-points.sort(function(a, b){return 0.5 - Math.random()});  //返回的数组随机
-
-//购物车内价格排序
-let cart = [
-    {name: "iphone", price: 12000},
-    {name: "imac", price: 18000},
-    {name: "ipad", price: 2000},
-];
-cart = cart.sort(function(a, b){
-    return b.price - a.price;
-});
-```
-
-```js
-//返回数组最大值的函数：
+// 返回数组最大值：
 function myArrayMax(arr) {
-  return Math.max.apply(null, arr);
+    return Math.max.apply(null, arr);
 }
-//返回数组最小值的函数：
+
+// 返回数组最小值：
 function myArrayMin(arr) {
     return Math.min.apply(null, arr);
 }
-```
-
-对于数组元素填充的方法full()
-
-```js
-//在空数组中进行元素的填充，将给定长度的空数组，添加相同给定的元素
-consloe.log(Array(3).fill("jlc"));  //结果显示["jlc","jlc","jlc"]
-//在特定的位置进行填充
-consloe.log([1,2,3,4,5].fill("jlc", 1, 3)); //结果显示[1, "jlc", "jlc", 4, 5]
 ```
 
 设计一个移动数组的函数：
@@ -1199,116 +1365,43 @@ function move(array, from, to){
     return newArray;
 }
 let array = [1, 2, 3, 4];
-console.log(move(array, 1, 3))
-//结果显示为：[1, 3, 4, 2]
+console.log(move(array, 1, 3))  // 把索引为1的元素移动到索引为4的位置
+// 结果显示为：[1, 3, 4, 2]
 ```
 
-清空数组：
+清空数组的常见方法：
 
 ```js
 let arr = [1, 2, 3];
-//方法一
-arr = [];  //重新开辟了一块内存空间，存放空数组，原先的内存空间还是存在的
-//方法二
-arr.length = 0;  //将原先的内存数据中的数值元素进行一个清空，清除数组更加彻底
-//方法三
-arr.splice(0);  //将原数组的元素全部拿走，原数组就清除了
-//方法四
-while(arr.pop()){}  //循环一次弹出
-```
-
-查找元素find方法的使用
-
-```js
-let lessons = [{name: "js"}, {name: "css"}];
-//查找并返回值
-let status = lessons.find(function(item){
-    return item.name == "js";
-})
-console.log(status);  //结果显示 {name: "js"}
-//查找并返回其索引位置
-let index = lessons.find(function(item){
-    return item.name == "js";
-})
-console.log(index);  //结果显示 0
-```
-
-find方法的底层实现：
-
-```js
-function find(array, callback){
-    for(const value of array){
-        if(callback(value)){
-            return value
-        }
-    }
-    return undefined;
-}
-//find方法的使用
-let arr = [2, 3, 4];
-console.log(find(arr, function(item){
-    return item == 2;
-}));
-//结果显示为2
-```
-
-`indexOf()` 方法在数组中搜索元素值并返回其位置（索引值），如果未找到项目，`Array.indexOf()` 返回 -1，如果项目多次出现，则返回第一次出现的位置
-
-基本语法：`array.indexOf(item, start)`
-
-item表示要检索的项目；start表示从哪里开始搜索，负值将从结尾开始的给定位置开始，并搜索到结尾
-
-```js
-//检索数组中的项目 "Apple"
-var fruits = ["Apple", "Orange", "Apple", "Mango"];
-var a = fruits.indexOf("Apple");
-```
-
-`Array.lastIndexOf()` 与 `Array.indexOf()` 类似，但是从数组结尾开始搜索
-
-`find()` 方法返回通过测试函数的第一个数组元素的值
-
-该函数最多接受 3 个参数：项目值，项目索引，数组本身（value, index, array）
-
-```js
-//查找（返回）大于 18 的第一个元素的值
-var numbers = [4, 9, 16, 25, 29];
-var first = numbers.find(myFunction);
-
-function myFunction(value, index, array) {
-  return value > 18;
-}
-```
-
-`findIndex()` 方法返回通过测试函数的第一个数组元素的索引
-
-```js
-//查找大于 18 的第一个元素的索引
-var numbers = [4, 9, 16, 25, 29];
-var first = numbers.findIndex(myFunction);
-
-function myFunction(value, index, array) {
-  return value > 18;
-}
+// 方法一
+arr = [];  // 重新开辟了一块内存空间，存放空数组，原先的内存空间还是存在的
+// 方法二
+arr.length = 0; // 将原先的内存数据中的数值元素进行一个清空，清除数组更加彻底
+// 方法三
+arr.splice(0);  // 将原数组的元素全部拿走，原数组就清除了
+// 方法四
+while(arr.pop()){}  // 循环一次数组中所有元素的弹出
 ```
 
 ##### 数组循环
 
+数组的循环有常见的`for`循环，`for of`循环和`for in`循环
+
 ```js
-//将数组字典内的name前面批量添加内容
+// 将数组字典内的name前面批量添加内容
 let lessons = [
     { name: "jlc", age: 24},
     { name: "xiaoming", age: 23}
 ];
-//方式一：通过普通的for循环
+// 方式一：通过普通的for循环
 for(let i = 0; i < lessons.length; i++){
     lessons[i].name = `姓名${lessons[i].name}`;
 }
-//方式二：通过for of循环
+// 方式二：通过for of循环
 for(const value of lessons){
     value.name = `姓名${value.name}`;
 }
-//方式三：通过for in循环
+// 方式三：通过for in循环
 for(const key in lessons){
     lessons[key].name = `姓名${lessons[key].name}`;
 }
@@ -1316,207 +1409,205 @@ for(const key in lessons){
 
 ##### 数组迭代
 
-数组迭代方法对每个数组项进行操作
+数组迭代方法是对每个数组项（元素）进行操作
 
 `forEach()` 方法为每个数组元素调用一次函数（回调函数）
 
 该函数最多接受 3 个参数：项目值，项目索引，数组本身（value, index, array）
 
 ```js
-//将每个元素竖直排序
+// 将每个元素竖直排序
 var txt = "";
 var numbers = [45, 4, 9, 16, 25];
 numbers.forEach(myFunction);
 document.getElementById("demo").innerHTML = txt;
 
 function myFunction(value) {
-  txt = txt + value + "<br>"; 
+    txt = txt + value + "<br>"; 
 }
 ```
 
-iterator迭代器
+`iterator`迭代器
 
 ```js
 let arr = ["jlc", "24"];
-let keys = arr.keys();  //keys表示获取其索引值
-console.log(keys.next);  //{value: 0, done: false}其中value表示索引，done表示是否迭代完成
-console.log(keys.next);  //{value: 1, done: false}
-console.log(keys.next);  //{value: undefined, done: true}
+let keys = arr.keys();  // keys表示获取其索引值
+console.log(keys.next);  // {value: 0, done: false}其中value表示索引，done表示是否迭代完成
+console.log(keys.next);  // {value: 1, done: false}
+console.log(keys.next);  // {value: undefined, done: true}
 
-let values = arr.value();  //values表示获取值
-let {value, done} = values.next();
-console.log(value, done);  //结果显示 jlc, false
+let values = arr.value();  // values表示获取值
+let {value, done} = values.next();  // 进行了一次迭代
+console.log(value, done);  // 结果显示 jlc, false
 ```
 
 ```js
-//迭代方法遍历数组中的元素，和for of循环方法类似
+// 迭代方法遍历数组中的元素，和for of循环方法类似
 let arr = ["jlc", "24"];
 let values = arr.value();
 while(({value, done} = values.next()) && done === false){
     console.log(value);
 }
-//结果显示：
+// 结果显示：
 jlc
 24
 ```
 
 ##### 高效处理数组的方法
 
-###### every()
+###### `every()`
 
-`every()` 方法检查所有数组值是否通过测试，对一个数据进行统一判断，全部为真，表达式才为真
+`every()` 方法检查所有数组值是否通过测试，对一个数据进行统一判断，当全部为真，表达式才为真
 
 该函数最多接受 3 个参数：项目值，项目索引，数组本身（value, index, array）
 
 ```js
 let arr = ["jlc", "24"];
 arr.every(function(value, index, arr){
-    console.log(value);  //jlc  回车   24
-    console.log(index);  //0  回车  1
-    console.log(arr);    //["jlc", "24"] 回车  ["jlc", "24"]
-    return true;  //如果写的是false，就只会打印第一组的对应的数据
+    console.log(value);  // jlc  回车   24
+    console.log(index);  // 0  回车  1
+    console.log(arr);    // ["jlc", "24"] 回车  ["jlc", "24"]
+    return true;  // 如果写的是false，就只会打印第一组(一次)的对应的数据
 });
 ```
 
 ```js
-//检查所有学生的成绩是否都及格
+// 检查所有学生的成绩是否都及格
 const user = [
     { name: "张三", chengjji: 88 },
     { name: "李四", chengjji: 92 },
     { name: "王五", chengjji: 58 },
 ];
 const res = user.every(function(item){
-    retuen item,chengji >= 60;
+    retuen item.chengji >= 60;
 });
 console.log(res ? "全部及格" : "有同学没有及格");
 ```
 
 ```js
-//检查所有数组值是否大于 18，返回的是一个bool类型的数据，数组中的全部元素通过测试返回true
+// 检查所有数组值是否大于 18，返回的是一个bool类型的数据，数组中的全部元素通过测试返回true
 var numbers = [45, 4, 9, 16, 25];
-var allOver18 = numbers.every(myFunction);
-
 function myFunction(value) {
   return value > 18;
 }
+var allOver18 = numbers.every(myFunction);  
+console.log(allOver18);    // false
 ```
 
-###### some()
+###### `some()`
 
-`some()` 方法检查某些数组值是否通过了测试，如果有任何为真，该表达式就为真
+`some()` 方法检查是否有数组值通过了测试，如果有任何为真，该表达式就为真
 
 该函数最多接受 3 个参数：项目值，项目索引，数组本身（value, index, array）
 
 ```js
 let arr = ["jlc", "24"];
-arr.every(function(value, index, arr){
-    console.log(value);  //jlc
-    console.log(index);  //0
-    console.log(arr);    //["jlc", "24"]
-    return true;  //如果写的是false，就会打印全部的对应数据
+arr.some(function(value, index, arr){
+    console.log(value);  // jlc
+    console.log(index);  // 0
+    console.log(arr);    // ["jlc", "24"]
+    return true;  // 如果写的是false，就会打印全部的对应数据，与every相反
 });
 ```
 
 ```js
-//检查是否有数组值是否大于 18，返回的是一个bool类型的数据，数组中的存在元素通过测试返回true
+// 检查是否有数组值是否大于 18，返回的是一个bool类型的数据，数组中的存在元素通过测试返回true
 var numbers = [45, 4, 9, 16, 25];
+function myFunction(value) {
+  return value > 18;
+}
 var someOver18 = numbers.some(myFunction);
-
-function myFunction(value) {
-  return value > 18;
-}
+console.log(someOver18);   // true
 ```
 
-###### filter() 
+###### `filter() `
 
-`filter()` 方法创建一个包含通过测试的数组元素的新数组（过滤数组，符合条件的拿出来）
+`filter()` 方法创建一个包含通过测试的数组元素的新数组（过滤数组，符合条件的拿出来，在数组的操作中使用的比较多）
 
 该函数最多接受 3 个参数：项目值，项目索引，数组本身（value, index, array）
 
 ```js
 let arr = ["jlc", "24"];
-arr.every(function(value, index, arr){
-    console.log(value);  //jlc  回车   24
-    console.log(index);  //0  回车  1
-    console.log(arr);    //["jlc", "24"] 回车  ["jlc", "24"]
-    return true;  //true表示每一次循环的时候，这个元素符合条件，后续就要了；如果写的是false，舍弃元素
+arr.filter(function(value, index, arr){
+    console.log(value);  // jlc  回车   24
+    console.log(index);  // 0  回车  1
+    console.log(arr);    // ["jlc", "24"] 回车  ["jlc", "24"]
+    return true;  // true表示每一次循环的时候，这个元素符合条件，提取这个元素；如果写的是false，舍弃元素
 });
-//如：
-let newArray = arr.every(function(value, index, arr){
+
+let newArray = arr.filter(function(value, index, arr){
     return true;
 });
-console.log(newArray;  //结果显示["jlc", "24"]
+console.log(newArray);  // 结果显示["jlc", "24"]
 ```
 
 ```js
-//将成绩为88的对象提出来
+// 将成绩为88的对象从数组中提取出来
 const user = [
-    { name: "张三", chengjji: 88 },
-    { name: "李四", chengjji: 92 },
-    { name: "王五", chengjji: 88 },
+    { name: "张三", chengji: 88 },
+    { name: "李四", chengji: 92 },
+    { name: "王五", chengji: 88 },
 ];
-const 88user = user.filter(function(user){
+const userFilter = user.filter(function(user){
     return user["chengji"] == 88;
 });
-console.log(88user); 
-//结果显示：[{ name: "张三", chengjji: 88 },{ name: "王五", chengjji: 88 }]
+console.log(userFilter); 
+// 结果显示：[{ name: "张三", chengjji: 88 },{ name: "王五", chengjji: 88 }]
 ```
 
 ```js
-//将原始数组中值大于18的元素创建一个新数组
+// 将原始数组中值大于18的元素创建一个新数组
 var numbers = [45, 4, 9, 16, 25];
-var over18 = numbers.filter(myFunction);
-
 function myFunction(value) {
-  return value > 18;
+    return value > 18;
 }
+var over18 = numbers.filter(myFunction);
 ```
 
-###### map()
+###### `map()`
 
-`map()` 方法（数组映射，复印一份数组，当然在复印的过程中可以进行二次处理），通过对每个数组元素执行函数来创建新数组，该方法不会对没有值的数组元素执行函数，不会改变原始数组
+`map()` 方法（数组映射，复印一份数组，当然在复印的过程中可以进行二次处理），通过对每个数组元素执行函数来创建新数组。该方法不会对没有值的数组元素执行函数，也不会改变原始数组
 
 该函数最多接受 3 个参数：项目值，项目索引，数组本身（value, index, array）
 
 ```js
 let arr = ["jlc", "24"];
 arr.every(function(value, index, arr){
-    console.log(value);  //jlc  回车   24
-    console.log(index);  //0  回车  1
-    console.log(arr);    //["jlc", "24"] 回车  ["jlc", "24"]
+    console.log(value);  // jlc  回车   24
+    console.log(index);  // 0  回车  1
+    console.log(arr);    // ["jlc", "24"] 回车  ["jlc", "24"]
     value = `这是前缀-${value}`;
     return value;
 });
 ```
 
 ```js
-//将每个元素都乘以2
+// 将每个元素都乘以2
 var numbers1 = [45, 4, 9, 16, 25];
-var numbers2 = numbers1.map(myFunction);  //对新数组进行映射改变，原数组是没有改变的
-
 function myFunction(value) {
-  return value * 2;
+    return value * 2;
 }
+var numbers2 = numbers1.map(myFunction);  // 对新数组进行映射改变，原数组是没有改变的
 ```
 
 ```js
-//数组对象中增加一个click，其值为100
+// 数组对象中增加一个click，其值为100
 const user = [
-    { name: "张三", chengjji: 88 },
-    { name: "李四", chengjji: 92 }
+    { name: "张三", chengji: 88 },
+    { name: "李四", chengji: 92 }
 ];
-//直接在原数组上进行改变
+// 直接在原数组上进行改变
 user.map(function(value){  
-    value.click =100;
+    value.click = 100;
 });
 console.log(user);
-//[{ name: "张三", chengjji: 88, click: 100 },{ name: "李四", chengjji: 92, click: 100 }]
+// [{ name: "张三", chengjji: 88, click: 100 },{ name: "李四", chengjji: 92, click: 100 }]
 
-//在新数组上进行改变
+// 在新数组上进行改变
 let newArray = user.map(function(value){  
-    //方式一：
+    // 方式一：
     return Object.assign({click: 100}, value);
-    //方式二：
+    // 方式二：
     return {
         name: value.name,
         chengji: value.chengji,
@@ -1525,20 +1616,20 @@ let newArray = user.map(function(value){
 });
 ```
 
-###### reduce()
+###### `reduce()`
 
 `reduce()` 方法在每个数组元素上运行函数，以生成（减少它）单个值，该方法在数组中从左到右工作，且方法不会减少原始数组
 
-该函数最多接受 4 个参数：总数（初始值/先前返回return的值），项目值，项目索引，数组本身(pre/total, value, index, array)
+该函数最多接受 4 个参数：总数（初始值/先前返回`return`的值），项目值，项目索引，数组本身`(pre/total, value, index, array)`
 
 ```js
-//语法介绍
+// 语法介绍
 let arr = [1, 2, 3, 4, 5];
 arr.reduce(function(pre, value, index, array){
     console.log(pre, value);
     return 99;
 });
-//结果显示：
+// 结果显示：
 1 2   pre为初始值，value为第二个值
 99 3  pre为返回值，value为第三个值
 99 4  pre为返回值，value为第四个值
@@ -1547,8 +1638,8 @@ arr.reduce(function(pre, value, index, array){
 arr.reduce(function(pre, value, index, array){
     console.log(pre, value);
     return 99;
-}, 0);  //添加的参数为初始值
-//结果显示：
+}, 0);  // 添加的参数为初始值
+// 结果显示：
 0 1   pre为初始值，value为第一个值
 99 2  pre为返回值，value为第二个值
 99 3  pre为返回值，value为第三个值
@@ -1557,42 +1648,42 @@ arr.reduce(function(pre, value, index, array){
 ```
 
 ```js
-//写一个函数，来统计数组中某个元素出现的次数
 let arr = [1, 2, 3, 1, 1];
+
+// 统计数组中某个元素出现的次数
 function arrayCount(array, item){
     retrun array.reduce(function(total, value){
         total += item == value ? 1 : 0;
         return total;
     }, 0);
 }
-console.log(arrayCount(arr, 1)); //结果显示3
+console.log(arrayCount(arr, 1)); // 结果显示3
 
-//写一个函数，来获取数组中的最大值
+// 获取数组中的最大值
 function arrayMax(array){
     retrun array.reduce(function(pre, value){
         return pre > value ? pre : value;
     });
 }
-console.log(arrayMax(arr)); //结果显示3
+console.log(arrayMax(arr)); // 结果显示3
 
-//数组去重
+// 数组去重
 let newArr = arr.reduce(function(arr, cur){
     if(arr.includes(cur) === false){
         arr.push(cur);
     }
     return arr;
 }, []);
-console.log(newArr);  //结果显示为[1, 2, 3]
+console.log(newArr);  // 结果显示为[1, 2, 3]
 ```
 
 ```js
-//从数组左到右计算数组中所有数字的总和
+// 数组左到右计算数组中所有数字的总和
 var numbers1 = [45, 4, 9, 16, 25];
-var sum = numbers1.reduce(myFunction);
-
 function myFunction(total, value) {
   return total + value;
 }
+var sum = numbers1.(myFunction);
 ```
 
 ```js
@@ -1602,23 +1693,23 @@ let cart = [
     {name: "ipad", price: 2000},
 ];
 
-//查看购物车中最贵的商品
+// 看购物车中最贵的商品
 function maxPrice(goods){
     retrun goods.reduce(function(pre, value){
         return pre.price > value.price ? pre : value;
     });
 }
-console.log(maxPrice(cart)); //结果显示{name: "imac", price: 18000}
+console.log(maxPrice(cart));// 结果显示{name: "imac", price: 18000}
 
-//汇总购物车中商品的总价格
+// 汇总购物车中商品的总价格
 function sum(goods){
     return goods.reduce(function(total, value){
         return (total += value["price"]);
     }, 0);
 }
-console.log(sum(cart));  //结果显示32000
+console.log(sum(cart));  // 结果显示32000
 
-//获取价格超过1万元商品的名称
+// 获取价格超过1万元商品的名称
 function getNameByPrice(goods, price){
     return goods.reduce(function(arr, cur){
         if(cur.price > price) arr.push(cur);
@@ -1626,9 +1717,9 @@ function getNameByPrice(goods, price){
     }, []).map(function(item){return item.name});
 }
 console.log(getNameByPrice(cart), 10000);
-//结果显示：[{name: "iphone"},{name: "imac"}]
+// 结果显示：[{name: "iphone"},{name: "imac"}]
 
-//过滤掉重复的商品
+// 过滤掉重复的商品
 function filterGoods(goods){
     return goods.reduce(function(arr, cur){
         let find = arr.find(function(v){
@@ -1642,10 +1733,10 @@ function filterGoods(goods){
 
 `reduceRight()` 方法在每个数组元素上运行函数，以生成（减少它）单个值，该方法在数组中从右到左工作，且方法不会减少原始数组
 
-该函数最多接受 4 个参数：总数（初始值/先前返回的值），项目值，项目索引，数组本身(pre/total, value, index, array)
+该函数最多接受 4 个参数：总数（初始值/先前返回的值），项目值，项目索引，数组本身`(pre/total, value, index, array)`
 
 ```js
-//从数组右到左计算数组中所有数字的总和
+// 从数组右到左计算数组中所有数字的总和
 var numbers1 = [45, 4, 9, 16, 25];
 var sum = numbers1.reduceRight(myFunction);
 
