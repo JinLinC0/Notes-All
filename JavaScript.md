@@ -5610,13 +5610,38 @@ console.dir(Request);  // 可以看到声明的host静态属性
 
 #### 静态方法
 
-在函数中，直接将方法定义到构造函数中的方法，叫做静态方法
+从函数角度进行分析，直接将方法定义到构造函数中的方法，叫做静态方法，这个方法是存在于后续通过这个构造函数实例化出的对象上
+
+```js
+function User() {
+    this.show = function() {}  // 这个方法是存在于后续实例化出来的新对象上的
+}
+let hd = new User;  // 之前定义的方法存在于新实例化的hd对象上
+```
+
+> 每`new`一个新的对象都会将这个方法添加进去，但是我们一般是将这些方法放到构造函数的原型上
+>
+> ```js
+> function User() {}
+> User.prototype.show = function() {}
+> ```
+>
+> 这样实例化出来的对象中是没有`show`这个方法，但是在原型链中是有这个方法的（通过构造函数创建的对象自动指向这个构造函数的原型）
+
+直接将方法定义到函数上的方法，叫做静态方法（区别于将方法定义在原型链上的方法，通过原型方式定义的方法，我们称之为普通方法）
+
+```js
+function User() {
+    
+}
+User.show = function() {}
+```
 
 在类中使用静态方法和普通方法：
 
 ```js
 class User {
-    // 定义普通方法
+    // 定义普通方法，定义到原型上的方法
     show() {
         console.log('show')
     }
@@ -5625,20 +5650,43 @@ class User {
         console.log('change')
     }
 }
+// 上面的定义静态方法等价于下面的方式，但是下面的方式不美观，不推荐使用
+User.__proto__.change = function() {
+    console.log('change');
+}
 let hd = new User();
 console.log(hd); // 可以在通过类构造出对象的原型链__proto__中找到show这个普通方法
+hd.show();    // show  原型（普通）方法的调用
 User.change();  // change  静态方法只能通过类进行调用
+```
+
+> 原型方法可以和静态方法命名相同，通过不同的方式进行调用不同的方法
+
+静态的方法和属性不会被实例所继承，只能在构造函数或类中找到
+
+小案例：通过`User`类中的`create`静态方法创建用户：
+
+```js
+class User {
+    constructor(name, age, sex) {
+        this.name = name;
+        this.age = age;
+        this.sex = sex;
+    }
+    static create(...args) {
+        return new this(...args);
+    }
+}
+let hd = User.create("jlc", 24, "男");
 ```
 
 
 
-静态的方法和属性不会被实例所继承，只能在构造函数或类中找到
-
 ***
 
-### 错误
+### 异常处理
 
-当 JavaScript 引擎执行 JavaScript 代码时，会发生各种错误，当错误发生时，JavaScript 引擎通常会停止，并生成一个错误消息，及JavaScript 将抛出一个错误
+当` JavaScript `引擎执行代码时，可能会发生各种错误，当错误发生时，`JavaScript`引擎通常会停止，并生成一个错误消息，及`JavaScript `将抛出一个错误
 
 **try** 语句测试代码块的错误
 
