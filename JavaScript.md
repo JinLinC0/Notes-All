@@ -1747,63 +1747,75 @@ function myFunction(total, value) {
 
 #### 集合
 
-##### Set
+##### `Set`
 
-集合类型Set，数组/对象里面可以放多个数据，集合类型也是，但是集合类型不能放重复的数据
+集合类型`Set`，数组/对象里面可以放多个数据，集合类型也是，但是集合类型不能放重复的数据
 
 ###### 基本语法
 
 ```js
-//声明set类型
+// 声明set类型
 let set = new Set();
 set.add(1);
-set.add("1");
-console.log(set);  //结果显示：Set(2) {1, "1"}
+set.add('1');
+console.log(set);  // 结果显示：Set(2) {1, '1'}
 
-//也可以在执行构造的时候直接在里面添加元素
-let set = new Set([1, "1"]);
+// 也可以在执行构造的时候直接添加元素
+let set = new Set([1, '1']);
 
-//和对象进行对比，在对象中属性都会转换为字符串
+// 和对象对比，在对象中属性都会转换为字符串
 let obj = {
     1: "第一个值",
-    "1": "第二个值"   //两个属性都是“1”
+    "1": "第二个值"   // 两个属性都是“1”
 };
-console.log(obj);  //结果显示：{1: "第二个值"}  属性一样，后一个会将前一个进行覆盖
+console.log(obj);  // 结果显示：{1: "第二个值"}  当属性名一样时，后一个会将前一个进行覆盖
 
 let hd = new Set("123456");
-console.log(hd);  //结果显示为 Set(6) {"1", "2", "3", "4", "5", "6"}
+console.log(hd);  // 结果显示为 Set(6) {"1", "2", "3", "4", "5", "6"}
 ```
+
+常用的集合方法：
 
 ```js
 let set = new Set([1, "1"]);
-//获取元素的数量：
-console.log(set.size);  //结果显示2
-//判断是否有某些元素：
-console.log(set.has("1")); //结果显示true
-//删除元素：
-console.log(set.delete("1"));  //结果显示true   true表示已删除元素，元素不存在返回false
-//清空元素：
+// 获取元素的数量：
+console.log(set.size);  // 结果显示2
+
+// 判断是否有某些元素：
+console.log(set.has("1")); // 结果显示true
+
+// 删除元素：
+console.log(set.delete("1"));  // 结果显示true   true表示已删除元素，元素不存在则返回false
+
+// 清空元素：
 set.clear()
 ```
 
 ###### 类型转换
 
-set类型转换成数组：
+`set`类型转换成数组：
 
 ```js
 let set = new Set(["jlc", "baidu"]);
-console.log(Array.from(set));  //结果显示["jlc", "baidu"]
-console.log([...set]);  //结果显示["jlc", "baidu"]
+// 方法一：通过构造函数进行转换
+console.log(Array.from(set));  // 结果显示["jlc", "baidu"]
+// 方法二：通过点语法进行转换
+console.log([...set]);  // 结果显示["jlc", "baidu"]
 ```
 
+实用的小案例：
+
 ```js
-//将set类型中值大于5的移除，先转换为数组，对数组进行操作，最后在转换为set类型
+// 将set类型中值大于5的值移除
+// 思路：先转换为数组，对数组进行操作，最后在转换为set类型
 let hd = new Set("123456");
 let arr = [...hd].filter(function(item){
     return item < 5;
 });
 hd = new Set(arr);
-//去除数组中的重复元素，将数组转换为set类型，再转换为数组
+
+// 去除数组中的重复元素
+// 思路：将数组转换为set类型，再转换为数组
 let arr = [1, 1, 2, 3];
 arr = [...new Set(arr)];
 ```
@@ -1812,19 +1824,19 @@ arr = [...new Set(arr)];
 
 ```js
 let set = new Set(["jlc", "baidu"]);
-//通过forEach遍历
+// 通过forEach遍历
 set.forEach(function(value, key, set){
     console.log(set);
 })
-//结果显示：
+// 结果显示：
 Set(2) {"jlc", "baidu"}
 Set(2) {"jlc", "baidu"}
 
-//通过for of进行遍历
+// 通过for of进行遍历
 for(const value of set){
     console.log(value);
 };
-//结果显示
+// 结果显示
 jlc
 baidu
 ```
@@ -1834,38 +1846,38 @@ baidu
 ```js
 let a = new Set([1, 2, 3, 4, 5]);
 let b = new Set([4, 5, 2, 9]);
-//并集
-console.log(new Set([...a, ...b]));  //Set(6) {1, 2, 3, 4, 5, 9}
+// 并集
+console.log(new Set([...a, ...b]));  // Set(6) {1, 2, 3, 4, 5, 9}  集合会把重复的元素剔除，只保留一个
 
-//交集，a和b中共同存在的
+// 交集，a和b中共同存在的
 consloe.log(
     new Set(
         [...a].filter(function(item){
             return b.has(item);
         })
     )
-);  //结果显示为 Set(3) {2, 4, 5}
+);  // 结果显示为 Set(3) {2, 4, 5}
 
-//差集，a中的某些元素在b中是不存在的
+// 差集，a中的某些元素在b中是不存在的
 consloe.log(
     new Set(
         [...a].filter(function(item){
             return !b.has(item);
         })
     )
-);  //结果显示为 Set(2) {1, 3}
+);  // 结果显示为 Set(2) {1, 3}
 ```
 
-##### WeakSet
+##### `WeakSet`
 
-WeakSet主要特点是保存对象数据
+`WeakSet`主要特点是保存对象数据
 
-WeakSet类型和Set类型一样，不能有重复的值，但是WeakSet要求必须是引用类型（对象，数组）
+`WeakSet`类型和`Set`类型一样，不能有重复的值，但是`WeakSet`要求必须是引用类型（对象，数组）
 
 ```js
-let set = new WeakSet("jlc"); //报错
-let set = new WeakSet(["jlc", "baidu"]); //报错
-//但是可以先创建，再添加
+let set = new WeakSet("jlc"); // 报错
+let set = new WeakSet(["jlc", "baidu"]); // 报错
+// 但是可以先创建，再添加
 let set = new WeakSet();
 set.add(["jlc", "baidu"]);
 ```
@@ -1876,74 +1888,75 @@ set.add(["jlc", "baidu"]);
 
 ```js
 let hd = {name: 'jlc'};
-let edu = hd;   //内存地址中的{name: 'jlc'}被两个地方引用了
-hd = null;  //将hd与内存内容的引用连接断开，引用次数减一，内存地址中的{name: 'jlc'}被一个地方引用了
-console.log(edu);  //结果显示{name: 'jlc'}
-//如果edu也不引用了，那么该内存地址中的内容就变成了垃圾，需要进行垃圾回收，释放内存
-edu = null;
+let ed = hd;    // 内存地址中的{name: 'jlc'}被两个地方引用了
+hd = null;      // 将hd与内存内容的引用连接断开，引用次数减一，内存地址中的{name: 'jlc'}被一个地方引用了
+console.log(ed);  // 结果还是显示{name: 'jlc'}
+ed = null;  // 如果ed也不引用了，那么该内存地址中的内容就变成了垃圾，需要进行垃圾回收，释放内存
 ```
 
-系统会自动检测，如果某内存地址的内容，没有被任何变量进行引用，就会进行垃圾回收
+> 系统会自动进行检测，如果某内存地址的内容，没有被任何变量进行引用，就会进行垃圾回收
+>
 
-WeakSet的弱引用特性：
+`WeakSet`的弱引用特性：
 
 ```js
 let hd = {name: 'jlc'};
-let edu = hd;   //强引用
+let ed = hd;   // 强引用
 let set = new WeakSet();
-set.add(hd);  //弱引用，系统不会在引用计数器中加一
-//将引用连接断开
+set.add(hd);  // 弱引用，系统不会在引用连接计数器中加一
+// 将引用连接断开
 hd = null;
-edu = null;
-//强引用断完后，内存地址就会被垃圾回收，那么set就读不出内容，但是它不知道，它认为里面是还有数据的
+ed = null;
+// 强引用断完后，内存地址就会被垃圾回收，那么set就读不出内容，但是它不知道，它认为里面是还有数据的
 ```
 
-因为存在若引用的特性，所以js规定WeakSet类型是不能进行循环遍历操作的
+因为存在弱引用的特性，所以`js`中规定`WeakSet`类型是不能进行循环遍历操作的，因此`WeakSet`类型相比与`Set`类型只能使用`add`,`has`和`delete`方法，其他方法都是不能使用的（这也是弱引用类型的方便）
 
-因此WeakSet类型相比与Set类型只能使用add,has和delete方法，其他方法都是不能使用的（这也是弱引用类型的方便）
+##### `Map`
 
-##### Map
-
-Map类型就是将我们的对象，函数，标准类型，字符串，数值可以作为我们的键名
-
-在以往的对象中，只能将字符串作为键名：
+`Map`类型可以将我们的对象，函数，标准类型，字符串，数值作为键名，在以往的对象中，只能将字符串作为键名（常规数组中的键名0是字符串'0'）：
 
 ```js
 let obj = {
-    name: "jlc",   //name是字符串
-    1： "111"    //数值类型会自动转换为字符串类型，在对象中，如果键名是一样的，后面的会覆盖前面的
+    name: "jlc",   // name是字符串
+    1： "111"    // 数值类型会自动转换为字符串类型，在对象中，如果键名是一样的，后面的会覆盖前面的
 };  
-console.log(obj.name)  //jlc
-console.log(obj[1])  //111
+// 读取对象的方式有以下几种方式：obj.name   obj['name']  obj[index]
+console.log(obj.name)     // jlc
+console.log(obj['1'])     // 111
+console.log(obj[1])       // 111
 ```
 
-在新增的Map类型中，什么类型都可以作为键名
+在新增的`Map`类型中，什么类型都可以作为键名：
 
 ```js
 let map = new Map();
-//通过set方式往Map集合中追加数据
-//字符串可以作为键名
+// 通过set方式往map集合中追加数据
+// 字符串作为键名
 map.set("name", "jlc");
-console.log(map);  //Map(1) {"name" => "jlc"}
-//函数可以作为键名
-map.set(function(){}, "jlc");
-console.log(map);  //Map(1) {function(){} => "jlc"}
-//对象也可以作为键名
-map.set({}, "jlc");
-console.log(map);  //Map(1) {Object => "jlc"}
-//数值也可以作为键名
-map.set(1, "jlc");
-console.log(map);  //Map(1) {1 => "jlc"}
+console.log(map);  // Map(1) {"name" => "jlc"}   key为"name"，value为"jlc"
 
-//也可以使用构造的时候往Map集合中添加数据
+// 函数作为键名
+map.set(function(){}, "jlc");
+console.log(map);  // Map(1) {function(){} => "jlc"}  key为f()，value为"jlc"
+
+// 对象作为键名
+map.set({}, "jlc");
+console.log(map);  //Map(1) {Object => "jlc"}    key为{}，value为"jlc"
+
+// 数值作为键名
+map.set(1, "jlc");
+console.log(map);  // Map(1) {1 => "jlc"}    key为1，value为"jlc"
+
+// 也可以使用构造的时候直接往map集合中添加数据
 let map = new Map([["name", "jlc"], ["age", 24]]);
-console.log(map) //Map(2) {"name" => "jlc", "age" => 24}
+console.log(map)  // Map(2) {"name" => "jlc", "age" => 24}
 ```
 
 ```js
-//链式追加元素
+// 链式追加元素
 let map = new Map();
-map.set("name", "jlc").set("age", 24);  //Map(2) {"name" => "jlc", "age" => 24}
+map.set("name", "jlc").set("age", 24);  // Map(2) {"name" => "jlc", "age" => 24}
 ```
 
 ###### 增删改查操作
@@ -1951,88 +1964,92 @@ map.set("name", "jlc").set("age", 24);  //Map(2) {"name" => "jlc", "age" => 24}
 ```js
 let obj = {};
 let map = new Map();
-map.set(obj, "jlc");  //增，改
-console.log(map.get(obj))  //查，通过引用类型查找
-console.log(map.has(obj))  //检测某个键名的元素是否存在，存在返回true
-console.log(map.delete(obj))  //删出部分，删除成功返回true
-map.clear()  //删除全部
+map.set(obj, "jlc");  // 增，改
+console.log(map.get(obj))  // 查，通过引用类型进行查找，返回的是对应的value
+console.log(map.has(obj))  // 检测某个键名的元素是否存在，存在则返回true
+console.log(map.delete(obj))  // 指定键名进行删除，删除成功返回true
+map.clear()  // 删除全部
 ```
 
 ###### 遍历Map类型
 
 ```js
 let map = new Map([["name", "jlc"], ["age", "24"]]);
-//遍历所有的键
-console.log(map.keys());  //MapIterator {"name", "age"}
-//遍历所有的值
-console.log(map.values());  //MapIterator {"hlc", "24"}
-//遍历所有键值对
-console.log(map.entries());  //MapIterator {"name" => "jlc", "age" => "24"}
-
-//循环所有的键
+// 遍历键相关
+// 遍历所有的键
+console.log(map.keys());  // MapIterator {"name", "age"}
+// 循环所有的键
 for(const key of map.keys()){
     console.log(key);
 }
-//name
-//age
+// name
+// age
+
+// 遍历值相关
+// 遍历所有的值
+console.log(map.values());  //MapIterator {"jlc", "24"}
 //循环所有的值
 for(const value of map.values()){
     console.log(value);
 }
-//jlc
-//24
-//循环所有的键值对
+// jlc
+// 24
+
+// 遍历键值对相关
+// 遍历所有键值对
+console.log(map.entries());  // MapIterator {"name" => "jlc", "age" => "24"}
+// 循环所有的键值对
 for(const [key, value] of map.entries()){
     console.log(key, value);
 }
-//name jlc
-//age 24
+// name jlc
+// age 24
 ```
 
 ###### 类型转换
 
-将Map类型转换为数组类型
+将`Map`类型转换为数组类型
 
 ```js
 let map = new Map([["name", "jlc"], ["age", "24"]]);
-//将Map类型转换为数组
+// 将Map类型转换为数组，通过点语法进行转化
 console.log(...map);
-//["name", "jlc"]
-//["age", "24"]
-console.log([...map]);  //[0: ["name", "jlc"], 1: ["age", "24"]]
+// ["name", "jlc"]
+// ["age", "24"]
+console.log([...map]);  // [0: ["name", "jlc"], 1: ["age", "24"]]
 
-//单独转换键
-console.log([...map.keys()]);  //["name", "age"]
-//单独转换值
-console.log([...map.values()]);  //["jlc", "24"]
+// 单独转换键
+console.log([...map.keys()]);  // ["name", "age"]
+// 单独转换值
+console.log([...map.values()]);  // ["jlc", "24"]
 ```
 
-##### WeakMap
+##### `WeakMap`
 
-WeakMap类型中的键，只能是引用类型（对象，数组）
+`WeakMap`类型中的键，只能是引用类型（对象，数组）
 
 ```js
 let map = new WeakMap();
-map.set("name", "jlc");  //报错
-map.set([], "jlc");  //不报错
+map.set("name", "jlc");  // 报错
+map.set([], "jlc");  // 不报错   key为[]，value为"jlc"
 ```
 
-WeakMap相较于Map类型，只能使用set,delete和has方法，其他Map类型有的属性WeakMap类型都是用不了的，同时WeakMap也是不可迭代的
+`WeakMap`相较于`Map`类型，只能使用`set`,`delete`和`has`方法，其他`Map`类型有的属性`WeakMap`类型都是用不了的，同时`WeakMap`也是不可迭代的（不可遍历循环的）
 
 ###### 弱引用特性
 
 ```js
 let hd = {name: "jlc"};
-let cms = hd;  //强引用
+let cms = hd;  // 强引用
 let map = new WeakMap();
-map.set(hd, "24");  //弱引用，将hd引用为key
-//断开强连接
+map.set(hd, "24");  // 弱引用，将hd引用为key
+// 断开强连接
 hd = null;
 cms = null;
-//强引用断完后，内存地址就会被垃圾回收，那么map就读不出内容，但是它不知道，它认为里面是还有数据的
+// 强引用断完后，内存地址就会被垃圾回收，那么map就读不出内容，但是它不知道，它认为里面是还有数据的
 ```
 
-所以WeakMap中的读取键，keys等方法是不能使用的，因为它是弱引用类型，如果能使用keys方法，其读取到的值可能是不正确的，所以js中就规定其是不能使用的
+所以`WeakMap`中的读取键，`keys`等方法是不能使用的，因为它是弱引用类型，如果能使用`keys`方法，其读取到的值可能是不正确的，所以`js`中就规定其是不能使用的
 
 #### 字符串
 
