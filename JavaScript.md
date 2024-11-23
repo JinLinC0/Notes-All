@@ -2249,11 +2249,11 @@ console.log(array.toString());  // 默认是通过使用逗号进行连接的   
 
 #### 对象
 
-为什么要进行面向对象的学习：使用函数编程会导致复杂的代码块，函数编程会暴露到全局，可能带来一系列问题，函数编程需要改良成面向对象的编程，将函数作为对象的一个方法，将关联性的业务封装起来，变成一个对象
+为什么要进行面向对象的学习：使用函数编程会导致出现复杂的代码块，函数编程会暴露到全局，可能带来一系列问题，函数编程需要改良成面向对象的编程，将函数作为对象中的一个方法，将关联性的业务封装起来，变成一个对象
 
 对象（`Object`）字面量定义一个对象，对象是一个引用类型，赋值的时候给的是内存地址（共用一个内存区域）
 
-对象也是变量，但是对象包含很多值，在` JavaScript `中，几乎“所有事物”都是对象，所有` JavaScript `值，除了原始值(原始值指的是没有属性或方法的值)，都是对象
+对象也是变量，但是对象可以包含很多值，在` JavaScript `中，几乎“所有事物”都是对象，所有` JavaScript `值，除了原始值(原始值指的是没有属性或方法的值)，都是对象
 
 `JavaScript`对象中的名称:值对被称为属性，属性：属性值
 
@@ -2272,46 +2272,50 @@ var person = {
 
 在函数定义中，`this` 引用该函数的“拥有者”
 
-在上面的例子中，`this` 指的是“拥有”` fullName` 函数的` person` 对象，即`this.firstName` 的意思是` this` 对象的 `firstName` 属性
+在上面的例子中，`this` 指的是“拥有”` fullName` 函数的` person` 对象，即`this.firstName` 的意思是` person` 对象的 `firstName` 属性
 
 ##### 访问对象的属性
 
 有两种方式可以访问对象的属性：
 
 ```js
-//方式一：objectName.propertyName，如上面的对象所示：
-person.lastName;   //推荐使用
-//方式二：objectName["propertyName"]，如上面的对象所示：
+// 方式一：objectName.propertyName，如上面的对象所示：
+person.lastName;   // 推荐使用
+
+// 方式二：objectName["propertyName"]，如上面的对象所示：
 person["lastName"];
 
-//一般是在循环遍历的时候使用方式二：
+// 一般是在循环遍历的时候会经常使用方式二：
 for(const key in person){
-    console.log(person[key]);  //key是一个字符串，将所有对象中的值打印出来：Bill等
+    console.log(person[key]);  // key是一个字符串，将所有对象中的值打印出来：Bill等
 }
 ```
 
 ##### 访问对象的方法
 
-可以通过以下的方法访问对象的方法：
+可以通过以下方式访问对象中的方法：
 
 ```js
-//objectName.methodName()
+// objectName.methodName()
 name = person.fullName();
-//如果您不加 () 访问 fullName 方法，则将返回整个函数定义内容的字符串
+// 如果您不加()访问 fullName 方法，则将返回整个函数定义内容的字符串
 ```
 
-通过关键词new来声明 JavaScript 变量，该变量会被创建为对象，但是不建议把字符串、数值和布尔值声明为对象，他们会增加代码的复杂性并降低执行速度
+通过关键词`new`来声明` JavaScript `变量，该变量会被创建为对象，但是不建议把字符串、数值和布尔值声明为对象，他们会增加代码的复杂性并降低执行速度
 
-JavaScript 对象无法进行对比，比较两个 JavaScript （不管是==比较还是===比较）将始终返回 `false`
+`JavaScript` 对象是无法进行对比的，比较两个` JavaScript` 对象（不管是==比较还是===比较），将始终返回 `false`
 
 ##### 动态管理对象的属性
 
 ###### 对象的属性和方法的动态添加
 
 ```js
-person.age = 18;  //给person对象添加一个age属性
+// 给person对象添加一个age属性，其属性值为18
+person.age = 18;  
 person["age"] = 18;
-person.get = function(){  //给person对象添加一个get方法
+
+// 给person对象添加一个get方法
+person.get = function(){  
     return `${this.lastName}的年龄是${this.age}`
 }
 ```
@@ -2319,34 +2323,36 @@ person.get = function(){  //给person对象添加一个get方法
 ###### 对象的属性和方法的动态删除
 
 ```js
-delete person.age;   //删除person对象的age属性
+delete person.age;   // 删除person对象的age属性
 ```
 
 ##### 属性的检测
 
-对象中判断是否有某个属性：
+判断对象中是否有某个属性：
 
-|           方法           |                        描述                         |
-| :----------------------: | :-------------------------------------------------: |
-| hd.hasOwnProperty("age") | 判断hd对象中是否存在age属性（只看自己是否有该属性） |
+|            方法            |                          描述                           |
+| :------------------------: | :-----------------------------------------------------: |
+| `hd.hasOwnProperty("age")` | 判断`hd`对象中是否存在`age`属性（只看自己是否有该属性） |
 
-原型链属性：对象的原型，可以理解为对象的父级，对象可以拿父级的属性进行使用的
+原型链属性：对象的原型，可以理解为对象的父级，对象可以拿（继承）父级的属性进行使用的
 
-对于数组和对象来说，length属性是存在数组对象中的，还有一个参数`__proto__`表示原型（理解为该数组的父级，在父级里面会有很多的属性）hasOwnProperty方法是不能看到父级的属性的，如果需要看到当前自己和父级的属性，可以通过`"属性" in arr`方式进行查找，该属性在数组自己或父级中，返回true，反之，返回false
+对于数组和对象来说，`length`属性是存在数组对象中的，还有一个参数`__proto__`表示原型（理解为该数组的父级，在父级里面会有很多的属性）
+
+`hasOwnProperty`方法是不能看到父级的属性的，如果需要看到当前自己和父级的属性，可以通过`"属性" in arr`方式进行查找，该属性在数组自己或父级中，则返回true，反之，返回false
 
 判断对象的属性是否存在：
 
 ```js
-//将b对象做成a对象的父亲
+// 将b对象做成a对象的父亲
 let a = {
     name: "jlc"
 };
 let b = {
     age: 24
 };
-Object.setPrototypeOf(a, b);  //为对象a设置一个新的父亲，父亲是b，这样a属性的原型中就有b的属性
-console.log(a.hasOwnProperty("age"));  //false
-console.log("age" in a);  //true
+Object.setPrototypeOf(a, b);  // 为对象a设置一个新的父亲，父亲是b，这样a属性的原型中就有b的属性
+console.log(a.hasOwnProperty("age"));  // false
+console.log("age" in a);  // true
 ```
 
 ##### 对象属性参与计算
@@ -2357,13 +2363,13 @@ console.log("age" in a);  //true
 let hd = {};
 let title = "name";
 hd[title] = "jlc";
-console.log(hd.name);   //jlc
+console.log(hd.name);   // jlc
 ```
 
-为了改变从后台返回的数据结构的形式，我们需要对对象属性进行计算，动态的改变属性：
+有时候为了改变从后台返回的数据结构的形式，我们需要对对象属性进行计算，动态的改变属性：
 
 ```js
-//后台拿到的数据的形式：
+// 后台拿到的数据的形式：
 const lessons = [
     {
         title: "布局",
@@ -2374,14 +2380,14 @@ const lessons = [
         category: "mysql"
     }
 ];
-//我们需要将拿到的对象数据进行动态的修改，方便我们后续的使用
+// 我们需要将拿到的对象数据进行动态的修改，方便我们后续的使用
 let res = lessons.reduce((obj, cur, index) => {
     obj[`${cur["category"]}-${index}`] = cur;
     return obj;
 },{});
 console.log(JSON.stringify(res, null, 2));  
-//使用系统提供处理json转换为字符串的方法,null表示保留所有内容，2表示tab键为两位
-//最后得到的结果为：
+// 使用系统提供处理json转换为字符串的方法,null表示保留所有内容，2表示tab键为两位
+// 最后得到的结果为：
 {
     "css-0": {
         title: "布局",
@@ -2400,20 +2406,20 @@ console.log(JSON.stringify(res, null, 2));
 
 ```js
 let hd = Object.assign({ a; 1 }, { b: 2 });
-console.log(hd);  //{a: 1, b: 2}
+console.log(hd);  // {a: 1, b: 2}
 ```
 
-##### 获取对象属性和值的API
+##### 获取对象属性和值的方法
 
 ```js
 let hd = {
     name: "jlc",
     age: 24
 };
-console.log(Object.keys(hd));  //获取对象中的属性名   ["name", "age"]
-console.log(Object.values(hd));  //获取对象中的属性值   ["jlc", 24]
-console.log(Object.entries(hd)); //对象的属性名和属性值一起获取，组成一个数组
-//[["name", "jlc"], ["age", 24]]  得到的是二维数组的结构
+console.log(Object.keys(hd));    // 获取对象中的属性名   ["name", "age"]
+console.log(Object.values(hd));  // 获取对象中的属性值   ["jlc", 24]
+console.log(Object.entries(hd)); // 对象的属性名和属性值一起获取，组成一个数组
+// [["name", "jlc"], ["age", 24]]  得到的是二维数组的结构
 ```
 
 ##### 对象的循环遍历操作
@@ -2426,15 +2432,16 @@ let hd = {
 for(const key in hd){
     console.log(hd[key]);
 }
-//jlc 回车 24
+// jlc 回车 24
 
-for(const iterator of Object.keys(hd)){  //这了的keys可以改为values和entries
+for(const iterator of Object.keys(hd)){  // 这了的keys可以改为values和entries
     console.log(iterator);
 }
-//name 回车 age
+// name 回车 age
+
 for(const [key, value] of Object.entries(hd)){
-    console.log(key);    //name 回车 age
-    console.log(value);  //jlc 回车 24
+    console.log(key);    // name 回车 age
+    console.log(value);  // jlc 回车 24
 }
 ```
 
@@ -2445,7 +2452,7 @@ for(const [key, value] of Object.entries(hd)){
 ```js
 let user = {name: "jlc", age: "24"};
 let hd = { ...user, lang: "zh"};
-console.log(hd);  //{name: "jlc", age: "24", lang: "zh"}
+console.log(hd);  // {name: "jlc", age: "24", lang: "zh"}
 ```
 
 通过展开语法进行内容的修改：
@@ -2456,36 +2463,36 @@ function upload(params){
         type: "*.jpeg,*.png",
         size: 10000
     };
-    config = { ...config, ...params};  //属性一样，后面的属性值会覆盖前面的属性值
+    config = { ...config, ...params};  // 属性一样，后面的属性值会覆盖前面的属性值
     console.log(config);
 }
-//不传，就使用默认的；传元素，就使用你传递的内容
-upload({size: 99});   //{type: "*.jpeg,*.png", size: 99}
+// 不传，就使用默认的；传元素，就使用你传递的内容，也可以传入新的属性和属性值
+upload({size: 99});   // {type: "*.jpeg,*.png", size: 99}
 ```
 
 ##### 解构语法特性
 
-解构语法特性是对元素的结构的分解处理，将结构打散后赋值给变量
+解构语法特性是对元素的结构进行分解处理，将结构打散后赋值给变量
 
 ```js
 let user = {name: "jlc", age: "24"};
-let {name: n, age: age} = user;  //对象的解构，解构的变量不用获取全部，可以只获取一部分
-console.log(n);  //jlc
-//解构后的名字可以和对象的属性值一样，那么可以进行简写
-let {name, age} = user;  //对象解构的简写
-console.log(name);  //jlc
+let {name: n, age: age} = user;  // 对象的解构，解构的变量不用获取全部，可以只获取一部分
+console.log(n);  // jlc
+// 解构后的名字可以和对象的属性值一样，那么可以进行简写
+let {name, age} = user;  // 对象解构的简写
+console.log(name);       // jlc
 ```
 
-解构的思路在模块化的使用中非常多
+解构的思路在模块化编程中的使用非常多
 
-只要数据是一个对象的，都可以进行解构处理，如果函数的返回值是对象的，也可以进行解构处理：
+只要数据是一个对象，都可以进行解构处理，如果函数的返回值是对象，也可以进行解构处理：
 
 ```js
 function hd(){
     return {name: "jlc", age: "24"};
 }
 let {name, age} = hd();
-console.log(name);  //jlc
+console.log(name);  // jlc
 ```
 
 在函数传递参数的时候，也可以使用解构特性：一般是传递数据库中拿过来的数据
@@ -2494,28 +2501,28 @@ console.log(name);  //jlc
 function user({ name, age }){
     console.log(name, age);
 }
-user({ name: "jlc", age: 24});  //jlc 24
+user({ name: "jlc", age: 24 });  // jlc 24
 
-//也可以穿插着使用，部分使用解构特性
+// 也可以穿插着使用，部分使用解构特性
 function hd(name, {age, sex}){
     console.log(name, age, sex);
 }
-hd("jlc", {age: 24, sex: "男"});  //jlc 24 男
+hd("jlc", {age: 24, sex: "男"});  // jlc 24 男
 ```
 
 ###### 在严格模式中解构的差异
 
-在严格模式中，解构语句前面必须要用let/const声明，不然会报错：
+在严格模式中，解构语句前面必须要用`let/const`进行声明，不然会报错：
 
 ```js
 let {name, age} = {name: "jlc", age: "24"};
-//非严格模式下可以简写为：
+// 非严格模式下可以简写为：
 ({name, age} = {name: "jlc", age: "24"});
 ```
 
 ###### 多层对象的结构
 
-对象中包含对象，那么这个对象被称为多层对象，对于多层对象可以进行解构
+如果对象中包含对象，那么这个对象被称为多层对象，对于多层对象可以进行解构
 
 ```js
 let hd = {
@@ -2525,7 +2532,7 @@ let hd = {
     }
 };
 let {name, lesson: {title}} = hd;
-console.log(name, title);  //jlc js
+console.log(name, title);  // jlc js
 ```
 
 ###### 解构的默认值
@@ -2535,18 +2542,18 @@ console.log(name, title);  //jlc js
 ```js
 let user = {name: "jlc", age: "24"};
 let {name, age, sex="男"} = user;
-console.log(name. age, sex);   //jlc 24 男   //如果没有加默认值，那个sex显示undefined
+console.log(name, age, sex);   // jlc 24 男   如果没有加默认值，那个sex显示undefined
 ```
 
 ##### 对象的复制
 
-传统情况的对象赋值，是传递内存地址的
+传统情况的对象赋值，传递的是内存地址
 
 ```js
 let hd = { name: "jlc" };
-let cm = hd;  //将对象hd的内存地址给cm
+let cm = hd;  // 将对象hd的内存地址给cm
 cm.name = "jlc123";
-console.log(hd);  //{ name: "jlc123" }  改变cm的，同时会改变原对象hd中的值
+console.log(hd);  // { name: "jlc123" }  如果改变cm中的属性值，同时会改变原对象hd中的值，公用地址
 ```
 
 ###### 浅拷贝
@@ -2558,9 +2565,9 @@ console.log(hd);  //{ name: "jlc123" }  改变cm的，同时会改变原对象hd
 ```js
 let hd = { name: "jlc" };
 let cm = {
-    name: hd.name   //将hd中的name属性的值取出来，作为cm对象中name属性的值
+    name: hd.name   // 将hd中的name属性的值取出来，作为cm对象中name属性的值
 };
-//这样hd和cm对象就是两个不同的内存数据，开辟了两块不同的内存空间，对象cm的属性值改变，不会影响hd的属性值
+// 这样hd和cm对象就是两个不同的内存数据，开辟了两块不同的内存空间，对象cm的属性值改变，不会影响hd的属性值
 ```
 
 如果被复制对象的属性特别多，我们需要用循环进行复制：（一般用于复制的时候想要内容发生一些改变时使用的，如将复制的内容都加上一个后缀）
@@ -2574,27 +2581,27 @@ for(const key in hd){
 // 此时开辟的是两块内存地址，但是内容是一样的，修改obj内部的值对hd是没有影响的
 ```
 
-除了循环的方式进行复制，也可以通过提供的接口assign()进行复制：
+除了循环的方式进行复制，也可以通过提供的`assign()`方法进行复制：
 
 ```js
 let hd = { name: "jlc", age: 24};
-let obj = Object.assign({}, hd);  //加对象hd中的值压到新对象中
+let obj = Object.assign({}, hd);  // 加对象hd中的值压到新对象中
 ```
 
 通过展开语法进行复制：
 
 ```js
 let hd = { name: "jlc", age: 24};
-let obj = {...hd};  //将hd对象的结构拿过来，放到obj对象新开辟的空间中
+let obj = {...hd};  // 将hd对象的结构拿过来，放到obj对象新开辟的空间中
 ```
 
-如果想要复制的时候，新对象发生一些改变，可以通过使用for循环进行复制，否则建议使用后面两种方法
+如果想要复制的时候，新对象发生一些改变，可以通过使用`for`循环进行复制，否则建议使用后面两种方法
 
 ###### 深拷贝
 
 可以将原始对象中深层次（嵌套）的对象进行复制给另外一个新的对象
 
-通过浅拷贝，对于对象中的对象，如果采用浅拷贝，新对象和原对象对于对象中的对象元素是共用内存地址的
+通过浅拷贝，对于对象中的对象，如果采用浅拷贝，新对象和原对象对于对象中的对象元素还是共用一个内存地址的
 
 我们可以通过深层次的复制：深拷贝就是一层一层的处理，通过递归算法
 
@@ -2637,18 +2644,17 @@ function user(name) {
 
 // 通过工厂函数生成对象
 let obj = user("jlc");
-console.log(obj);
-// 结果显示为：{name: "jlc", show: f}
+console.log(obj);   // 结果显示为：{name: "jlc", show: f}
 obj.show()  // jlc-姓名
 ```
 
-对于工厂函数中对象的方法进行修改后，同时会影响所有使用该工厂函数创建的对象
-
-使用工厂创建对象，可以使我们的代码更加规范，可以对我们的统一动作进行定制
+> - 对于工厂函数中对象的方法进行修改后，同时会影响所有使用该工厂函数创建的对象
+>
+> - 使用工厂创建对象，可以使我们的代码更加规范，可以对我们的统一动作进行定制
 
 ###### 构造函数
 
-定义构造函数要求首字母大写，构造函数可以在创建的时候传递参数，来为我们的对象来做初始值
+定义构造函数要求首字母大写，构造函数可以在创建的时候传递参数，来为我们的对象做初始值
 
 ```js
 // 构造函数，this是只当前调用这个方法的对象
@@ -2661,12 +2667,11 @@ function User(name){
 
 // 通过构造函数来创建对象
 let obj = new User('jlc')
-console.log(obj);
-// 结果显示：User {name: "jlc", show: f}
+console.log(obj);  // 结果显示：User {name: "jlc", show: f}
 obj.show();  // jlc
 ```
 
-拓展：在js中，所有的数据类型都是可以通过构造函数进行创建的（但是对于大多数的类型都不建议通过构造函数进行创建，一般是直接创建即可）
+拓展：在`js`中，所有的数据类型都是可以通过构造函数进行创建的（但是对于大多数的类型都不建议通过构造函数进行创建，一般是直接创建即可）
 
 ```js
 // 通过构造函数创建对象类型
@@ -2686,7 +2691,7 @@ let str = new String('jlc');
 
 ###### 抽象
 
-被封装的对象，其属性还是可以被外部进行访问到，还没有实现到抽象
+被封装的对象，其属性还是可以被外部进行访问到的，还没有实现到抽象
 
 抽象可以理解为一个手机的内部有很多复杂的逻辑，复杂逻辑的功能实现都被封装到手机的内部了，只给外部提供了一些案件的操作（这个逻辑称为抽象：把一些属性和方法封装到内部，不让外部进行访问）
 
@@ -2718,11 +2723,11 @@ const user = {
 };
 // 查看对象中某一个属性特征的描述
 console.log(Object.getOwnPropertyDescriptor(user, "name"))
-显示如下的内容：
+// 显示如下的内容：
 {
-    "value": "jlc",  // 属性的值
-    "writable": true,  // 属性是否可修改
-    "enumerable": true,  // 属性是否可遍历
+    "value": "jlc",       // 属性的值
+    "writable": true,     // 属性是否可修改
+    "enumerable": true,   // 属性是否可遍历
     "configurable": true  // 属性是否可以被删除
 }
 // 所以在默认的情况下，对象中的某个属性是可以被编辑、遍历和删除的
@@ -2760,7 +2765,7 @@ Object.definePropertys(user,{
 
 有了这种方法，我们就可以将对象中的某些属性进行保护起来
 
-系统提供了简化API用于对象属性的设置
+系统提供了简化`API`用于对对象属性的设置
 
 ```js
 // 禁止向对象中添加属性API
@@ -2774,8 +2779,7 @@ Object.seal(user);
 
 // 冻结对象属性，writable和configurable都变成了false
 Object.freeze(user)
-// 判断对象是否处于冻结状态
-Object.isFrozen(user)
+// 判断对象是否处于冻结状态：Object.isFrozen(user)
 ```
 
 ##### 访问器
@@ -2848,7 +2852,7 @@ console.log(web.site);  // 网站的网址是www.baidu.com
 
 ###### 访问器的应用
 
-在前后端分离开发的时候，，为了与后台的接口对接，我们需要存储一个token，令牌的处理可以通过访问器来进行控制，一般获取到令牌后，需要存储到本地
+在前后端分离开发的时候，为了与后端的接口进行对接，我们需要存储一个`token`，令牌的处理可以通过访问器来进行控制，一般获取到令牌后，需要存储到本地
 
 ```js
 let Request = {
@@ -2886,9 +2890,10 @@ user.name = "JLC";  // 访问器的优先级高，结果显示：jlc姓名
 console.log(user);  // 同时打印变量丢失了name的属性：{age: 24}
 ```
 
-普通属性的优先级比访问器的优先级低
+> 普通属性的优先级比访问器的优先级低
+>
 
-如果想要将name进行保存，可以将其定义为一个私有的属性
+如果想要将`name`进行保存，可以将其定义为一个私有的属性
 
 ```js
 const user = {
@@ -2907,9 +2912,7 @@ console.log(user.name);  // jlc
 
 ###### 使用类定义访问器
 
-类可以理解为构造函数的一个简写的形式
-
-通过类的形式（语法糖的形式）来定义访问器：
+类可以理解为构造函数的一个简写的形式，通过类的形式（语法糖的形式）来定义访问器：
 
 ```js
 class User{
@@ -2941,7 +2944,7 @@ console.log(obj.name);  // JLC
 
 代理就相当于买房的中介公司，我们通过中介公司来买房子，在计算机中，我们不直接操作数据，一般是通过代理来访问数据
 
-代理在`Vue`框架的数据绑定等都会使用到
+代理在`Vue`框架的数据绑定等都会使用到对象代理的概念
 
 ###### 代理的基本语法
 
@@ -2960,6 +2963,7 @@ const proxy = new Proxy(hd,{
     	return true;  // 在严格模式下需要有这一行
     }
 });
+
 // 通过代理进行访问
 console.log(proxy.name);  // jlc
 proxy.name = "JLC";
@@ -3162,27 +3166,33 @@ proxy.forEach((item, i) => {
 
 #### 布尔类型
 
-JavaScript 提供一种布尔数据类型，它只接受值true或false
+`JavaScript` 提供一种布尔数据类型，它只接受值`true`或`false`
 
-所有具有“真实”值的即为 True；所有不具有“真实”值的即为 False （0，-0，" "，undefined，null，(数组里面有多个值是没有办法转换成数值的，只能转换成NaN)NaN，false）的布尔值为false
+> 所有具有“真实”值的即为` True`；
+>
+> 所有不具有“真实”值的即为` False` （0，-0，" "，`undefined`，`null`，`NaN`，`false`）的布尔值为`false`
 
 ```js
 let bool = true;
-console.log(typeof bool)  //结果打印boolean
+console.log(typeof bool)  // 结果打印boolean
 ```
 
-空数组/对象转换成布尔类型，其结果为真`console.log(Boolean([]))  //结果为true`
+空数组/对象转换成布尔类型，其结果为真`console.log(Boolean([]))  // 结果为true`
 
-总结：数值类型，除了0之外都是真，0是假；字符串类型，除了空字符串类型都为真，空字符串为假；对于引用类型，任何数组和对象都为真
+总结：
+
+- 数值类型，除了0之外都是真，0是假
+- 字符串类型，除了空字符串类型都为真，空字符串为假
+- 对于引用类型，任何数组和对象都为真
 
 ##### 布尔类型的显示转换
 
 ```js
 let num = 0;
-//通过！进行转换，！有两部分的功能：1，将其转换成布尔类型；2.将布尔类型取反
+// 通过！进行转换，！有两部分的功能：1，将其转换成布尔类型；2.将布尔类型取反
 num = !!num;
-console.log(num);  //结果为false,num为布尔类型
-//通过构造函数进行转换
+console.log(num);  // 结果为false  num为布尔类型
+// 通过构造函数进行转换
 Boolean(num)
 ```
 
@@ -3209,9 +3219,9 @@ while(true){
 
 `JavaScript` 程序可以很容易的将 `JSON` 数据转换为` JavaScript `对象
 
-##### JSON 语法规则和相关函数
+##### `JSON `语法规则和相关函数
 
-```jso
+```json
 {"text":[
     {"name":"Runoob", "url":"www.runoob.com"}, 
     {"name":"Google", "url":"www.google.com"},
@@ -3230,12 +3240,12 @@ let data = {
     name: "jlc",
     title: "111"
 };
+// 将js对象转化为JSON类型的数据
 let json = JSON.stringify(data);
-console.log(json);
-// 结构显示为：{"name":"jlc","title":"111"}
+console.log(json);  // 结构显示为：{"name":"jlc","title":"111"}
 ```
 
-> ` JavaScript`中使用内置函数 `JSON.parse() `可以将`JSON`字符串转换为` JavaScript` 对象：`obj = JSON.parse(text);`，转化后的对象就可以在前台进行使用了
+> ` JavaScript`中使用内置函数 `JSON.parse() `可以将`JSON`字符串转换为` JavaScript` 对象：`obj = JSON.parse(text);`，转化后的对象就可以在前端直接进行使用了
 >
 > 使用内置函数`JSON.stringify()`可以将`JavaScript` 值转换为` JSON` 字符串，对象的属性没有加双引号，但是变成`JSON`格式后，会自动的补上双引号
 
@@ -3251,8 +3261,7 @@ console.log(json);
 >     }
 >     return value;
 > });
-> console.log(obj);
-> // {name:"myname-jlc",title:"111"}
+> console.log(obj);   // {name:"myname-jlc",title:"111"}
 > ```
 
 在`stringify()`方法中有几个常见的参数：`JSON.stringify(data, null, 2);`
@@ -3268,8 +3277,7 @@ console.log(json);
 ```js
 let arr = ["jlc", "111"]
 let json = JSON.stringify(arr);
-console.log(json);
-// 结构显示为：["jlc","111"]
+console.log(json);   // 结构显示为：["0": "jlc", "1": "111"]
 ```
 
 ##### 自定义返回`JSON`格式
@@ -3290,8 +3298,7 @@ let data = {
     }
 };
 let json = JSON.stringify(data);
-console.log(json);
-// {"name":"jlc","mytitle":"111"}   根据自定义的数据格式进行返回JSON格式
+console.log(json);  // {"name":"jlc","mytitle":"111"}   根据自定义的数据格式进行返回JSON格式
 ```
 
 ***
