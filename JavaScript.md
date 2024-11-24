@@ -3305,11 +3305,13 @@ console.log(json);  // {"name":"jlc","mytitle":"111"}   根据自定义的数据
 
 ### 控制语句
 
+在`Js`中有两种常见的控制语句：条件语句和循环语句
+
 #### 条件语句
 
-条件语句用于基于不同条件执行不同的动作
+条件语句用于在不同的条件执行不同的动作
 
-##### if语句
+##### `if`语句
 
 ```js
 if (条件 1) {
@@ -3321,34 +3323,29 @@ if (条件 1) {
 }
 ```
 
-##### switch语句
+##### `switch`语句
 
 使用 `switch` 语句来选择多个需被执行的代码块之一
 
-计算一次 switch 表达式，把表达式的值与每个 case 的值进行对比，如果存在匹配，则执行关联代码
-
-switch 语句会使用恒等计算符(===)进行比较
+计算一次 `switch` 表达式，把表达式的值与每个 `case` 的值进行对比，如果存在匹配，则执行对应`case`关联代码，`switch` 语句会使用恒等计算符(`===`)（值和类型都相同）进行比较
 
 ```js
 switch(表达式) {
-     case n:  //Switch case 使用严格比较（===），值必须与要匹配的类型相同
+    case n:    // Switch case 使用严格比较（===），值必须与要匹配的类型相同
         代码块
-        break;  // 遇到 break 关键词，它会跳出 switch 代码块（终止switch）
-     case n:
-        代码块
-        break;
-     default:  //default 关键词规定不存在 case 匹配时所运行的代码
+        break; // 遇到 break 关键词，它会跳出 switch 代码块（终止switch）
+    default:   // default 关键词规定不存在 case 匹配时所运行的代码
         默认代码块
 } 
 ```
 
-默认的 case 不必是 switch 代码块中最后一个 case，如果 `default` 不是 switch 代码块中最后一个 case，请记得用 break 结束默认 case
+默认的 `case` 不必是 `switch` 代码块中最后一个` case`，但是，如果 `default` 不是` switch `代码块中最后一个` case`，请记得用` break` 结束默认` case`
 
 #### 循环语句
 
 循环可多次执行代码块
 
-##### For循环
+##### `For`循环
 
 ```js
 for (在循环开始之前执行; 定义运行循环的条件; 在循环每次被执行后执行) {
@@ -3356,9 +3353,9 @@ for (在循环开始之前执行; 定义运行循环的条件; 在循环每次�
 }
 ```
 
-##### For in 循环
+##### `For in` 循环
 
-`for in` 语句遍历对象的属性，或者遍历数组，主要用于从后台抓取.json数组数据进行批量处理
+`for in` 语句主要用于遍历对象的属性，或者遍历数组，主要用于从后台抓取`.json`数组数据进行批量处理
 
 ```html
 <script>
@@ -3370,15 +3367,15 @@ for (在循环开始之前执行; 定义运行循环的条件; 在循环每次�
     	<table border="1" width="100%">
     	<thead><tr><th>姓名</th><th>年龄</th></tr></thead>
     `)
-    //循环批量的处理数据
-    for (let i in person) {  //对于数据，i就是每一个的编号
+    // 循环批量的处理数据
+    for (let i in person) {  // 对于数据，i就是每一个的编号
         document.write(`<tr><td>${person[i].name}</td><td>${person[i].age}</td></tr>`)
     }
     document.write("</table>")
 <script>
 ```
 
-遍历window对象：
+遍历`window`对象：
 
 ```js
 for(let key in window){
@@ -3386,31 +3383,32 @@ for(let key in window){
 }
 ```
 
-`for in`循环在老版本ES5中比较常用，在新版本中`for of`用的比较多
+`for in`循环在老版本`ES5`中比较常用，在新版本中`for of`用的比较多
 
 `for in`循环是取键名；`for of`循环是取值
 
-##### For of 循环
+##### `For of` 循环
 
 `for of` 语句循环遍历可迭代对象的值（主要处理迭代对象）
 
 允许循环遍历可迭代的数据结构，例如数组、字符串、映射、节点列表等
 
 ```js
-//遍历数组
+// 遍历数组
 const cars = ["BMW", "Volvo", "Mini"];
 for (let value of cars) {
   console.log(value)
 }
-//结果显示为
+// 结果显示为
 BMW
 Volvo
 Mini
-//遍历字符串
+
+// 遍历字符串
 for(let value of "jlc"){
     console.log(value);
 }
-//结果显示为
+// 结果显示为
 j
 l
 c
@@ -3428,31 +3426,38 @@ c
     	<table border="1" width="100%">
     	<thead><tr><th>姓名</th><th>年龄</th></tr></thead>
     `)
-    //循环批量的处理数据
-    for (let value of person) {  //对于数据，i就是每一个的编号
+    // 循环批量的处理数据
+    for (let value of person) {
         document.write(`<tr><td>${value.name}</td><td>${value.age}</td></tr>`)
     }
     document.write("</table>")
 <script>
 ```
 
-##### ForEach循环
+##### `ForEach`循环
 
 ```js
 let lessons = [
-    { name: "jlc", age: 24},
-    { name: "xiaoming", age: 23}
+    {name: "jlc", age: 24},
+    {name: "xiaoming", age: 23}
 ];
-lessons.forEach(function(item, index, lessons){  //参数是按照需求选填的
-    console.log(item);  //循环所有的数组对象
-    console.log(index); //循环所有的索引
-    console.log(lessons); //循环原数组
+lessons.forEach(function(item, index, lessons){  // 参数是按照需求选填的
+    console.log(item);    // 循环所有的数组对象
+    console.log(index);   // 循环所有的索引
+    console.log(lessons); // 循环原数组
 })
+// 结果显示
+{name: "jlc", age: 24}
+0
+[{name: "jlc", age: 24},{name: "xiaoming", age: 23}]
+{name: "xiaoming", age: 23}
+1
+[{name: "jlc", age: 24},{name: "xiaoming", age: 23}]
 ```
 
-##### while循环
+##### `while`循环
 
-while 循环会一直循环代码块，只要指定的条件为 true
+`while `循环会一直循环代码块，如果指定的条件为` true`
 
 ```js
 while (条件) {
@@ -3460,29 +3465,30 @@ while (条件) {
 }
 ```
 
-do/while 循环是 while 循环的变体，在检查条件是否为真之前，这种循环会执行一次代码块，然后只要条件为真就会重复循环
+`do/while` 循环是` while `循环的变体，在检查条件是否为真之前，这种循环会执行一次代码块，然后只要条件为真就会重复循环
 
 ```js
 do {
     要执行的代码块
 }
-
 while (条件);
 ```
 
-do/while循环会执行至少一次，即使条件为 false，因为代码块会在条件测试之前执行
+`do/while`循环会执行至少一次，即使条件为 `false`，因为代码块会在条件测试之前执行
 
-##### 循环中的break和continue关键字
+##### 循环中的`break`和`continue`关键字
 
-`break` 语句“跳出”循环；`continue` 语句“跳过”循环中的这一个一个迭代，继续执行后续的循环
+`break` 语句“跳出”整个循环；`continue` 语句“跳过”循环中的这一个一个迭代，继续执行后续的循环
 
 ```js
-//打印1-10中的偶数
+// 打印1-10中的偶数
 for(let i = 1; i <= 10; i++){
     if(i % 2) continue;
     console.log(i);
 }
-//打印1-10中的三个奇数
+// 结果显示2 4 6 8 10
+
+// 打印1-10中的三个奇数
 let count = 0;
 for(let i = 1; i <= 10; i++){
     if(i % 2){
@@ -3490,11 +3496,14 @@ for(let i = 1; i <= 10; i++){
         console.log(i);
     }
 }
+// 结果显示1 3 5
 ```
 
-##### 打label标签
+##### 打`label`标签
 
 打标签用于在子层循环中退出外层循环
+
+一般标签是对某个循环进行打的标签，标签相当于对于这个循环起别名，我们调用这个别名来调取这个循环
 
 ```js
 label1: for(let i = 1; i <= 10; i++){
@@ -3503,10 +3512,16 @@ label1: for(let i = 1; i <= 10; i++){
             console.log(i, n);
         }
         if(n + i > 10){
-            break label1;  //调出label1标签的循环，如果不加标签，仅仅是退出当前的循环，及label2循环
+            break label1;// 跳出label1标签的循环，如果不加标签，仅仅是退出当前的循环，及label2循环
         }
     }
 }
+// 结果显示：
+1 2
+1 4
+1 6
+1 8
+1 10
 ```
 
 ***
