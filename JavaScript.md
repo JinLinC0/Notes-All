@@ -3654,7 +3654,7 @@ cms();  // jlc
 ```js
 x = findMax(1, 123, 500, 115, 44, 88);
 
-function findMax() {
+function findMax() {  // 括号中不用设置参数了
     var i;
     var max = -Infinity;
     for (i = 0; i < arguments.length; i++) {
@@ -3666,73 +3666,79 @@ function findMax() {
 }
 ```
 
-以上函数不属于任何对象，但是在 JavaScript 中，始终存在一种默认的全局对象，在 HTML 中，默认全局对象是 HTML 页面本身，所有上面的函数“属于”HTML 页面，在浏览器中，这个页面对象就是浏览器窗口，myFunction() 和 window.myFunction() 是同一个函数
+以上函数不属于任何对象，但是在` JavaScript `中，始终存在一种默认的全局对象，在` HTML` 中，默认全局对象是 `HTML` 页面本身，所有上面的函数“属于”`HTML `页面，在浏览器中，这个页面对象就是浏览器窗口，`myFunction()` 和 `window.myFunction() `是同一个函数
 
 ```js
-//arguments.length 会返回函数被调用时收到的参数个数
+// arguments.length 会返回函数被调用时收到的参数个数
 function myFunction(a, b) {
     return arguments.length;
 }
+myFunction(1);   // 1
 ```
 
-arguments是伪数组：
+`arguments`是伪数组：
 
 ```js
-function sum(){
-    return arguments.reduce((a, b) => a + b);  //报错
-    return [...arguments].reduce((a, b) => a + b);  //正确
+function sum() {
+    return arguments.reduce((a, b) => a + b);  // 报错
+    return [...arguments].reduce((a, b) => a + b);  // 正确
 }
-console.log(sum(1, 2));  //3
+console.log(sum(1, 2));  // 3
 ```
 
-目前，在新版本的js中，一般通过点语法来代替arguments方法来接收数组：
+目前，在新版本的`js`中，一般通过点语法来代替`arguments`方法来接收数组：
 
 ```js
-function sum(...args){
-    //console.log(args);
+function sum(...args) {
+    console.log(args);
     return args.reduce((a, b) => a + b);
 }
-console.log(sum(1, 2, 3)); //6
+sum(1, 2, 3); 
+// [1, 2, 3]
+// 6
 ```
 
 `toString()` 方法以字符串返回函数
 
 ``` js
-var txt = myFunction.toString();  //返回的是声明函数的整段字符串
+var txt = myFunction.toString();  // 返回的是声明函数的整段字符串
+// 'function myFunction(a, b) {\n    return arguments.length;\n}'
 ```
 
 定义为对象属性的函数，被称为对象的方法
 
 #### 立即执行函数
 
-函数自动调用表达式（立即执行函数：不需要刻意的调用）：`(function(){})()`，封装在这里面的子函数名就不属于全局了
+函数自动调用表达式（立即执行函数：不需要刻意的调用）：`(function(){})()`
+
+封装在括号里面的子函数名就不属于全局了
 
 #### 函数的参数
 
 ##### 形参和实参
 
 ```js
-function sum(a, b){
+function sum(a, b) {
     return a + b;
 }
 console.log(sum(1, 2));
-//1和2为实参，具体要进行计算的参数
-//a和b为形参，需要由实参进行赋值的
+// 1和2为实参，具体要进行计算的参数
+// a和b为形参，需要由实参进行赋值的
 ```
 
-一般情况下，实参的数量要对应形参的数量，如果形参数量多于实参，多余的形参为undefined；如果实参的数量多余形参，不影响函数的使用，多余的实参会被忽略掉
+一般情况下，实参的数量要对应形参的数量，如果形参数量多于实参，多余的形参为`undefined`；如果实参的数量多余形参，不影响函数的使用，多余的实参会被忽略掉
 
 ##### 默认参数
 
 ```js
-function sum(a, b = 2){
+function sum(a, b = 2) {
     return a + b;
 }
-console.log(sum(1));  //3
-//此时b就是默认参数，如果调用函数时，没有给定b，那么b就使用默认的值，如果给定了b，那就使用给定的值
+console.log(sum(1));  // 3
+// 此时b就是默认参数，如果调用函数时，没有给定b，那么b就使用默认的值，如果给定了b，那就使用给定的值
 ```
 
-默认参数要放在形参的最后面
+默认参数要放在所有形参的后面
 
 ##### 函数参数
 
@@ -3740,10 +3746,10 @@ console.log(sum(1));  //3
 
 ```js
 let arr = [1, 2, 3, 4, 5, 6, 7].filter(hd);
-function hd(a){
+function hd(a) {
     return a <= 3;
 }
-console.log(arr);  //[1, 2, 3]
+console.log(arr);  // [1, 2, 3]
 ```
 
 #### 箭头函数
@@ -3751,65 +3757,69 @@ console.log(arr);  //[1, 2, 3]
 箭头函数允许使用简短的语法来编写函数表达式
 
 ```js
-//正常匿名函数编写方式
-let hd = function(){
+// 正常匿名函数编写方式
+let hd = function() {
     return 1 + 2;
 };
-//箭头函数的简写方式
+// 箭头函数的简写方式
 let hd = ()=>{
     return 1 + 2;
 };
-
-//具体例子
-let hd = [1, 2, 3, 4, 5, 6].filter(function(value){
-    return value <= 3;
-});
-//箭头函数
-let hd = [1, 2, 3, 4, 5, 6].filter((value) => {return value <= 3;});
-//第一步优化：如果只有一个参数时，可以不用括号包裹，如果一个参数都没有的话，就要带一个括号()
-let hd = [1, 2, 3, 4, 5, 6].filter(value => {return value <= 3;});
-//第二步优化：如果只有一行的表达式，可以不加花括号，return和分号
-let hd = [1, 2, 3, 4, 5, 6].filter(value => value <= 3);  
-//虽然没有加return，但是要知道会进行return
 ```
 
-箭头函数看起来非常简洁，但是箭头函数不是万能的，它也有缺点，它不能完全的替代传统的function关键字，比如说在递归函数（箭头函数没有函数名字，在做递归回调处理的时候也是不方便的），构造函数和事件处理器的时候，是不方便使用箭头函数的，因为那个时候要考虑作用域和this关键词
+具体例子：
 
-箭头函数没有自己的 this，它们不适合定义对象方法
+```js
+let hd = [1, 2, 3, 4, 5, 6].filter(function(value) {
+    return value <= 3;
+});
+// 箭头函数
+let hd = [1, 2, 3, 4, 5, 6].filter((value) => {return value <= 3;});
+// 第一步优化：如果只有一个参数时，可以不用括号包裹，如果一个参数都没有的话，就要带一个括号()
+let hd = [1, 2, 3, 4, 5, 6].filter(value => {return value <= 3;});
+// 第二步优化：如果只有一行的表达式，可以不加花括号，return和分号
+let hd = [1, 2, 3, 4, 5, 6].filter(value => value <= 3);  
+// 虽然没有加return，但是要知道会进行return
+```
 
-箭头函数未被提升，它们必须在使用前进行定义
+箭头函数看起来非常简洁，但是箭头函数不是万能的，它也有缺点，它不能完全的替代传统的`function`关键字，比如说在递归函数（箭头函数没有函数名字，在做递归回调处理的时候也是不方便的），构造函数和事件处理器的时候，是不方便使用箭头函数的，因为那个时候要考虑作用域和`this`关键词
 
-箭头函数形式函数自调用（立即执行函数）：`(()=>{})()`
+- 箭头函数没有自己的 `this`，它们不适合定义对象方法
+
+- 箭头函数未被提升，它们必须在使用前进行定义
+
+- 箭头函数形式函数自调用（立即执行函数）：`(()=>{})()`
+
 
 #### 递归函数
 
 递归的原理：不断重复的做一件事情，同时找到一个合适的时机去退出递归的过程
 
-递归的应用（一般用于重复数量不定的情况）：数的阶乘：
+递归的应用（一般用于重复数量不定的情况），如数的阶乘：
 
 ```js
-function factorial(num){
+function factorial(num) {
     if(num == 1){
         return 1;
     }
     return num * factorial(num - 1);
 }
-//函数精简：
-function factorial(num){
+// 函数精简：
+function factorial(num) {
     return num == 1 ? 1 : num * factorial(--num);
 }
-console.log(factorial(5));  //120
+console.log(factorial(5));  // 120
 ```
 
 ```js
-//通过递归来进行求和
+// 通过递归来进行求和
 function sum(...args){
     if(args.length == 0){
         return 0;
     }
     return args.pop() + sum(...args);
 }
-console.log(sum(1, 2, 3)); ///6
+console.log(sum(1, 2, 3)); // 6
 ```
 
 #### 回调函数
