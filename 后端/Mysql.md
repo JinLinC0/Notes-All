@@ -37,6 +37,8 @@
 
 ### 数据库管理操作
 
+#### 数据库相关
+
 - 创建数据库：`create database 数据库的名称;`
 
   > 在创建语句中，我们可以指定字符集，如`create database 数据库的名称 charset utf8;`
@@ -50,6 +52,28 @@
 - 查看数据库：`show databases;`
 - 使用数据库：`use 数据库的名称;`
 - 删除数据库：`drop database if exits 数据库名称;`
+
+#### 表相关
+
+- 创建表：`CREATE TABLE 数据表的名称 (id int PRIMARY KEY AUTO_INCREMENT, cname varchar(30) not null, description varchar(100) null);`
+
+  > 上述创建的数据表有3个表字段，`id`、`cname`和`description`
+  >
+  > - `id`是`int`数字类型；同时是一个主键（主键查找的速度比较快），通过`PRIMARY KEY`声明；`AUTO_INCREMENT`表示设置数据自增（随着数据条目的增加，`id`的值是自增的，保证`id`值的唯一性）
+  > - `varchar`表示字符串类型的数据结构，30和100表示设置字符串的最大长度
+  > - `not null`表示设置输入的内容不能为空（必填项），`null`表示输入的内容可以为空
+
+- 查看当前数据库中的表：`desc 数据表的名称`
+
+  ![image-20241128171201609](..\images\image-20241128171201609.png)
+
+  删除表：`drop table if EXISTS 数据表的名称`
+
+  > `if EXISTS`这条语句建议加上，如果数据表不存在时，有这条语句后台是不会报错的
+
+当我们使用数据库软件的时候，比如`Navicat`时，我们想要通过命令行进行数据库的操作，我们可以点击左上角的新建查询按钮，选择相应的数据库连接和数据库，输入相关代码（在一行语句结束的时候一定要以分号进行结尾），点击运行即可
+
+
 
 ***
 
@@ -67,3 +91,57 @@ show databases;
 在命令行进行数据库文件的导入：`mysql -uroot -p < mysql.sql`
 
 我们也可以先进入数据库，在通过`source mysql.sql`进行导入
+
+
+
+## 问题记录
+
+- 2024/11/28
+
+  问题详情：忘记`mysql`中安装时，自定义的`root`密码
+
+  问题解读：这种情况我们需要对`mysql`进行重置密码操作
+
+  问题解决：针对于`MySQL Server 8.0`这个版本
+
+  1. 以管理员的权限打开`cmd`，关闭`mysql`服务：`net stop MySQL80`
+
+     可以在任务管理器的服务和应用程序中进行查看，是否关闭`mysql`服务（也可以在服务里面手动关闭）
+
+  2. 在以管理员权限启动的`cmd`中输入：`mysqld --console --skip-grant-tables --shared-memory`   
+
+     当出现光标停留在最后一行闪动，则运行成功
+
+     这一步可能会出现两个问题：
+
+     - 报错：`'mysqld' `不是内部或外部命令，也不是可运行的程序
+
+       这个问题可以到`mysql`安装目录的`bin`目录下进行运行，也可以将`mysqld`添加到环境变量中
+
+     - 如果进程直接结束了，且光标没有停留在最后闪动
+
+       一般是因为以前安装`MySQL`的时候自定义了安装路径，导致安装目录下没有`Data`文件夹
+
+       我们需要将`C:\ProgramData\MySQL\MySQL Server 8.0`路径下的`Data`文件夹剪切到`Mysql`的安装目录中（与`bin`文件同级）（记得后续修改完密码，重新启动前，将其剪切回去）
+
+  3. 再次以管理员身份打开一个新的`cmd`窗口（第一个`cmd`窗口无法进行操作）
+
+     1. 输入`mysql -u root -p`
+
+     2. 不用输入密码，直接敲回车进入mysql命令行
+
+     3. 输入`use mysql;`
+
+     4. 输入`flush privileges;`
+
+     5. 输入`alter user root@localhost identified by 'password';`
+
+        其中，`password` 换成自己想要的密码
+
+     6. 输入`exit`，退出`mysql`
+
+  4. 将`Data`文件剪切回去
+
+  5. 打开`MySQL`服务，输入`net start MySQL80`
+
+  6. 输入`mysql -u root -p`，回车后输入修改后的密码即可登录

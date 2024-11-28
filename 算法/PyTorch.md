@@ -324,3 +324,19 @@ y.backward()
 ![image-20241017212256315](..\images\image-20241017212256315.png)
 
 > `b.grad`每一次是1，上面因为执行的8次，所以变成了8
+
+
+
+
+
+### 问题记录
+
+- 2024/11/28
+
+  问题详情：`AttributeError: 'TextModel' object has no attribute 'config'`
+
+  问题解读：在`TextModel`这个类下，没有`self.config`这个属性，但是后续的方法中又使用到了这个属性，由于缺少属性导致的报错
+
+  问题解决：根据实际情况将这个类属性加上即可
+
+  
