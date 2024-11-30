@@ -55,11 +55,13 @@
 
 #### 表相关
 
+##### 创建表和插入数据
+
 - 创建表：`CREATE TABLE 数据表的名称 (id int PRIMARY KEY AUTO_INCREMENT, cname varchar(30) not null, description varchar(100) null);`
 
   > 上述创建的数据表有3个表字段，`id`、`cname`和`description`
   >
-  > - `id`是`int`数字类型；同时是一个主键（主键查找的速度比较快），通过`PRIMARY KEY`声明；`AUTO_INCREMENT`表示设置数据自增（随着数据条目的增加，`id`的值是自增的，保证`id`值的唯一性）
+  > - `id`是`int`数字类型；同时是一个主键（主键查找的速度比较快），通过`PRIMARY KEY`声明；`AUTO_INCREMENT`表示设置数据自增（随着数据条目的增加，`id`的值是自增的，保证`id`值的唯一性）主键在添加数据的时候我们一般不用管，它会自己进行维护，来一条数据自增一下（但是删除完对应的数据，id不会在后续继续使用，为了保证唯一性）
   > - `varchar`表示字符串类型的数据结构，30和100表示设置字符串的最大长度
   > - `not null`表示设置输入的内容不能为空（必填项），`null`表示输入的内容可以为空
 
@@ -71,9 +73,99 @@
 
   > `if EXISTS`这条语句建议加上，如果数据表不存在时，有这条语句后台是不会报错的
 
-当我们使用数据库软件的时候，比如`Navicat`时，我们想要通过命令行进行数据库的操作，我们可以点击左上角的新建查询按钮，选择相应的数据库连接和数据库，输入相关代码（在一行语句结束的时候一定要以分号进行结尾），点击运行即可
+为数据表添加数据，通过命令行进行为数据表插入数据
+
+- 插入一条数据：
+
+  `INSERT INTO 数据库的名称 set cname = 'mysql', description = '学习mysql数据库';`
+
+- 插入多条数据：
+
+  `INSERT INTO class (cname, description) VALUES('Linux', '服务器知识'), ('git', null);`
+
+> 当然，我们也可以直接在图形化界面中为数据表插入一条数据，在单元格中输入数据，最后点击保存
+
+##### 根据其他表来快速的生成一张表
+
+- 首先要创建一张表，同时说明这个新表的表结构来源于哪张旧表
+
+  `create table 创建的新数据表名称 like 旧数据表的名称;`
+
+  > `like`可以理解于数据结构来源于哪张旧表，这样创建的新表会和旧表有着一样的数据表字段和类型
+
+- 有时我们想要在创建相同表结构的基础上还要将数据也复制过来，可以通过以下的方式：
+
+  `insert into 创建的新数据表名称 select * from 旧数据表的名称;`
+
+  > `select`表示查询操作；*表示所有字段；
+  >
+  > 有时候我们可能不想要所有的字段，我们只想要其中一个字段的数据，可以将代码进行以下的修改：
+  >
+  > - `insert into 创建的新数据表名称(cname) select cname from 旧数据表的名称;`
+
+- 我们也可以将上述两个步骤合成一个，在创建的表的时候，使数据连同一起过来
+
+  `CREATE TABLE 创建的新数据表名称 select * from 旧数据表的名称;`
+
+  也可以创建新表的时候拿一部分字段的数据：
+
+  `CREATE TABLE 创建的新数据表名称 (id int PRIMARY KEY AUTO_INCREMENT, cname varchar(30)) select cname from 旧数据表的名称;`
+
+  当我们新表的字段名称和旧数据表的名称不同时，我们需要进行如下的修改：
+
+  `CREATE TABLE 创建的新数据表名称 (id int PRIMARY KEY AUTO_INCREMENT, name varchar(30)) select cname as name from 旧数据表的名称;`
+
+##### 查询表
+
+查询表通过`SELECT`方式进行查询，具体的方式如下所示：
+
+- `SELECT * FROM 要查询的数据表;`
+
+  > `*`表示查询所有的字段
+
+- 根据需要查询数据表中指定的字段：`SELECT cname, id FROM 要查询的数据表;`
+
+  > 最后查询的结果返回也是根据查询时输入的字段顺序进行返回的（`cname`这一列字段在`id`这一列字段前面），有时候在多表关联的查询的时候，会出现同名的字段，这个时候就需要进行别名的设置：
+  >
+  > `SELECT cname, id as ids FROM 要查询的数据表;`
+  >
+  > 这时查询返回的字段名就是`cname`和`ids`
+
+- 我们在实际查询操作的时候，往往是不会把一张表的所有数据都进行查询的（可能数据表的数据非常大，都拿出来不现实），我们一般使用基于条件的筛选查询（结果返回的是符合这个筛选条件的所有数据条目）：
+
+  - 根据某个字段的数值大小进行筛选：`SELECT * FROM 数据表的名称 WHERE id > 2;`
+
+  - 根据某个字段的内容进行查询筛选：`SELECT * FROM 数据表的名称 WHERE cname = 'mysql';`
+
+  - 查找字段中包含某个元素的内容：`SELECT * FROM 数据表的名称 WHERE description like '%l%';`
+
+    > 但是在实际应用中，`like`的搜索性能会有一定的差异，我们一般使用一些第三方的搜索，包括使用一些云主机的搜索，这些的搜索功能比较强悍
+
+  上述的筛选条件进行组合在一起进行查找筛选，找到同时满足条件的数据：
+
+  `SELECT * FROM 数据表的名称 WHERE description not like '%l%' and id > 2;`
+
+  > `not`表示非；`and`表示与
+
+- 在有的时候，我们需要将多个列的结果进行合并返回，我们可以使用连接函数进行连接：
+
+  `SELECT CONCAT(cname, description) as class_info from 数据表的名称;`
+
+  > 一般情况下，我们需要为其起别名，不然返回的字段是这整个连接函数的内容，会过于长了
+
+###### 关联查询
+
+在此基础上我们先新建另一个班级数据表：
+
+`CREATE TABLE stu (id int PRIMARY key AUTO_INCREMENT, sname char(10), class_id int DEFAULT null, age SMALLINT not null);`
+
+在新建的学生表中插入一些基本的数据：
+
+`INSERT INTO stu(sname, class_id, age) VALUES('小明', 1, 22), ('小红', 2, 23), ('小亮', 3, 24), ('小白', null, 22);`
 
 
+
+当我们使用数据库软件的时候，比如`Navicat`时，我们想要通过命令行进行数据库的操作，我们可以点击左上角的新建查询按钮，选择相应的数据库连接和数据库，输入相关代码（在一行语句结束的时候一定要以分号进行结尾），点击运行即可，同时我们要知道`SQL` 的关键字和函数名不区分大小写
 
 ***
 
