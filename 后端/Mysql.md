@@ -145,7 +145,9 @@
 
   `SELECT * FROM 数据表的名称 WHERE description not like '%l%' and id > 2;`
 
-  > `not`表示非；`and`表示与
+  > `not`表示非；`and`表示与；`or`表示或
+  >
+  > `%l%`表示查找任何位置出现内容`l`；`%l`表示查找以`l`结尾的内容；`l%`表示查找以`l`开始的内容
 
 - 在有的时候，我们需要将多个列的结果进行合并返回，我们可以使用连接函数进行连接：
 
@@ -153,7 +155,9 @@
 
   > 一般情况下，我们需要为其起别名，不然返回的字段是这整个连接函数的内容，会过于长了
 
-###### 关联查询
+###### 关键字查询
+
+关键字查询中的关键字包括：`between`，`like`，`in`等等
 
 在此基础上我们先新建另一个班级数据表：
 
@@ -161,11 +165,66 @@
 
 在新建的学生表中插入一些基本的数据：
 
-`INSERT INTO stu(sname, class_id, age) VALUES('小明', 1, 22), ('小红', 2, 23), ('小亮', 3, 24), ('小白', null, 22);`
+`INSERT INTO stu(sname, class_id, age) VALUES('小明', 1, 22), ('小红', 2, 23), ('小亮', 2, 24), ('小白', null, 22);`
 
+- 查找哪些班级有学生：`SELECT DISTINCT class_id FROM stu;`
 
+  > `DISTINCT`的作用是去重，返回有学生的班级，班级不应该重复出现
 
-当我们使用数据库软件的时候，比如`Navicat`时，我们想要通过命令行进行数据库的操作，我们可以点击左上角的新建查询按钮，选择相应的数据库连接和数据库，输入相关代码（在一行语句结束的时候一定要以分号进行结尾），点击运行即可，同时我们要知道`SQL` 的关键字和函数名不区分大小写
+- 查找年龄在18到23之间的数据，有以下的两种写法：
+
+  `SELECT * FROM stu WHERE age >= 18 AND age <= 23;`
+
+  `SELECT * FROM stu WHERE age BETWEEN 18 AND 23;`
+
+- 查询学生班级在1班或者2班的数据，有以下的两种写法：
+
+  `SELECT * FROM stu WHERE class_id = 1 OR class_id = 2;`
+
+  `SELECT * FROM stu WHERE class_id in(1, 2);`
+
+##### `Mysql`对`NULL`的处理技巧
+
+空不能和任何的值相比较，如`stu`数据表单，我们通过`SELECT * FROM stu WHERE class_id = null;`是查询不到内容的（虽然在插入语句中有一条数据的`class_id`的内容为`null`）
+
+针对这个问题，`Mysql`提供了相应的关键字：`SELECT * FROM stu WHERE class_id is null;`这样我们就可以查询到`('小白', null, 22)`这条记录
+
+小案例：对于查询`stu`表的所有数据，如果有班级就显示班级的编号，如果班级字段的内容为`null`，就显示班级未分配：
+
+```mysql
+-- 方式一
+SELECT sname, if(class_id, class_id, '未分配')，age from stu;
+-- 方式二
+SELECT sname, ifnull(class_id, '未分配'), age from stu;
+```
+
+##### 排序操作
+
+我们可以对数据表中的某个字段进行排序操作：
+
+对`stu`数据表中的年龄字段进行从大到小进行排序：`SELECT sname, age FROM stu order by age desc;`
+
+> 对于排序：`desc`表示降序（从大到小）；`asc`表示升序（从小到大）
+>
+> `null`表示最小，如果升序排序，会出现在最前面
+
+小案例：对于班级进行升序排序，如果班级相同则通过年龄进行升序排序：
+
+```mysql
+SELECT * FROM stu order by class_id asc, age asc;
+```
+
+> 排序可以指定多个字段
+>
+> 同时对于返回的数据条目，我们可以指定个数进行展示，下面例子表示取一条排序后（最顶部）的数据
+>
+> `SELECT * FROM stu order by class_id asc limit 1;`
+>
+> 也可以用如下的方式进行写：`SELECT * FROM stu order by class_id asc limit 1,1;`
+>
+> `limit`也可以接收两个参数，第一个表示从哪一个开始，第二个表示取几条数据
+
+当我们使用数据库软件的时候，比如`Navicat`时，我们想要通过命令行进行数据库的操作，我们可以点击左上角的新建查询按钮，选择相应的数据库连接和数据库，输入相关代码（在一行语句结束的时候一定要以分号进行结尾），点击运行即可，同时我们要知道`SQL` 的关键字和函数名不区分大小写；`SQL`语句注释是在语句前面加`--`
 
 ***
 
