@@ -216,13 +216,48 @@ SELECT * FROM stu order by class_id asc, age asc;
 
 > 排序可以指定多个字段
 >
-> 同时对于返回的数据条目，我们可以指定个数进行展示，下面例子表示取一条排序后（最顶部）的数据
+> 同时对于返回的数据条目，我们可以指定个数进行展示，下面例子表示取输入的最后一条数据（先进行降序排序，在进行`limit`取选取一条数据）
 >
 > `SELECT * FROM stu order by class_id asc limit 1;`
 >
-> 也可以用如下的方式进行写：`SELECT * FROM stu order by class_id asc limit 1,1;`
+> 也可以用如下的方式进行写：`SELECT * FROM stu order by class_id asc limit 0,1;`
 >
-> `limit`也可以接收两个参数，第一个表示从哪一个开始，第二个表示取几条数据
+> `limit`也可以接收两个参数，第一个表示从哪一个开始，第二个表示取几条数据，如`limit 0, 2`表示取第一条和第二条数据（从第一条数据开始取，取两个）
+
+##### 更新表数据
+
+我们更新表数据一般使用`UPDATE`关键字，更新一般是需要加上条件的，不然就会将这张表中要更新的字段内容全部修改了
+
+- 将`stu`数据表中`class_id`为空的字段设置为`class_id`为2：
+
+  `UPDATE stu SET class_id = 2 WHERE class_id is NULL;`
+
+- 将年龄小于22岁的人员班级设置为班级1：
+
+  `UPDATE stu SET class_id = 1 WHERE age < 22;`
+
+##### 删除表数据
+
+我们删除表中的数据一般使用`DELETE`关键字，删除条目一般也是需要加上条件的
+
+- 删除班级为`null`的这条数据：`DELETE FROM stu WHERE class_id is NULL;`
+- 删除最后报名的两个学生：`DELETE FROM stu order by id desc limit 2;`
+
+##### 修改数据表的结构
+
+修改数据表的结构是一个相对低频的操作，一般在确定表后，都很少进行其结构的修改，但是也需要了解一下表结构修改的`SQL`语句
+
+- 修改数据表的名称，将数据表`stu`的名字修改为`stus`，有以下的两种方式：
+
+  - `ALTER TABLE stu RENAME stus;` 
+
+  - `RENAME TABLE stu to stus;`
+
+- 创建一个备份表，将一张数据表进行备份：`CREATE TABLE stu_bak SELECT * FROM stu;`
+
+- 修改数据表的字符集：字符集一般是在创建表的时候确定的，后续不会轻易修改的，但也可以修改：
+
+  `ALTER TABLE stu charset gbk;`    将字符集改为`gbk`的形式
 
 当我们使用数据库软件的时候，比如`Navicat`时，我们想要通过命令行进行数据库的操作，我们可以点击左上角的新建查询按钮，选择相应的数据库连接和数据库，输入相关代码（在一行语句结束的时候一定要以分号进行结尾），点击运行即可，同时我们要知道`SQL` 的关键字和函数名不区分大小写；`SQL`语句注释是在语句前面加`--`
 
