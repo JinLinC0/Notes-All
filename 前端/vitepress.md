@@ -73,5 +73,53 @@ themeConfig: {
 
 文档的定制主要涉及到两个方面，第一个部分是右上方的导航栏，另一部分是左侧的侧边栏
 
-导航栏在`config.mts`中的体现是`nav`配置项，但是我们一般要将导航栏的配置移除`config`配置文件，采用引入的方式进行导入，防止配置文件过于杂乱，一般在`.vitepress`文件下创建`nav.ts`文件
+导航栏在`config.mts`中的体现是`nav`配置项，但是我们一般要将导航栏的配置移除`config`配置文件，采用引入的方式进行导入，防止配置文件过于杂乱，一般在`.vitepress`文件下创建`nav.ts`文件，其内容为：
 
+```ts
+export default [
+    { text: 'Home', link: '/' },
+    // 可以进行嵌套，使其有子菜单
+    { 
+        text: '前端',
+        items: [
+            { text: 'html', link: '/html/基础知识' },
+        ]
+    }
+]
+```
+
+我们需要在`config.mts`文件中将其引入进来：`import nav from './nav'`
+
+侧边栏同理，我们也应该将其抽离出去，单独写成`sidebar.ts`文件，使配置文件更加简洁
+
+侧边栏是用于同一个文件（笔记）具体章节的跳转的，基本配置如下：
+
+```ts
+export default {
+    '/html/': [
+        {
+            text: 'html',
+            items: [
+                { text: '基础知识', link: '/html/基础知识' },
+                { text: '其他知识', link: '/html/其他知识' },
+            ]
+        }
+    ]
+}
+```
+
+***
+
+### 站内搜索
+
+我们可以在配置文件`config.mts`中添加启用本地搜索：
+
+```ts
+themeConfig: {
+    search: {
+        provider: 'local'
+    },
+}
+```
+
+搜索是搜索静态内容，搜索到关键词所在的标题段落
