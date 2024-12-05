@@ -278,10 +278,6 @@ X, y
 
   
 
-
-
-## 自动求导机制
-
 前向传播理解起来比较容易，但是反向传播理解起来是比较困难的，在反向传播中，我们一般需要对每个参数进行求导（对矩阵w进行逐层的求导），我们对矩阵进行求导往往难度是比较大的，这就需要使用`PyTorch`中的自动求导机制，帮我们将反向传播全部计算好了，我们只需要将时间放在，怎么设计网络，怎么构建网络模型即可
 
 ![image-20241017210602890](..\images\image-20241017210602890.png)
@@ -327,9 +323,68 @@ y.backward()
 
 
 
+## 模型的检查点
+
+在机器学习和深度学习中，`checkpoint`（检查点）是指在模型训练过程中保存的模型状态，这些检查点通常包括模型的参数（权重和偏置）、优化器状态和其他相关的训练信息，可以在训练过程中定期保存模型的当前状态，以便在需要时恢复训练或用于模型评估和推理
+
+使用`checkpoint`可以防止数据丢失、调试和优化、模型的评估和推理和迁移学习等等
+
+一个典型的检查点通常包含以下内容：
+
+1. 模型权重：模型的所有参数，包括权重和偏置
+2. 优化器状态：优化器的状态，包括动量、学习率等
+3. 训练状态：当前的训练轮数（`epoch`）、批次（`batch`）编号等
+4. 其他元数据：如学习率调度器的状态、自定义指标等
+
+### 创建检查点
+
+在`PyTorch`中，可以使用`torch.save`函数保存检查点：
+
+```py
+import torch
+
+# 假设有一个模型和优化器
+model = ...
+optimizer = ...
+
+# 训练循环中的某个点
+checkpoint = {
+    'model_state_dict': model.state_dict(),
+    'optimizer_state_dict': optimizer.state_dict(),
+    'epoch': epoch,
+    'loss': loss
+}
+
+# 保存检查点
+torch.save(checkpoint, 'checkpoint.pth')
+```
+
+***
+
+### 加载检查点
+
+要恢复训练或进行推理，可以使用 `torch.load` 和 `load_state_dict` 函数：
+
+```py
+# 加载检查点
+checkpoint = torch.load('checkpoint.pth')
+
+# 恢复模型和优化器状态
+model.load_state_dict(checkpoint['model_state_dict'])
+optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+
+# 恢复训练状态
+epoch = checkpoint['epoch']
+loss = checkpoint['loss']
+
+# 如果是恢复训练，可以从保存的epoch继续
+for epoch in range(epoch, num_epochs):
+    # 继续训练
+```
 
 
-### 问题记录
+
+## 问题记录
 
 - 2024/11/28
 
