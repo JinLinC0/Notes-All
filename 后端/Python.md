@@ -1636,6 +1636,138 @@ s=sys.stdin.readlines()
 
 
 
+## 语义操作系统
+
+`os`，又叫语义操作系统，管理着操作系统的相关功能，用于处理文件和目录这些我们日常需要手动完成的操作
+
+`os`是`python`中的一个包，使用的时候需要进行导入：`import os`
+
+`os`下面有很多函数，调用方式一般为`os.name`，其中比较特殊的是`path`，`path`模块是`os`的一个子模块，下面又有很多的函数，调用方式一般为`os.path.isfile`
+
+我们可以通过下面的两种方式进行具体函数的查看：
+
+```python
+# 查看os下的函数
+print(dir(os))
+# 查看os.path下的函数
+print(dir(os.path))
+```
+
+### 常见函数
+
+|      函数       |                             描述                             |                  具体使用                   |
+| :-------------: | :----------------------------------------------------------: | :-----------------------------------------: |
+|   `os.name()`   | 显示当前使用的平台，`'nt'`表示`Windows`，`'posix'` 表示`Linux` |                  `os.name`                  |
+|  `os.getcwd()`  |                    返回当前进程的工作目录                    |                `os.getcwd()`                |
+|  `os.chdir()`   |              改变当前工作目录到指定的路径`path`              |              `os.chdir(path)`               |
+| `os.makedirs()` | 用于递归创建目录，可以指定创建目录的用户权限设置，默认为`0o777`（十六进制）的权限，表示所有者，所属者和其他用户都有读、写和执行权限 |       `os.makedirs(path, mode=0o777)`       |
+|  `os.mkdir()`   |     以数字权限模式创建目录，默认的模式为 `0777 `(八进制)     |         `os.mkdir(path, mode=0777)`         |
+| `os.listdir()`  |        列出目录下的所有文件和文件夹，以数组的形式返回        |             `os.listdir(path)`              |
+|  `os.remove()`  | 用于删除指定路径的文件，如果指定的路径是一个目录，将抛出`OSError`异常 |              `os.remove(path)`              |
+|  `os.rename()`  | 命名文件或目录，能对相应的文件进行重命名，`src`表示要修改的目录/文件名；`dst`表示修改后的目录/文件名 |            `os.rename(src, dst)`            |
+| `os.renames()`  | 用于递归重命名目录或文件（目录和文件可以同时进行改名）,类似`rename()`，既可以重命名文件, 也可以重命名文件的上级目录名 | `os.renames("dist/test.py","DIST/TEST.py")` |
+| `os.linesep()`  | 显示当前平台用于分隔（或终止）行的字符串，如` POSIX` 上是` '\n'`; `Windows` 上是 `'\r\n'` |                `os.linesep`                 |
+| `os.close(fd)`  |        关闭指定的文件描述符，`fd`表示打开文件时的赋值        |               `os.close(fd)`                |
+|   `os.stat()`   |                     获取文件或者目录信息                     |               `os.stat(path)`               |
+|   `os.sep()`    | 显示当前平台下路径分隔符,在 `POSIX`上是` '/'`，在 `Windows` 上是` '\'` |                  `os.sep`                   |
+
+***
+
+### 子函数`path`中常见的函数
+
+|           函数           |                             描述                             |             具体使用             |
+| :----------------------: | :----------------------------------------------------------: | :------------------------------: |
+|   `os.path.abspath()`    |                      返回文件的绝对路径                      |     `os.path.abspath(path)`      |
+|   `os.path.basename()`   |        返回文件名，纯粹字符串处理逻辑，路径错误也可以        |     `os.path.basename(path)`     |
+| `os.path.commonprefix()` | 返回`list`(多个路径)中，所有`path`共有的最长的路径，`list`是数组的形式 |   `os.path.commonprefix(list)`   |
+|   `os.path.dirname()`    |     返回文件路径，文件在哪个文件夹下，返回该文件夹的路径     |     `os.path.dirname(path)`      |
+|    `os.path.exists()`    | 如果路径 `path` 存在，返回 `True`；如果路径 `path` 不存在，返回 `False` |      `os.path.exists(path)`      |
+|   `os.path.lexists()`    | 路径存在则返回`True`，路径损坏也返回`True`， 不存在，则返回 `False` |        `os.path.lexists`         |
+|  `os.path.expanduser()`  |         把`path`中包含`~`和`“user”`的转换成用户目录          |            见具体列举            |
+|  `os.path.expandvars()`  |   根据环境变量的值替换`path`中包含的`"$name"`和`"${name}"`   |            见具体列举            |
+|   `os.path.getatime()`   | 返回最近访问时间（浮点型秒数，时时间戳），从新纪元到访问时的秒数 |     `os.path.getatime(path)`     |
+|   `os.path.getmtime()`   |              返回最近文件修改时间，以时间戳返回              |     `os.path.getmtime(path)`     |
+|   `os.path.getctime()`   |                   返回文件路径创建的时间戳                   |     `os.path.getctime(path)`     |
+|   `os.path.getsize()`    |            返回文件大小，如果文件不存在就返回错误            |     `os.path.getsize(path)`      |
+|    `os.path.isabs()`     |                      判断是否为绝对路径                      |      `os.path.isabs(path)`       |
+|    `os.path.isfile()`    |    判断路径指向的是否为文件，文件不存在返回的也是`False`     |      `os.path.isfile(path)`      |
+|    `os.path.isdir()`     |                   判断路径指向的是否为目录                   |      `os.path.isdir(path)`       |
+|     `os.path.join()`     | 把目录和文件名合成一个路径，注意：如果各组件名首字母不包含`’/’`，则函数会自动加上；如果有一个组件是一个绝对路径，则在它之前的所有组件均会被舍弃；如果最后一个组件为空，则生成的路径以一个`’/’`分隔符结尾 |            具体见列举            |
+|   `os.path.normcase()`   |                   转换`path`的大小写和斜杠                   |            具体见列举            |
+|   `os.path.normpath()`   |                     规范`path`字符串形式                     |     `os.path.normpath(path)`     |
+|   `os.path.realpath()`   |                     返回`path`的真实路径                     |     `os.path.realpath(path)`     |
+|   `os.path.samefile()`   |                    判断目录或文件是否相同                    | `os.path.samefile(path1, path2)` |
+|    `os.path.split()`     | 把路径分割成 `dirname`（目录） 和 `basename`（文件），返回一个元组 |            具体见列举            |
+|  `os.path.splitdrive()`  |      一般用在`windows `下，返回驱动器名和路径组成的元组      |            具体见列举            |
+|   `os.path.splitext()`   |            分割路径，返回路径名和文件扩展名的元组            |            具体见列举            |
+|     `os.path.walk()`     |           遍历`path`，进入每个目录都调用visit函数            |            具体见列举            |
+
+复杂形式的列举：
+
+- `os.path.expanduser()`：把`path`中包含`~`和`“user”`的转换成用户目录
+
+  ```python
+  os.path.expanduser('~/Desktop/股票数据分析/')
+  'C:\\Users\\jlc/Desktop/股票数据分析/'
+  ```
+
+- `os.path.expandvars()`：根据环境变量的值替换`path`中包含的`"$name"`和`"${name}"`
+
+  ```python
+  os.environ['KITTIPATH'] = 'D:/thunder'
+  path = '$KITTIPATH/train/date.png'
+  os.path.expandvars(path)
+  'D:/thunder/train/date.png'
+  ```
+
+- `os.path.join()`：把目录和文件名合成一个路径，注意：如果各组件名首字母不包含`’/’`，则函数会自动加上；如果有一个组件是一个绝对路径，则在它之前的所有组件均会被舍弃；如果最后一个组件为空，则生成的路径以一个`’/’`分隔符结尾
+
+  ```python
+  os.path.join('C:/Users','jlc/Desktop/','date.png')
+  'C:/Users\\jlc/Desktop/date.png'
+  ```
+
+- `os.path.normcase()`：转换`path`的大小写和斜杠
+
+  ```python
+  os.path.normcase('D:\Python\test\data.txt')
+  'd:\\python\test\\data.txt'
+  ```
+
+- `os.path.split()`：把路径分割成 `dirname`（目录） 和 `basename`（文件），返回一个元组
+
+  ```python
+  os.path.split('D:\Python\test\data.txt')
+   ('D:\\Python\test', 'data.txt')
+  ```
+
+- `os.path.splitdrive()`：一般用在`windows `下，返回驱动器名和路径组成的元组
+
+  ```python
+  os.path.splitdrive('C:/Users/date.JPG')
+  ('C:', '/Users/date.JPG')
+  ```
+
+- `os.path.splitext()`：分割路径，返回路径名和文件扩展名的元组
+
+  ```python
+  os.path.splitext('C:/Users/date.JPG')
+  ('C:/Users/date', '.JPG')
+  ```
+
+- `os.path.walk(path, visit, arg)`：遍历`path`，进入每个目录都调用`visit`函数，`visit`函数必须有3个参数`(arg, dirname, names)`，`dirname`表示当前目录的目录名，`names`代表当前目录下的所有文件名，`args`则为`walk`的第三个参数
+
+  ```python
+  # 穷举遍历一个文件夹里面的所有文件，并获取文件的目录名
+  abs_cur_dir = 'C:/Users/Desktop/data'
+  file_url = []
+  for dirs, folders, files in os.walk(abs_cur_dir):
+      for i in files:
+          file_url.append(os.path.join(dirs, i))
+  ```
+
+
+
 ## 网络爬虫
 
 网络爬虫需要下载以下相关的库：
