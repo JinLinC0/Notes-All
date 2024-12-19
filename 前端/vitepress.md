@@ -125,3 +125,78 @@ themeConfig: {
 ```
 
 搜索是搜索静态内容，搜索到关键词所在的标题段落
+
+
+
+## 自定义首页
+
+### 首页样式的修改
+
+如果我们需要自定义首页的`css`样式，我们需要在`.vitepress/theme`文件夹下创建两个文件：
+
+- `custom.css`：编写`css`样式，可以覆盖原先默认的`css`样式，如：
+
+  ```css
+  /* 调整 image 模块的样式 */
+  .VPHomeHero .image {
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      transition: transform 0.3s ease;
+  }
+  
+  /* 调整 features 信息框的样式 */
+  .VPHomeFeatures .container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+  }
+  ```
+
+- `index.js`：进行`css`文件的引入，和默认配置的覆盖（将自定义的`css`内容和系统默认的样式进行合并）
+
+  ```js
+  import DefaultTheme from 'vitepress/theme'
+  import './custom.css'
+  
+  export default {
+    ...DefaultTheme,
+  }
+  ```
+
+这样就可以对系统的默认样式进行自定义的修改，但是这种修改只局限于系统存在的模块组件
+
+***
+
+### 引入`Vue`进行模块的自定义
+
+我们可以对`Vitepress`项目的首页进行内容的自定义，可以使用前端框架`Vue`进行模块内容的编写，在此之前，我们需要进行全局的注册，同样在`index.js`文件上进行全局注册：
+
+```js
+import DefaultTheme from 'vitepress/theme'
+import './custom.css'
+import HomeComponent from '../home.vue';
+
+export default {
+  ...DefaultTheme,
+  enhanceApp({ app }) {
+    // 注册全局组件
+    app.component('HomeComponent', HomeComponent);
+  },
+}
+```
+
+注册完后，我们就可以在`home.vue`文件中进行自定义模块的编写
+
+
+
+## 问题记录
+
+- 2024/12/19
+
+  问题详情：终端出现：`The language 'ssh' is not loaded, falling back to 'txt' for syntax highlighting.`的警告
+
+  问题解读：不单单是`ssh`，还有`mysql`都出现了不能加载，原因是代码区域`vitepress`无法识别`ssh`和`mysql`构建的代码区域，使用的`txt`进行代替了
+
+  问题解决：不要使用`ssh`和`mysql`声明代码区域块，对于`mysql`可以使用`sql`进行代替
+
