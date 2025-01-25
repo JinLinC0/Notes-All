@@ -658,7 +658,7 @@ SELECT * FROM stu WHERE flag & 6;
 |   `DAYOFWEEK`    |                星期天（1）到星期六（7）                |
 |    `WEEKDAY`     |                星期一（0）到星期天（6）                |
 |    `TO_DAYS`     |           从元年到现在的天数（忽略时间部分）           |
-|   `FROM_DAYS`    |            根据天数得到日期（忽略时间部分）            |
+|   `FROM_DAYS`    |       根据距离元年的天数得到日期（忽略时间部分）       |
 |  `TIME_TO_SEC`   |              时间转为秒数（忽略日期部分）              |
 |  `SEC_TO_TIME`   |            根据秒数转为时间（忽略日期部分）            |
 | `UNIX_TIMESTAMP` |           根据日期返回秒数（包括日期与时间）           |
@@ -668,9 +668,233 @@ SELECT * FROM stu WHERE flag & 6;
 | `TIMESTAMPDIFF`  |  根据指定单位计算两个日期时间的间隔（包括日期与时间）  |
 |    `LAST_DAY`    |                     该月的最后一天                     |
 
-基本使用：
+基本使用：使用频率比较高的时间处理函数
 
 - 获取时间日期数据的年月日：`SELECT YEAR(birthday), MONTH(birthday), DAY(birthday) from stu;`
+
+  > 通过时间处理函数，可以把时间中的时间信息进行独立和局部的获取
+
+- 获取当前时刻的日期和时间：`SELECT NOW();`
+
+  > 我们也可以进行当前日期和时间的分开获取：`SELECT CURRENT_DATE();`和 `SELECT CURRENT_TIME();`
+
+- 查看给定的日期时间是一年当中的第几天：`SELECT DAYOFYEAR(NOW());`
+
+  > 同理，也可以查看给定的时间是当前月的第几天`DAYOFMONTH`；是当前周的第几天`DAYOFWEEK`（星期六是7，星期天是1）或者使用`WEEKDAY`（星期一是0，星期天是6）
+
+小案例：如果当前时间大于更新时间`publish_time`时，所属条目的状态字段`status`就由0更新到1：
+
+```sql
+update 数据表名称 set status = 1 WHERE status = 0 and publish_time < now();
+```
+
+- 定义变量获取当前的时间：`set @time = time(now());`        输出变量：`select @time;`
+
+- 将时间转化成秒数：`select TIME_TO_SEC(@time);`        `00:00:00`为第0秒
+
+- 也可以将秒数转化回时间：`select SEC_TO_TIME(TIME_TO_SEC(@time));`
+
+- 将当前时间转化为从元年到现在所经过的天数：`select TO_DAYS(now());`
+
+- 查看出生到现在所经过的天数：`select DATEDIFF(now(), birthday) from stu;`
+
+- 根据单位来获取时间差：`select TIMESTAMPDIFF(day, birthday, now()) from stu;`
+
+  > 按天来进行比较，比较两段时间之间相差多少天；也可以按照月来进行比较`month`；可以按照周数`week`；可以按照分钟数据来进行比较`minute`；可以按照秒数来进行比较`second`
+
+- 查找出生年月在某个范围内：
+
+  `SELECT  * from stu WHERE birthday BETWEEN '1995-01-01' AND '2005-01-01';`
+
+- 查找年龄最小的（先降序排列，再取第一个）：
+
+  `SELECT * from stu order by birthday desc limit 1;`
+
+- 查找在2000年出生的学生：`SELECT * from stu WHERE YEAR(birthday) = '2000';`
+
+- 查找20岁以上的学生：`SELECT * from stu WHERE TIMESTAMPDIFF(YEAR, birthday, NOW()) > 20;`
+
+***
+
+### 日期时间的计算
+
+#### 日期时间的提前和推迟
+
+在有的时候，我们需要对日期和时间进行计算，如：在某个时间后面再加几个小时
+
+- 在当前的时间上再加8个小时：
+
+  `SELECT addtime(now(), '08:00:00');`或`SELECT timestamp(now(), '08:00:00');`
+
+- 得到当前日期时间7天之后的日期时间：`SELECT date_add(now(), INTERVAL 7 DAY);`
+
+  > 如果7前面加个负号，就表示获取7天之前的日期时间，也可以使用`date_add`的反函数`date_sub`
+  >
+  > 对于日期时间的提前和推迟，我们不仅可以使用天，也可以使用年月日，时分秒等等
+  >
+  > - 提前或推迟10个小时30分钟：`SELECT date_add(now(), INTERVAL "10:30" HOUR_MINUTE);`
+  > - 提前或推迟3天8小时：`SELECT date_add(now(), INTERVAL "3 8" DAY_HOUR);`
+
+#### 月初月末的计算
+
+- 获得当前日期时间在当前月月末的日期：`SELECT last_day(now());`
+
+- 获取当前日期时间上个月的最后一天的日期时间：`SELECT last_day(date_sub(now(), INTERVAL 1 MONTH));`
+
+- 获取当前日期时间下个月的最后一天的日期时间：`SELECT date_add(last_day(now()), INTERVAL 1 DAY);`
+
+- 获取当前日期时间在当前月月初的日期：`SELECT date_sub(now(), INTERVAL DAYOFMONTH(now())-1 DAY);`
+
+  > `DAYOFMONTH(now())`表示当前日期时间是这个月的第几天
+
+小案例：获取本月发表文章条目：文章的数据表为`article`，包括字段发布时间：`publish_time`
+
+```sql
+SELECT * FROM article
+WHERE publish_time <= last_day(now())
+ADD publish_time >= date_sub(now(), INTERVAL DAYOFMONTH(now())-1 day);
+```
+
+#### 日期对周的控制
+
+在`mysql`中，系统提供了两个常用的函数来实现日期对周的控制：`DAYOFWEEK`（星期天（1）到星期六（7））和`WEEKDAY`（星期一（0）到星期天（6））
+
+获取当前日期所在周星期二的日期：`SELECT date_add(now(), INTERVAL 3-DAYOFWEEK(now()) DAY);`
+
+> 如果想要获得星期三的日期，就使用4减去`DAYOFWEEK(now())`即可
+>
+> 如果使用`WEEKDAY`的方法获得当前日期所在周星期二的日期：`SELECT date_add(now(), INTERVAL 1-WEEKDAY(now()) DAY);`
+
+获取当前日期三周之前星期二的日期：
+
+`SELECT date_sub(date_add(now(), INTERVAL 1-WEEKDAY(now()) DAY), INTERVAL 21 Day);`
+
+***
+
+### 日期时间常见案例
+
+#### 月考勤
+
+查找本月迟到的学生：创建一张考情表`attendance`，包含字段表示打卡时间`created_at`
+
+```sql
+SELECT * FROM attendance WHERE time(created_at) > '08:30:00'
+AND date(created_at) > date(date_sub(now(), INTERVAL DAYOFMONTH(now())-1 DAY));
+```
+
+查找本月迟到超过两次的学生：
+
+```sql
+SELECT stu_id, count(id) FROM attendance WHERE time(created_at) > '08:30:00'
+AND date(created_at) > date(date_sub(now(), INTERVAL DAYOFMONTH(now())-1 DAY))
+GROUP by stu_id
+HAVING count(id) >=2;
+```
+
+#### 周考勤
+
+查找本周迟到的学生：创建一张考情表`attendance`，包含字段表示打卡时间`created_at`
+
+```sql
+SELECT * FROM attendance WHERE time(created_at) > '08:30:00'
+AND date(created_at) > date(date_add(now(), INTERVAL 0-WEEKDAY(NOW()) DAY));
+```
+
+在计算日期时间时，会使用大量的函数，函数在数据库中进行操作时，会为每一条数据都执行函数，比较消耗性能，一般后续都在后端得到具体的日期，再在数据库中进行比对，这样比较高效
+
+
+
+## 排序和统计
+
+### 排序
+
+排序可以对枚举类型，数值类型等进行排序；排序是先拿数据，再对数据做排序处理（因此条件`WHERE`是在排序`ORDER`之前的）
+
+排序是我们对查询到的结果进行排序，排序分为降序（从大到小`DESC`）和升序（从小到大`ASC`）
+
+- 对年龄进行升序排序：`SELECT * FROM stu ORDER BY age ASC;`
+- 对性别进行降序排序，之后再对年龄进行升序排序：`SELECT * FROM stu ORDER BY sex DESC, age ASC;`
+
+对于想要获取最大的数据，我们可以先进行排序，再进行选取一条记录：`LIMIT 1`
+
+根据学生出生的月份进行降序排序：`SELECT sname, birthday, MONTH(birthday) as m FROM stu ORDER BY m DESC;`
+
+#### 随机排序
+
+当我们想要随机获取一些数据，我们可以使用随机函数进行生成：`SELECT RAND();`（为某条数据生成一个字段，字段中是随机数）
+
+我们可以使用随机函数产生的随机顺序进行排序：`SELECT * FROM stu ORDER BY RAND() DESC;`
+
+随机取一条数据：`SELECT * FROM stu ORDER BY RAND() DESC LIMIT 1;`
+
+#### 自定义排序
+
+自定义排序是使用集合进行排序的
+
+`SELECT field('a','f','a','b','c');`  返回的结果为2，表示`a`在集合（`fabc`）中第2个位置出现
+
+使用上述的特性可以进行自定义的排序，如希望某些字段在前面出现
+
+按照学生的姓式进行排序：`SELECT sname, left(sname,1) as s FROM stu ORDER BY FIELD(s, '金') DESC;`
+
+> 将姓金的排在最前面
+>
+> 增加姓式列表：'金'，’李‘，’陈‘，其他不变，那么陈就在最上面，之后是李，最后是金，（s中于金匹配的，结果就为1，s中与李匹配的，结果就是2，经过降序排列，结果大的就在上面，s中的内容如果集合中没有，结果就取0，就放在最后了）
+
+***
+
+### 统计
+
+#### 统计数量
+
+统计是对我们查询到的结果进行的一个汇总，使用函数`count()`进行汇总
+
+- 汇总查询到所有的条目数据：`SELECT count(*) FROM stu;`       查询到几条数据就返回几
+
+- 查询学生表中所有男同学的数量：`SELECT COUNT(*) FROM stu WHERE sex = '男';`
+
+> *表示对所有的记录进行统计
+>
+> 我们可以进行有条件的统计，学生表中有的学生分配了班级，有的学生没有分配班级，我们需要统计分配了班级的学生数量：
+>
+> - 方法一：`SELECT COUNT(*) FROM stu WHERE class_id IS NOT NULL;`
+> - 方法二：`SELECT COUNT(class_id) FROM stu;`      统计明确的字段，在统计的时候是不会记录`NULL`值的
+
+#### 最值
+
+对于最值的获取，我们之前是使用排序并取最上面一个的方式进行获取，但是`mysql`系统提供了两个内置的系统函数：`MIN`和`MAX`
+
+- 获取某字段的最大值：`SELECT MAX(age) FROM stu;`
+- 获取某字段的最小值：`SELECT MIN(age) FROM stu;`
+- 获取年龄最小学生的出生年份：`SELECT year(max(birthday)) from stu;`      出生年份最大，年龄最小
+
+当我们使用分组操作或者聚合函数的时候（统计、最值），如果使用额外的字段，如：`SELECT MIN(age), id FROM stu;`（其中的`id`就是额外的字段），在一些新版的`mysql`中会出现`ONLY_FULL_GROUP_BY`问题
+
+对于这个错误，可以在一些框架的配置文件中进行配置的更改，配置为允许可以使用其他的字段
+
+如果在`sql`命令行中继续操作，我们将`SET sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));`命令放到`SELECT MIN(age), id FROM stu;`命令前执行即可
+
+#### 求和和平均
+
+求和和平均在`mysql`中提供了两个系统函数：`SUM`和`AVG`
+
+- 获取文章总的点击次数：`SELECT SUM(click) FROM article;`
+- 获取文章平均的点击次数：`SELECT AVG(click) FROM article;`
+- 获取小于平均点击数的文章信息：`SELECT * FROM article WHERE click < (SELECT AVG(click) FROM article);`
+
+> `round()`函数表示四舍五入，一般和取平均进行结合使用
+
+#### 去重
+
+在我们获取班级的编号时，往往会出现一些相同的值，这个时候进行去重操作，将相同的过滤掉，我们可以使用关键字`DISTINCT`进行操作：`SELECT DISTINCT class_id FROM stu WHERE class_id is not null;`
+
+##### 组合去重
+
+`SELECT DISTINCT class_id,name FROM stu WHERE class_id is not null;`表示将两个字段（`class_id`和`name`）的内容放到一起进行过滤去重，同一个班级，同一个姓名的内容将会被去重
+
+#### 分组统计
+
+
 
 
 
