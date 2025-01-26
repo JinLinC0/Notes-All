@@ -469,7 +469,9 @@
 
 
 
-## `VSCode`中使用`Git`
+## 常见问题
+
+### `VSCode`中使用`Git`
 
 在`VSCode`中使用`Git`建议先安装两个插件：`Git Graph`和`GitLens`
 
@@ -479,7 +481,7 @@
 
 - `VSCode`分支切换回主分支出现在签出前，请清理仓库工作树的问题：
 
-  由于是修改代码冲突，在VSCode新建或者打开终端，在终端输入：
+  由于是修改代码冲突，在`VSCode`新建或者打开终端，在终端输入：
 
   ```js
   // 先将本地修改存储起来
@@ -508,4 +510,26 @@
   ```
 
   > 在忽略文件中的内容，不管是文件还是文件夹，都不会被进行云端的提交
+
+***
+
+### 同时在`Github`和`Gitee`中进行远程提交
+
+有时候，我们需要将一个文件中的内容即提交到`Github`中，也提交到`Gitee`中，在确保两个在线托管平台中都有对应的仓库后，我们修改我们文件中的`Git`配置文件，修改`.git/config`文件，修改为如下的形式，将两个远程仓库的信息都放入：
+
+```python
+[remote "gitee"]
+	url = git@gitee.com:JinLinC/Notes-All.git
+	fetch = +refs/heads/*:refs/remotes/gitee/*
+[remote "github"]
+	url = git@github.com:JinLinC0/Notes-All.git
+	fetch = +refs/heads/*:refs/remotes/github/*
+```
+
+> - `url`表示托管平台远程仓库的`ssh`地址
+> - `fetch`表示新建一个指定的远程仓库
+
+这样我们在第一次提交的时候，执行`git push -u github master`即可
+
+在后续提交的时候，执行`git push github`
 
