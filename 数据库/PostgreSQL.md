@@ -1,5 +1,7 @@
 # `PostgreSQL`
 
+## 基本概念
+
 `PostgreSQL `是一个功能强大的开源关系型数据库管理系统（`RDBMS`），具有高度可扩展性和标准兼容性。它支持复杂查询、外键、触发器、视图、事务完整性、多版本并发控制（`MVCC`）等高级功能。`PostgreSQL `的设计目标是提供高度可靠性和数据完整性，适用于各种规模的应用程序
 
 - `PostgreSQL` 更适合需要复杂查询、高度可扩展性和标准兼容性的应用场景，如数据分析、地理信息系统（`GIS`）和企业级应用
@@ -7,45 +9,7 @@
 
 
 
-## 远程访问
-
-我们有时需要对`PostgreSQL`数据库进行远程的访问操作，可以通过`python`或者软件`Navicat`进行访问
-
-在访问前需要更改在`D:\postgresql\data`中的`pg_hba`配置文件，在`# IPv4 local connections:`下面加上一行，允许所有`ip`访问的指令：`host all all 0.0.0.0/0 trust`，如下图所示：
-
-![image-20250221153342793](..\images\image-20250221153342793.png)
-
-### 通过`python`远程访问
-
-访问之前需要下载`psycopg2`包
-
-```python
-import psycopg2
-
-# 连接postgresql数据库
-conn = psycopg2.connect(dbname="postgres", user="postgres", password="j13579", host="10.234.75.59", port="5432")
-print("Successfully connected!")
-```
-
-> `dbname`和`user`选择`pgAdmin4`自带的`"postgres"`数据库和用户；
->
-> `password`是安装`PostgreSQL`时设置的密码；
->
-> `host`为`ip`地址，可以通过`cmd`命令行`ipconfig`进行查看，`port`端口为默认的`5432`
-
-***
-
-### 通过`Navicat`远程访问
-
-`Navicat`是一款功能强大的数据库管理工具，支持多种类型的数据库连接，包括`MySQL`、`PostgreSQL`、`Oracle`等。通过`Navicat`我们可以方便地操作整个数据库，并备份和还原整个数据库或单个表
-
-在建立连接时要正确输入`postgresql`数据库的相关信息，确保可以连接成功
-
-通过`Navicat`我们可以快速的查看和管理`postgresql`中存在的数据表单，方便进行远程管理
-
-
-
-## 基本语法
+## 基础语法
 
 ### 数据库管理操作
 
@@ -189,6 +153,44 @@ print("Successfully connected!")
 为所有模式创建一个表：`create table test(id int, name varchar(20));`
 
 执行上述代码后，就多了一个模式`my123`，同时所有模式下都有表`test`
+
+
+
+## 远程访问
+
+我们有时需要对`PostgreSQL`数据库进行远程的访问操作，可以通过`python`或者软件`Navicat`进行访问
+
+在访问前需要更改在`D:\postgresql\data`中的`pg_hba`配置文件，在`# IPv4 local connections:`下面加上一行，允许所有`ip`访问的指令：`host all all 0.0.0.0/0 trust`，如下图所示：
+
+![image-20250221153342793](..\images\image-20250221153342793.png)
+
+### 通过`python`远程访问
+
+访问之前需要下载`psycopg2`包
+
+```python
+import psycopg2
+
+# 连接postgresql数据库
+conn = psycopg2.connect(dbname="postgres", user="postgres", password="j13579", host="10.234.75.59", port="5432")
+print("Successfully connected!")
+```
+
+> `dbname`和`user`选择`pgAdmin4`自带的`"postgres"`数据库和用户；
+>
+> `password`是安装`PostgreSQL`时设置的密码；
+>
+> `host`为`ip`地址，可以通过`cmd`命令行`ipconfig`进行查看，`port`端口为默认的`5432`
+
+***
+
+### 通过`Navicat`远程访问
+
+`Navicat`是一款功能强大的数据库管理工具，支持多种类型的数据库连接，包括`MySQL`、`PostgreSQL`、`Oracle`等。通过`Navicat`我们可以方便地操作整个数据库，并备份和还原整个数据库或单个表
+
+在建立连接时要正确输入`postgresql`数据库的相关信息，确保可以连接成功
+
+通过`Navicat`我们可以快速的查看和管理`postgresql`中存在的数据表单，方便进行远程管理
 
 
 
