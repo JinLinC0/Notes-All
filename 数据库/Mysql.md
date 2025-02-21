@@ -2004,13 +2004,13 @@ Alter table stu add index class_id_status(class_id,status);
 
 通过以下指令开启全局慢查询（重起` Mysql `后需要重新执行）
 
-```routeros
+```txt
 set global slow_query_log='ON';
 ```
 
 设置慢查询时间为 1 妙，即超过 1 秒将会被记录到慢查询日志
 
-```routeros
+```txt
 set session long_query_time=1;
 ```
 
@@ -2018,7 +2018,7 @@ set session long_query_time=1;
 
 通过修改配置 `mysql `配置文件` my.cnf` 来开启全局慢查询配置，在配置文件中修改以下内容
 
-```ini
+```txt
 slow_query_log = ON
 slow_query_log_file = /usr/local/mysql/data/slow.log
 long_query_time = 1
@@ -2026,7 +2026,7 @@ long_query_time = 1
 
 重起 MYSQL 服务
 
-```ebnf
+```txt
 service mysqld restart
 ```
 
