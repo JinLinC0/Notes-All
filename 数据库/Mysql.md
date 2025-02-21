@@ -890,11 +890,457 @@ AND date(created_at) > date(date_add(now(), INTERVAL 0-WEEKDAY(NOW()) DAY));
 
 ##### 组合去重
 
-`SELECT DISTINCT class_id,name FROM stu WHERE class_id is not null;`表示将两个字段（`class_id`和`name`）的内容放到一起进行过滤去重，同一个班级，同一个姓名的内容将会被去重
+`SELECT DISTINCT class_id,name FROM stu WHERE class_id is not null;`表示将两个字段（`class_id`和`name`）的内容放到一起进行过滤去重，只有同一个班级和同一个姓名的内容将会被去重，即将两个重复的归类到一组
 
 #### 分组统计
 
+比如我们要统计每个班级有多少个学生，这个时候就需要使用到分组统计的方式：先使用班级编号进行分组，再进行统计，具体语句如下：
 
+```sql
+SELECT count(class_id),class_id from stu GROUP BY class_id;
+```
+
+统计每个班级年龄最大的学生，即出生年月最小的：
+
+```sql
+SELECT min(birthday),class_id from stu GROUP BY class_id;
+```
+
+在分组统计的时候可以进行条件的添加，如条件每个班级中有多少个男同学：
+
+```sql
+SELECT count(class_id),class_id from stu WHERE sex = '男' GROUP BY class_id;
+```
+
+总而言之，`GROUP BY`是对查询结果进行分组，总是出现在`WHERE`条件的后面
+
+##### 多字段的分组
+
+多字段的分组表示分组的条件不单单只有一个，如在按照班级分组的同时，又要按照性别进行分组，如：
+
+```sql
+SELECT count(*),class_id,sex from stu GROUP BY class_id,sex;
+```
+
+> 统计每个班男生有几个，女生有几个
+
+使用多字段分组进行统计，是按照对应字段的先后依次进行统计的
+
+对统计完的分组进行排序，排序的位置是在分组后面，要先分组再进行排序
+
+```sql
+SELECT count(*),class_id,sex from stu GROUP BY class_id,sex ORDER BY class_id desc;
+```
+
+> 将分组的内容根据`class_id`进行大到小排序
+
+##### 筛选分组
+
+对分组的结果进行筛选，要使用`HAVING`方法，原先的`WHERE`条件是对查询到的结果进行筛选
+
+```sql
+SELECT count(*),class_id from stu GROUP BY class_id HAVING count(*)>=2;
+```
+
+> 对班级进行分组，并筛选出每组中人数大于等于2的组别
+>
+> 分组筛选用于筛选出一部分满足条件的组
+
+查询本周迟到超过2次的同学信息：
+
+```sql
+SELECT count(*) as c stu_id FROM stu 
+WHERE date(created_at)>=date(date_add(now(),interval 0-WEEKDAY(now()) day)) 
+AND time(create_at)>'08:30:00'
+GROUP BY stu_id HAVING c>=2;
+```
+
+查询哪个同学本周准时到校次数最多：
+
+```sql
+SELECT count(*) as c stu_id FROM stu 
+WHERE date(created_at)>=date(date_add(now(),interval 0-WEEKDAY(now()) day)) 
+AND time(create_at)<='08:30:00'
+GROUP BY stu_id ORDER BY c desc limit 1;
+```
+
+查找本周哪天迟到的学生最多的数据：
+
+```sql
+SELECT * FROM stu 
+WHERE date(created_at)>=date(date_add(now(),interval 0-WEEKDAY(now()) day)) 
+AND time(create_at)>'08:30:00'
+GROUP BY create_at ORDER BY count(*) desc limit 1;
+```
+
+查找哪个姓氏的学生最多：
+
+```sql
+SELECT left(sname, 1) as s from stu
+GROUP BY s ORDER BY count(*) desc limit 1;
+```
+
+> 先对查询结果进行筛选，筛选完后进行分组，再按照每一组的人数进行排序，取最多的一个
+
+查询超过2个同学的姓氏：
+
+```sql
+SELECT left(sname, 1) as s from stu
+GROUP BY s HAVING count(*)>=2;
+```
+
+
+
+## 多表操作
+
+### 多表关系
+
+数据表的关系有：
+
+- 一对一的关系
+
+  学生表，学生详情资料表，一个学生对应详情表中的一条数据，有且只有一条，学生表中方的`id`与详情表中的`stu_id`对应做表语表的联系
+
+  有一个主表，一个从表，详情数据太多的情况下，我们可以将表字段进行切分，移动到另一张表中（从表）
+
+- 一对多的关系
+
+  学生和班级的关系：一个学生对应一个班级，一个班级可以对应多个学生
+
+  多的一方来记录少的一方，学生表中有个字段记录班级编号即可
+
+- 多对多的关系
+
+  学生和课程的关系：学生可以学多个课程，一个课程也可以被多个学生学习
+
+  用中间表来做衔接，记录哪个编号的学生对应哪个课程，同一个编号的学生可以对应多个课程
+
+***
+
+### `Exists`的工作原理
+
+`Exists`类似于过滤，对于满足条件的内容进行筛选，过滤掉我们不需要的内容，使用示例：
+
+```sql
+SELECT * FROM stu s WHERE EXISTS(SELECT * FROM stu WHERE s.id=1);
+```
+
+> `EXISTS()`里面放上我们的过滤条件，只要这个条件有结果，那这个表达式就为真，会拿查询到的每一条数据和这个表达式进行判断，符合条件的就留下，不符合条件的就过滤掉
+>
+> 上述语义具体描述为：对查询到的数据起一个别名，如果其id为1，就留下数据，否则就过滤掉数据
+>
+> `EXISTS()`的具体工作原理是将外层的结果依次传递给里面的`sql`语句
+
+`Exists`有一个反函数：`Not Exists`，逻辑上与其相反，满足条件的被过滤掉，不满足条件的留下
+
+`Exists`一般用于多表操作中会带来便利，如我们有两张表：一张学生信息表，一张学生所学课程表，该表的字段只有`stu_id`和`lesson_id`，我们查看哪些学生已经在学习课程了：
+
+```sql
+SELECT * FROM stu s WHERE EXISTS(SELECT * FROM lesson l WHERE s.id=l.stu_id);
+```
+
+> 返回的是学生表中有在学习课程的学生信息，如果一个学生同时学习两门课程，只会显示最后查询到的
+
+查询学生学习课程数量大于等于2门的学生信息：
+
+```sql
+SELECT * FROM stu s WHERE EXISTS(
+    SELECT id FROM lesson l WHERE s.id=l.stu_id GROUP BY id HAVING count(*)>=2
+);
+```
+
+> 对课程表中的学生id进行分组，统计出学习课程数大于2的学生id
+>
+
+查询的数据是男同学，且其学生具体信息表中设置了QQ号：
+
+```sql
+SELECT * FROM stu s WHERE s.sex='男' AND EXISTS(
+    SELECT * FROM stu_info sl WHERE s.id=sl.stu_id AND sl.qq IS NOT null
+);
+```
+
+> `EXISTS()`的作用是过滤，是将上层查询的结果进行一个过滤，如果该数据在`EXISTS()`中有结果，就为真，这条数据就会被保留，否则就会被过滤掉
+
+***
+
+### 笛卡尔积
+
+笛卡尔积是多表关联产生的一种情况，对于两张表进行关联的时候，如学生表与班级表进行关联，学生表中有10条数据，班级表有5条数据，在两表进行关联的时候没有指定条件：`SELECT * FROM stu,class;`
+
+那`mysql`就会认为学生表中的一条记录和班级表中的所有记录都相匹配，就会产生50条记录
+
+为了解决这个情况，我们需要加上条件，让学生表中的班级编号与班级表中的主键相匹配：
+
+```sql
+SELECT * FROM stu,class WHERE stu.class_id = class.id;
+```
+
+这样就将两张表中所有的字段组合在一起进行返回了，返回的结果是学生表中的10条数据，学生表的信息在前面，班级表的信息在后面，同时又包括对应班级表中的具体信息，根据学生表中的班级编号和班级表中的主键对应进行匹配
+
+> 上述`sql`语句中，如果两张表中只有一张表中有`class_id`，那么条件前面的表前缀是可以去掉的，变为：
+>
+> ```sql
+> SELECT * FROM stu,class WHERE class_id = class.id;
+> ```
+>
+> 如果两张表都有这个字段，表前缀是不可以去掉的
+>
+> 一般情况下，都是要加表前缀的，防止冲突，如果表前缀比较长，我们一般是使用别名：
+>
+> ```sql
+> SELECT * FROM stu as s,class as c WHERE s.class_id = c.id;
+> ```
+
+多表关联取数据的时候，通常是不会将各个表中的所有数据都取过来的，一般是取部分数据的
+
+```sql
+SELECT s.sname,c.cname FROM stu as s,class as c WHERE s.class_id = c.id;
+```
+
+> 上述表示取学生表中的学生名字和班级表中的班级名字
+
+***
+
+### 多表操作
+
+#### 分组查询
+
+对于上节中的学生表与班级表进行多表关联：
+
+```sql
+SELECT * FROM stu as s,class as c WHERE s.class_id = c.id;
+```
+
+一般推荐使用`INNER JOIN`和`ON`的方式进行多表关联，具体如下：
+
+```sql
+SELECT * FROM stu as s INNER JOIN class as c ON s.class_id = c.id;
+```
+
+> 这样的方式语义更加清晰，`INNER JOIN`后面的表示被关联的表，关联前后的表，`ON`后面表示条件
+
+对于一对一的表进行关联，学生表和学生具体信息表：
+
+```sql
+SELECT * FROM stu as s INNER JOIN stu_info as si ON s.id = si.stu_id;
+```
+
+> 返回的结果数据条数是学生具体信息表的数据条数，对于没有学生具体信息的学生表中的学生，返回结果会将其过滤掉，只有完全匹配的会被拿出来
+
+多个表关联后的结果，可以理解为其结果是一张表，对后续的查询和筛选操作可以当作对一张表进行操作，如查询班级为1班的学生：
+
+```sql
+SELECT * FROM stu as s INNER JOIN class as c ON s.class_id = c.id WHERE c.cname = '1班';
+```
+
+关联后的结果可以继续与其他表进行关联，一直关联下去，直到得到想要的任务结果：
+
+```sql
+SELECT c.cname,c.id,s.id,s.sname,a.title FROM stu as s INNER JOIN class as c
+ON s,class_id = c.id
+INNER JOIN article as a
+ON s.id = a.stu_id;
+```
+
+也可以将`INNER JOIN`的内容连接起来写，`ON`的内容连接起来写：
+
+```sql
+SELECT c.cname,c.id,s.id,s.sname,a.title FROM stu as s 
+INNER JOIN class as c
+INNER JOIN article as a
+ON s,class_id = c.id AND ON s.id = a.stu_id;
+```
+
+#### 分组筛选
+
+分组筛选是在分组查询的基础上进行`WHERE`的条件筛选，将多表关联分组后，理解为一张表，再进行查询
+
+筛选为男生写的文章：
+
+```sql
+SELECT a.title FROM stu as s 
+INNER JOIN class as c
+INNER JOIN article as a
+ON s,class_id = c.id AND ON s.id = a.stu_id
+WHERE s.sex = '男';
+```
+
+***
+
+### 外链接在多表查询中的使用
+
+对于一对一的表进行关联，学生表和学生具体信息表：
+
+```sql
+SELECT * FROM stu as s INNER JOIN stu_info as si ON s.id = si.stu_id;
+```
+
+> 返回的结果数据条数是学生具体信息表的数据条数，对于没有学生具体信息的学生表中的学生，返回结果会将其过滤掉，只有完全匹配的会被拿出来
+
+对于学生具体信息没有设置的，其学生表中的学生基本信息也会被过滤掉，如果就需要找这些没有设计具体信息的学生，就需要使用到外链接，`LEFT JOIN`和`RIGHT JOIN`，左侧偏心（将左侧的表信息全部读取出来，无无论有没有匹配）和右侧偏心（将右侧的表信息全部读取出来，无论有没有匹配）
+
+```sql
+SELECT * FROM stu as s LEFT JOIN stu_info as si ON s.id = si.stu_id;
+```
+
+> 这样如果没有具体信息的学生，其基本内容也会返回出来
+
+查找哪些同学没有在具体信息表中设置QQ：
+
+```sql
+SELECT * FROM stu as s LEFT JOIN stu_info as si ON s.id = si.stu_id WHERE si.qq is null;
+```
+
+右侧偏心关联和左侧偏心关联使用方式一样，会将右侧表的信息全部展示出来，即使没有被左侧的内容进行匹配
+
+查找哪些班级没有学生：
+
+```sql
+SELECT c.cname FROM stu as s RIGHT JOIN class as c ON s.class_id = c.id 
+WHERE s.id is null;
+```
+
+查找学生所在的班级，如果学生没有分配班级，就显示`null`：
+
+```sql
+SELECT s.sname,if(s.class_id,c.cname,'无') as cname FROM class as c 
+RIGHT JOIN stu as s ON c.id = s.class_id;
+```
+
+***
+
+### 自链接
+
+自链接就是自己链接自己，具体使用为：与小金同学在一个班级的同学：
+
+第一种方式是使用子查询：
+
+```sql
+SELECT * FROM stu WHERE class_id = (SELECT class_id FROM stu WHERE sname = '小金')
+AND sname != '小金';
+```
+
+使用自链接的方法进行查询：自己关联自己，将一张表当作两张表进行关联使用
+
+```sql
+SELECT s2.sname FROM stu as s1 INNER JOIN stu as s2
+ON s1.class_id = s2.class_id
+WHERE s1.sname = '小金' AND s2.sname != '小金';
+```
+
+查找出生年份比小金大的同学：（出生日期越小，年龄越大）
+
+```sql
+SELECT s2.sname FROM stu as s1 INNER JOIN stu as s2
+ON YEAR(s1.birthday) > YEAR(s2.birthday)
+WHERE s1.sname = '小金';
+```
+
+***
+
+### 多表操作中的多对多关系
+
+对于学生表和课程表之间，就是一个典型的多对多关系，一个学生可以学习多个课程，一个课程也可以被多个学生学习，多对多关系是不能让一方剔除另一方的，对于多对多关系的表，需要使用中间表来进行记录关系
+
+查找小金学习的所有课程：
+
+```sql
+SELECT s.sname,l.name FROM stu as s INNER JOIN stu_lesson as sl ON s.id = sl.stu_id
+INNER JOIN lesson as l ON l.id = sl.lesson_id WHERE s.sname = '小金';
+```
+
+查找哪个班级的学生最喜欢`mysql`课程：
+
+```sql
+SELECT c.id, count(*) as total FROM class as c INNER JOIN stu as s ON c.id = s.class_id
+INNER JOIN stu_lesson as sl ON s.id = sl,stu_id
+INNER JOIN lesson as l ON sl.lesson_id = l.id
+WHERE l.name = 'mysql'
+GROUP BY c.id
+ORDER BY total desc LIMIT 1;
+```
+
+多表操作简单来说就是首先需要确定使用哪几张表，将这几张表全部连接起来，再当作一种表进行筛选处理
+
+***
+
+### 多表查询多个查询结果的连接和合并
+
+默认合并，如果有重复的是会过滤掉重复的，只显示一个重复的数据
+
+```sql
+SELECT * FROM stu UNION SELECT * FROM stu;
+```
+
+如果我们不想让重复的数据被过滤，需要在`UNION`后面加上`ALL`即可：
+
+```sql
+SELECT * FROM stu UNION ALL SELECT * FROM stu;
+```
+
+这样就会得到两次完整的查询结果
+
+使用`UNION ALL`可以进行连接不同的表，但是连接的时候，字段的数量要相等：
+
+```sql
+SELECT sname FROM stu UNION ALL SELECT cname FROM class;
+```
+
+> 两张表都提供一个字段进行连接，是可以进行连接的，连接后，两张表的内容被放到了同一列，使用的字段名是第一条记录的字段名，也就是`sname`
+>
+> 但是如果对不同的表进行条件的添加，需要使用括号进行包裹：
+>
+> ```sql
+> (SELECT sname FROM stu LIMIT 3) UNION ALL (SELECT cname FROM class LIMIT 3);
+> ```
+
+对连接完后的结果，我们可以将其当作一张新表，可以进行其他的筛选处理操作：
+
+```sql
+(SELECT sname FROM stu LIMIT 3) UNION ALL (SELECT cname FROM class LIMIT 3) LIMIT 2;
+```
+
+查询学生表中年龄最大的和最小的数据，进行合并：
+
+```sql
+(SELECT * FROM stu WHERE birthday is not null ORDER BY birthday ASC LIMIT 1)
+UNION ALL
+(SELECT * FROM stu WHERE birthday is not null ORDER BY birthday DESC LIMIT 1);
+```
+
+***
+
+### 多表查询数据的删除
+
+我们可以对多表查询的结果进行删除，删除操作是有破坏性的
+
+删除没有学习任何课程的同学：
+
+- 方法一：使用子查询的方式进行删除：
+
+  ```sql
+  DELECT FROM stu WHERE id in(
+  SELECT * FROM(
+  SELECT s.id FROM stu as s LEFT JOIN stu_lesson as sl 
+  ON s.id = sl.stu_id
+  WHERE sl.lesson_id is null) as s
+  );
+  ```
+
+  > 在实际开发中，一般是先发一条`sql`语句，在发一条语句进行处理，而不是写成一条语句，一条语句的形式往往不够清晰，不通俗易懂
+
+- 方法二：使用多表来进行删除操作：
+
+  ```sql
+  DELECT s FROM stu as s
+  LEFT JOIN stu_lesson as sl ON s.id = sl.stu_id
+  WHERE sl.lesson_id is null;
+  ```
+
+  > 明确告知要删除学生表s中的数据
+
+删除操作也可以使用存储过程来进行删除
 
 
 
@@ -909,6 +1355,686 @@ AND date(created_at) > date(date_add(now(), INTERVAL 0-WEEKDAY(NOW()) DAY));
 - 查看班级表中的介绍字段中包括`php`和`mysql`内容的记录：
 
   `select * from class where description REGEXP 'php|mysql';`
+
+
+
+## 事务处理
+
+事务可以理解为`mysql`所做的事情，通过`sql`语句进行控制
+
+有的简单事务通过一条`sql`语句就可以完成，该事务要么成功要么失败，但是有的复杂的事务，需要多条`sql`语句才能完成，如回复评论引发的其他内容的变化，这个是一条链的执行过程，如果在某个环节出现了问题，这个链就是缺损的，是不完整的。我们需要考虑，如果某个环节出现了问题，我们是否需要让这条链全部撤销掉重做？对于不同的情况，有不同的考虑方式，如回复评论引发的后续其他内容的变化，是不需要撤销重做的，我们可以不用保证每一块业务的完整性，因为后续更新的时候会保证修正操作，也就是说，某个环节的异常不会对整体产生严重影响，我们可以不需要进行撤销重做，可以进行宽松对待；对于要求比较严格的，如商城系统、库存系统等实时交易，我们必须要求该事务是一个整体，要么全部成功，要么全部失败。
+
+### 事务存储引擎的选择
+
+事务的方式是受存储引擎影响的
+
+我们可以通过`SHOW engines;`来查看`mysql`支持的存储引擎，其中`innoDB`是默认的存储引擎，是支持事务处理的，如果有一些老的数据表，使用的是其他的存储引擎，我们可以进行存储引擎的修改：
+
+```sql
+ALTER TABLE stu engine = 'InnoDB';
+```
+
+> 也可以使用图形化界面进行修改
+
+***
+
+### 事务单独开启
+
+开启事务将后续的`sql`语句归类为一组进行执行，要么全部成功，要么全部失败，不会出现某条`sql`语句执行成功，具体的开启事务的方式为：
+
+```sql
+BEGIN;
+INSERT INTO class(canme)VALUES('研究生');
+COMMIT;
+ROLLBACK;
+```
+
+> 执行`BEGIN;`语句后，后面输入执行的`sql`语句就是一组
+>
+> 在一个用户在执行事务的时候，成功执行了一条语句后，当前`mysql`用户是可以看到具体结果的，但是另一个用户是查询不到该执行结果的，因为`mysql`认为第一个用户的事务还没有完成，可能还有其他的`sql`语句，如果想要结束，需要使用`COMMIT;`进行事务的提交，提交完后，这条数据才会真正的写入硬盘的数据表当中，其他用户就可以查询到事务中新增的数据了。
+>
+> 简而言之，`BEGIN;`语句将多条事务连接成一组了；`COMMIT;`语句将多条语句进行统一的执行了
+>
+> 除了`BEGIN;`，还有其他的开启事务的语法：`START TRANSACTION;`
+>
+> 如果在执行`sql`语句的时候，有一条语句出现了问题，我们可以进行回滚操作`ROLLBACK;`，回滚可以理解为放弃上一条执行的`sql`语句（撤销上一条`sql`语句的执行），如果出现异常，我们可以使用`ROLLBACK;`，让其进行回滚，但是要注意，当执行`ROLLBACK;`后，和`COMMIT;`一样，这个事务就走完了，后续还是回到默认的方式，即执行一条`sql`语句，生效一次
+
+***
+
+### 全局的事务开启
+
+每执行一个事务，我们都需要进行开启事务，如果要求全部的`sql`语句必须要全部使用事务的方式，我们可以开启全局事务，不用每一次提交后，再重新开启事务，全局事务开启的设置：
+
+```sql
+SET autocommit = 0;
+INSERT INTO class(canme)VALUES('研究生');
+COMMIT;
+```
+
+> 表示执行`sql`语句的时候，系统不会自动的进行提交，必须进行`COMMIT;`操作才可以进行提交，将真正的数据写入到硬盘上，其他用户才能看到，否则，只是当前执行`sql`语句的用户能看到
+
+***
+
+### 事务隔离级别与脏读
+
+在高并发的状态下，可能会有多个事务在同时操作一张数据表，这个时候可能就会出现脏读和幻读等问题
+
+- 脏读：事务A读取了事务B更新的数据，然后B进行了回滚操作，那么A读取到的数据是脏数据
+- 不可重复读：事务A多次读取同一数据，事务B在事务A多次读取的过程中，对数据作了更新并提交，导致事务A多次读取同一数据时（这个时候事务A还没有进行提交，按理说是看不到事务B提交的内容的），结果不一致
+- 幻读：系统管理员A将数据库中所有学生的成绩从具体分数改为ABCDE等级，但是系统管理员B就在这个时候插入了一条具体分数的记录，当系统管理员A结束后发现还有一条新的记录也被改过来了，就好像发生了幻觉一样
+
+我们希望每个事务之间是独立的，不同的事务不会互相干扰，这就需要引入事务隔离操作，事务隔离有不同的隔离级别，但是，隔离级别越好，会导致性能变差，因此设置隔离级别的时候也要兼顾性能
+
+|          事务隔离级别          | 脏读 | 不可重复读 | 幻读 |                             说明                             |
+| :----------------------------: | :--: | :--------: | :--: | :----------------------------------------------------------: |
+| 读未提交（`read-uncommitted`） |  是  |     是     |  是  | 最低的事务隔离级别，一个事务还没提交时，它做的变更就能被别的事务看到 |
+| 不可重复读（`read-committed`） |  否  |     是     |  是  | 保证一个事物提交后才能被另外一个事务读取。另外一个事务不能读取该事物未提交的数据 |
+| 可重复读（`repeatable-read`）  |  否  |     否     |  是  | 多次读取同一范围的数据会返回第一次查询的快照，即使其他事务对该数据做了更新修改。事务在执行期间看到的数据前后必须是一致的 |
+|    串行化（`serializable`）    |  否  |     否     |  否  | 事务 100% 隔离，可避免脏读、不可重复读、幻读的发生。花费最高代价但最可靠的事务隔离级别 |
+
+查询当前使用的事务隔离级别：`select @@global.transaction_isolation,@@transaction_isolation;`
+
+默认情况下，`mysql`使用的事务隔离级别是`repeatable-read`
+
+我们可以进行事务隔离级别的设置：`set session transaction isolation level read uncommitted;`
+
+> 设置事务隔离级别的时候，将级别名称的-去掉进行设置
+
+使用串行化来阻止幻读的现象，会使用锁机制，将中间开启的事务进行锁定，当之前的事务结束时，中间开启的事务才会继续的自动往下执行，这样就防止出现幻读
+
+
+
+## 锁机制
+
+`Mysql`是支持多线程的，在同一时刻可以处理多个用户的请求，如果多个用户都在修改同一个数据，就会造成数据的不稳定性，锁机制的出现是为了保证数据的稳定性，如我们在同一时刻进行买书的操作，我们要锁住记录，在扣除余额的时候是一个一个进行的，而不要受并发多线程的影响来同时进行余额的扣除
+
+### 事务处理中的锁机制
+
+#### 行级锁
+
+使用锁机制，我们可以将整张表进行锁定，即表级锁，也可以使用行级锁定的方式，将表中的某条数据记录进行锁定，行级锁在应付高并发的时候响应比较快，其存储性能是比较高的，在数据引擎中`InnoDB`是支持行级锁的
+
+如果两个事务都执行一个事务，都对数据表中的同一条数据的同一个字段内容进行修改，先执行的事务可以正常修改，但是后执行的事务在执行`sql`语句的时候就会阻塞，一直到先执行的事务提交后，阻塞才会重新恢复，并执行下去。如果在锁机制阻塞的时候，我们将其终止，更新其他数据的内容，是可以更新成功的。
+
+上述过程是一个行级锁的体现，没有锁定整张表，只是锁定了表中的某行数据
+
+#### 索引
+
+对于没有设置索引的字段，即使修改的不是同一条数据，但是根据这个字段取查找的：
+
+```sql
+UPDATE stu SET sname = '小金' WHERE sname = 'xiaojin';
+```
+
+其中`sname`字段没有索引数据，不同事务通过该字段进行索引从而修改内容，会导致表的记录被大面积的锁定
+
+一般情况下，主键是默认添加了索引的，其他字段是没有添加索引的，如果使用的列不是索引列，就会将整个表的索引记录进行锁定，这样就丢失了`InnoDB`行级锁的魅力
+
+对于查询量多的字段，我们最好可以将其设置成索引，这样就不会造成大面积的锁定
+
+#### 查询范围对锁的影响
+
+在查询范围内的所有记录都会被锁定，但是在范围外的记录是不会被锁定的
+
+对于事务A，对主键id大于1和小于5之间的`num`字段内容进行修改：
+
+```sql
+SET autocommit = 0;   # 开启全局事务
+UPDATE goods SET num=500 WHERE id>1 AND id<5;
+```
+
+对于事务B，在查询范围id大于1且小于5的内容进行修改，会被锁定；对范围之外的内容进行修改不会被锁定：
+
+```sql
+SET autocommit = 0;
+UPDATE goods SET num=200 WHERE id=3;    # 发生阻塞
+UPDATE goods SET num=200 WHERE id=5;    # 不发生阻塞
+```
+
+只有当事务A提交后，那事务B就可以该怎么操作怎么操作了，不会受到影响了
+
+我们是希望锁的查询范围是越小越好，这样使多线程的`Mysql`应用在处理高并发的时候，性能可以更好
+
+***
+
+### 悲观锁
+
+在`Mysql`中总是感觉这个数据在更新的时候，别人也在更新，我们可以使用悲观锁，在查询的时候就进行锁定
+
+当有一个事务在查询的时候，其他事务的查询操作也被锁定了，这个情况就是悲观锁（当前一个事务在查询的时候，后面的事务就不要查询了，将查询操作阻塞了）
+
+事务A：
+
+```sql
+SET autocommit = 0;
+SELECT * FROM goods WHERE id=1 FOR UPDATE;   # 对id为1的商品进行查询，执行悲观锁
+```
+
+事务B：
+
+```sql
+SET autocommit = 0;
+SELECT * FROM goods WHERE id=1 FOR UPDATE; # 也对id为1进行查询，由于事务A设置了悲观锁，当前会阻塞
+```
+
+> 当事务A执行提交或回滚操作后，即结束事务，事务A剩余执行的`sql`语句：
+> ```sql
+> UPDATE goods SET num=0 WHERE id=1;   # 将id为1的商品全部买完
+> COMMIT;
+> ```
+>
+> 事务B的阻塞才会终止，返回查询的结果，返回的结果：id为1的商品数量为0
+
+***
+
+### 乐观锁
+
+`Mysql`中有悲观锁，对应的也有乐观锁，更新数据的时候很乐观，不认为别人也会更新数据，如果出现了问题，等出现了问题再说，一般通过其他字段进行限制，常用的是版本号字段
+
+事务A：
+
+```sql
+SET autocommit = 0;
+SELECT * FROM goods WHERE id=1;   # 对id为1的商品进行查询
+# 买100件商品，同时让版本号加一
+UPDATE goods SET num=num-100,version=version+1 WHERE version=0 AND id=1;  
+COMMIT;
+```
+
+事务B：
+
+```sql
+SET autocommit = 0;
+# 版本号已经发生改变，是索引不到这个商品的，因此也买不到这个商品
+UPDATE goods SET num=num-100,version=version+1 WHERE version=0 AND id=1;  
+```
+
+通过这样的乐观锁，保持了数据的稳定性，从而不会出现数据的错乱
+
+***
+
+### 表锁的技巧
+
+对于一些不能支持事务的引擎，我们可以使用锁表的机制来保证数据的稳定
+
+#### 读锁
+
+对表进行锁定，使该表只能进行读取，不能进行其他操作，包括当前用户：
+
+```sql
+LOCK TABLE goods READ;
+SELECT * FROM goods;   # 可以读取，当前会话和其他会话都可以读取
+INSERT INTO goods (name,num)VALUES('手机',200);   # 不能执行，当前会话报错，其他会话发生阻塞
+UNLOCK TABLES;  # 执行解锁操作，其他会话阻塞结束，执行了之前的操作
+```
+
+#### 写锁
+
+写锁可以使当前会话可以操作这张表，其他会话什么都不能执行，阻塞，只有当前会话解锁后，其他会话才能使用
+
+```sql
+LOCK TABLE goods WRITE;
+SELECT * FROM goods;
+UNLOCK TABLES;
+```
+
+> 锁表不但但只能锁一个表，可以一起锁定很多表：`LOCK TABLE goods WRITE, stu WRITE;`
+
+这样写锁的方式会造成对整个表的锁定，对高并发的吞吐处理能力是非常有限的，一般不太建议使用写锁的方法
+
+
+
+## 外键约束
+
+外键约束是`Mysql`提供的一个特性，`Mysql`作为一个关系型的数据库，表之间都是有关系的
+
+`	Mysql`的默认引擎`InnoDB`支持外键关联/约束
+
+对于几个表之间的关联，表之间会受影响，一张表发生变化，会影响另一张表（如班级表中的某个班级被删除了，对应学生表中对应这个被删除班级的学生是应该删除呢？还是这些学生的班级为`null`呢？这些变化都是关联的变化），这就需要各个表中的某一个字段来建立联系，对于不同表的这个字段，其字段类型要保持一致；一般情况下，与主键（主表的关联键）或者外键进行关联，关联约束的字段内部有一个检索的过程，所以这些关联字段都应该设置索引属性，我们可以不用特意的去设置，在做表关联的时候，`Mysql`会自动的给我们设置这些关联字段的索引属性
+
+### 表中定义外键约束
+
+常用的外键约束关键词：
+
+|     选项      |         说明         |
+| :-----------: | :------------------: |
+| `CONSTRAINT`  |  为外键约束定义名称  |
+| `FOREIGN KEY` |  子表与父表关联的列  |
+| `REFERENCES`  |  子表关联的父表字段  |
+|  `ON DELETE`  | 父表删除时的处理方式 |
+|  `ON UPDATE`  | 父表更新时的处理方式 |
+
+#### 从新建表开始
+
+新建一张表，并添加外键约束：
+
+```sql
+CREATE TABLE stu2(
+	id int PRIMARY KEY AUTO_INCREMENT,  # 设置id为主键，且自增
+    sname char(30) NOT NULL,
+    class_id int DEFAULT NULL,
+    # 声明外键和定义外键
+    CONSTRAINT stu2_class
+    FOREIGN KEY (class_id)
+    REFERENCES class(id)
+    # 定义主表发生变化时，子表的动作
+    # 当班级某条数据执行删除的时候，对应班级的学生数据跟着删除
+    ON DELETE CASCADE
+)ENGINE=InnoDB DEFAULT CHARSET=utf8;   # 定义引擎和字符集
+```
+
+新键的学生表不单单只与班级表进行关联，还可以与其他的表进行关联，这样我们就要定义多个外键，为了区分，我们一般是给外键取一个别名，这个别名一定是要唯一的，一般情况下以当前表的名字-关联表的名字即可
+
+在哪个表中定义外键，哪个表就是子表，外键最好是要指向另一张表的主键，可以不指向主键，但是指向的这个字段必须有索引属性
+
+#### 基于修改表
+
+对于存在的表，如果后续我们想要添加外键约束，我们可以进行以下操作：
+
+```sql
+ALTER TABLE stu ADD
+# 声明外键和定义外键
+CONSTRAINT stu_class
+FOREIGN KEY (class_id)
+REFERENCES class(id)
+# 定义主表发生变化时，子表的动作
+# 当班级某条数据执行删除的时候，对应班级的学生数据跟着删除
+ON DELETE CASCADE;
+```
+
+***
+
+### 删除外键约束
+
+删除学生表`stu`中的外键约束：
+
+```sql
+ALTER TABLE stu DROP FOREIGN KEY stu_class;
+```
+
+***
+
+### 外键约束的关联动作
+
+#### `ON DELETE`
+
+`ON DELETE`是指在删除时的处理方式，常用的处理方式有：
+
+|         选项          |                             说明                             |
+| :-------------------: | :----------------------------------------------------------: |
+|  `ON DELETE CASCADE`  | 删除父表记录时，子表中关联这条父表记录的所有子表记录会同时删除 |
+| `ON DELETE SET NULL`  | 删除父表记录时，子表记录对应的外键变为为 NULL（子表字段要允许 NULL） |
+| `ON DELETE NO ACTION` | 不能直接删除父表记录，必须把子表外键处理（删除或修改）完才可以删除主表中对应的内容，具体来说，就是子表有数据，主表不能动 |
+| `ON DELETE RESTRICT`  |                 与`ON DELETE NO ACTION`一致                  |
+
+#### `ON UPDATE`
+
+`ON UPDATE`是指在更新时的处理方式，常用的处理方式有：
+
+|         选项          |                             说明                             |
+| :-------------------: | :----------------------------------------------------------: |
+|  `ON UPDATE CASCADE`  | 更新父表记录时，比如更改主表的主键时，子表对应的外键内容同时更新 |
+| `ON UPDATE SET NULL`  | 更新父表记录时，比如更改主表的主键时，子表对应的外键被设置为 NULL |
+| `ON UPDATE NO ACTION` | 不能直接更新父表记录，必须把子表外键处理（删除或修改）完才可以更新主表 |
+| `ON UPDATE RESTRICT`  |                 与`ON UPDATE NO ACTION`一致                  |
+
+父表更新时，子表对应的更新无非就是更新对应的外键内容，如更改主键的编号，改为6，那么对应匹配外键的编号也会变为6，这个就是`ON UPDATE CASCADE`更新的过程，关联受影响
+
+更新的应用场景相较于删除是很低的
+
+
+
+## 索引优化
+
+### 性能优化思路
+
+- 选择合理范围内最小的
+
+  选择最小的数据范围，因为这样可以大大减少磁盘空间及磁盘 I/0 读写开销，减少内存占用，减少 CPU 的占用率
+
+- 选择相对简单的数据类型
+
+  数字类型相对字符串类型要简单的多，尤其是在比较运算中，应该选择最简单的数据类型，比如说在保存时间时，我们可以将日期存为`int(10)`，这样会更方便、合适、快速的多
+
+#### 字符串类型的优化思路
+
+字符串数据类型是一个万能数据类型，可以储存数值、字符串等
+
+- 保存数值类型最好不要用字符串数据类型，这样存储的空间显然是会更大，同时，如果进行运算时` mysql `会将字符串转换为数值类型，这种转换是不会走索引的
+- 如果明确数据在一个完整的集合中如男，女，可以使用 `set` 或 `enum `数据类型，这种数据类型在运算及储存时以数值方式操作，所以效率要比字符串更好，同时空间占用更少
+
+#### 数值类型的优化思路
+
+##### 整数
+
+整数类型很多比如 `tinyint`、`int`、`smallint`、`bigint` 等，我们要根据自己需要存储的数据长度决定使用的类型，同时 `tinyint(10)`与` tinyint(100)`在储存与计算上并无任何差别，区别只是在显示层面上，但是我们也要选择适合合适的数据类型长度。可以通过指定 `zerofill `属性查看显示时区别
+
+##### 浮点数与精度数值
+
+浮点数`float` 与` double `在储存空间及运行效率上要优于精度数值类型 `decimal`，但 `float `与 `double`会有舍入错误，而 `decimal` 则可以提供更加准确的小数级精确运算不会有错误产生计算更精确，更适用于金融类型数据的存储
+
+***
+
+### `EXPLAIN`
+
+`EXPLAIN` 指令可以帮助开发人员分析` SQL` 问题，`explain` 显示了 `mysql `如何使用索引来处理 `select`语句以及连接表，可以帮助选择更好的索引和写出更优化的查询语句
+
+通过`EXPLAIN`进行查询，返回的查询结果字段介绍（从左到右依次进行介绍）：
+
+|      字段       |               说明               |
+| :-------------: | :------------------------------: |
+|      `id`       |           索引执行顺序           |
+|  `select_type`  |             查询类型             |
+|     `table`     |              操作表              |
+|     `type`      |             使用类型             |
+| `possible_keys` | 可能用到的索引，不一定被真正使用 |
+|      `key`      |          最终使用的索引          |
+|    `key_len`    |            索引字节数            |
+|      `ref`      |          列与索引的比较          |
+|     `rows`      |        预计读出的记录条数        |
+|     `Extra`     |             查询说明             |
+
+> 对于使用类型`type`，有下面常见的值：
+>
+> - `const`：使用主键值比较，匹配唯一行检索，速度快
+>
+>   ```sql
+>   explain select * from stu where id = 3;
+>   ```
+>
+> - `ref`： 前面表中的非唯一数据 
+>
+> - `eq_ref`：前面表中非唯一数据，使用了唯一索引字段，如表关联时使用主键
+>
+> - `range`：索引区间获得，如使用` IN(1,2,3)`筛选
+>
+>   ```sql
+>   explain select * from stu where class_id in(1,2,3);
+>   ```
+>
+> - `all`：全表遍历
+>
+>   ```sql
+>   explain select * from stu where birthday = '20000213';
+>   ```
+>
+> - `index`：与 `all` 类似只是扫描所有表，而非数据表
+>
+>   ```sql
+>   explain select * from stu order by id;
+>   ```
+
+***
+
+### 基础索引
+
+合适的索引优化可以大幅度的提高`Mysql`的检索速度，索引就像书中的目录一样让我们更快的寻找到自己想要的数据，但是我们也不能过多的创建目录页（索引），原因是如果某一篇文章删除或修改将发变所有页码的顺序，就需要重新创建目录
+
+索引优化是针对于海量数据的数据库，优化其数据的查找速度，增强其性能，减少开销
+
+索引的弊端：
+
+- 创建索引会使查询操作变得更加快速，但是会降低增加、删除、更新操作的速度，因为执行这些操作的同时会对索引文件进行重新排序或更新
+- 创建过多列的索引会大大增加磁盘空间开销
+- 不要盲目的创建索引，只为查询操作频繁的列创建索引
+
+#### 索引类型
+
+|          索引          |                 说明                 |
+| :--------------------: | :----------------------------------: |
+|   `UNIQUE` 唯一索引    |  不可以出现相同的值，可以有 NULL 值  |
+|    `INDEX` 普通索引    |        允许出现相同的索引内容        |
+| `PRIMARY KEY` 主键索引 | 不允许出现相同的值，且不能为 NULL 值 |
+
+#### 索引维护
+
+- 设置索引：`ALTER TABLE stu ADD INDEX sname_index(sname)`
+
+  为 `stu` 学生表中的 `sname` 字段设置索引，`sname_index`为设置索引的别名
+
+- 删除索引：`ALTER TABLE stu DROP INDEX sname_index`
+
+  > 删除主键索引，首先需要移除` auto_increment `（自增属性）然后删除主键索引：
+  >
+  > ```sql
+  > ALTER TABLE stu MODIFY id int;
+  > ALTER TABLE stu DROP PRIMARY KEY
+  > ```
+
+- 查看索引：`show index from stu;`
+
+***
+
+### 性能分析
+
+索引是加快查询操作的重要手段，如果当发生查询过慢时，为这个字段添加上索引后，会发现速度大大改观
+
+- 对于没有添加索引属性的字段进行查找，会执行全盘扫描，性能是最差的
+
+  ```sql
+  EXPLAIN SELECT * FROM stu WHERE class_id=5 LIMIT 1;
+  ```
+
+  > 查找`stu`数据表中，`class_id`等于5的第一条数据
+  >
+  > 结果显示` type=ALL` 看出执行了全表扫描，`rows`数量较多
+
+- 如果为`class_id`字段添加索引，后再执行查找：
+
+  ```sql
+  ALTER TABLE stu ADD INDEX class_id(class_id);
+  EXPLAIN SELECT * FROM stu WHERE class_id=5 LIMIT 1;
+  ```
+
+  > 从`type `字段看出已经走了索引，本次查询遍历了少量的记录，`rows`数量较小
+
+对于多表操作，连接操作多个表时，如果没有添加索引性能会非常差
+
+- 对于没有使用索引的情况：
+
+  ```sql
+  explain select * from a join b on a.id=b.id join c on b.id=c.id;
+  ```
+
+  > 从结果中会看到每张表都遍历了所有记录，其`type`值都为`ALL`，遍历大量数据，性能较差
+
+- 为其都添加索引后的情况：
+
+  ```sql
+  ALTER TABLE a ADD INDEX id(id);
+  ALTER TABLE b ADD INDEX id(id);
+  ALTER TABLE c ADD INDEX id(id);
+  explain select * from a join b on a.id=b.id join c on b.id=c.id;
+  ```
+
+  > 执行的结果会看到使用了索引，并且并没有进行全表遍历
+
+***
+
+### 前缀和组合索引
+
+#### 前缀索引
+
+` text`/`长varchar `字段创建索引时，会造成索引列长度过长，从而生成过大的索引文件影响检索性能。使用前缀索引方式进行索引，可以有效解决这个问题。前缀索引应该控制在一个合适的点，控制在前百分之30即可
+
+下面是取前缀索引的计算公式，有时也根据字段保存内容确定，比如标题 100 可以取 30 个字符为前缀索引：
+
+```sql
+select count(distinct(left(title,10)))/count(*) from news
+```
+
+为文章表 `article` 的` title` 字段添加 30 个长度的前缀索引：
+
+```sql
+ALTER TABLE article ADD INDEX title(title(30));
+```
+
+#### 组合索引
+
+组合索引是为多个字段统一设计索引
+
+- 可以较为每个字段设置索引文件体积更小
+- 使用速度优于多个索引操作
+- 前面字段没出现，只出现后面字段时不走索引
+
+为学生表中的班级字段` class_id `与学生状态` status `设置组合索引：
+
+```sql
+Alter table stu add index class_id_status(class_id,status);
+```
+
+> 使用 `class_id `时会走索引，因为 `class_id` 在组合索引最前面：
+>
+> ```sql
+> explain select * from stu where class_id=3;
+> ```
+>
+> 查询结果`type`为`ref`，表明走了索引，走的索引`key`为`class_id`
+>
+> 只使用` status `字段不会走索引：
+>
+> ```sql
+> explain select * from stu where status=1;
+> ```
+>
+> 查询结果`type`为`ALL`，表明进行了全盘查找
+>
+> 当 `class_id `与` status `字段一起使用时会走索引：
+>
+> ```sql
+> explain select * from stu where status=1 and class_id=5;
+> ```
+>
+> 查询结果`type`为`ref`，表明走了索引，走的索引`key`为`class_id_status`
+
+***
+
+### 字段选择
+
+#### 维度思考
+
+- 维度的最大值是数据列中不重复值出现的个数
+
+  > 如数据表中存在8行数据 `a,b,c,d,a,b,c,d `，则这个表的维度为 4
+
+#### 索引规则
+
+- 对` where`，`on` 或 `group by` 及 `order by `中出现的列（字段）使用索引
+- 对较小的数据列使用索引，这样会使索引文件更小，同时内存中也可以装载更多的索引键
+- 为较长的字符串使用前缀索引
+- 要为维度高的列创建索引
+- 性别这样的列不适合创建索引，因为维度过低
+- 不要过多创建索引，除了增加额外的磁盘空间外，对于` DML` 操作的速度影响很大
+
+***
+
+### 查询优化
+
+- 解析器
+
+  `Mysql `的解析器非常智能，会对发出的每条` SQL `进行分析，决定是否使用索引或是否进行全表扫描
+
+- 表达式影响
+
+  索引列参与了计算的` SQL` 语句不会使用索引：
+
+  ```sql
+  explain select * from stu where status+1=1;
+  ```
+
+  > `type`为`ALL`
+
+  索引列使用了函数运算的` SQL` 语句不会使用索引：
+
+  ```sql
+  explain select * from stu where left(sname,1)='金';
+  ```
+
+  > `type`为`ALL`
+
+  索引列使用模糊匹配的` SQL` 语句不会使用索引：
+
+  ```sql
+  explain select * from stu where sname like '%1%';
+  ```
+
+  > `type`为`ALL`
+
+  索引列使用正则表达式的` SQL` 语句不会使用索引：
+
+  ```sql
+  explain select * from stu where sname regexp '^1';
+  ```
+
+  > `type`为`ALL`
+
+- 类型比较
+
+  相同类型比较时走索引：
+
+  ```sql
+  explain select * from stu where sname="xiaojin";
+  ```
+
+  > `sname`的类型为字符串类型，与之比较的内容类型也是字符串类型，因此走的索引
+
+  字符串类型与数值比较时不走索引：
+
+  ```sql
+  explain select * from stu where sname=1;
+  ```
+
+  > `type`为`ALL`
+
+- 排序
+
+  排序中尽量使用添加索引的列进行
+
+***
+
+### 慢查询
+
+当 `Mysql` 性能下降时，通过开启慢查询来了解哪条` SQL `语句造成响应过慢，后续可以进行分析处理。当然开启慢查询会带来` CPU` 损耗与日志记录的` IO` 开销，所以我们要间断性的打开慢查询日志来查看 `Mysql`运行状态
+
+慢查询能记录下所有执行时间超过设定 `long_query_time `时间的` SQL `语句, 用于找到执行慢的` SQL`语句, 方便我们对这些 `SQL`语句进行优化
+
+#### 运行配置
+
+##### 会话配置
+
+通过以下指令开启全局慢查询（重起` Mysql `后需要重新执行）
+
+```routeros
+set global slow_query_log='ON';
+```
+
+设置慢查询时间为 1 妙，即超过 1 秒将会被记录到慢查询日志
+
+```routeros
+set session long_query_time=1;
+```
+
+##### 全局配置
+
+通过修改配置 `mysql `配置文件` my.cnf` 来开启全局慢查询配置，在配置文件中修改以下内容
+
+```ini
+slow_query_log = ON
+slow_query_log_file = /usr/local/mysql/data/slow.log
+long_query_time = 1
+```
+
+重起 MYSQL 服务
+
+```ebnf
+service mysqld restart
+```
+
+#### 状态查看
+
+查看开启慢查询状态：`show variables like 'slow_query%';`
+
+查看慢查询的设置时间：`show variables like "long_query_time";`
 
 
 
