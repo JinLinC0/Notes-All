@@ -1,4 +1,4 @@
-# `Vitepress`
+# `VitePress`
 
 ## 基本概念
 
@@ -14,9 +14,9 @@
 
 ## 快速搭建
 
-当我们需要搭建属于自己的在线文档库时，我们可以使用`Vitepress`进行在线文档网站的快速搭建
+当我们需要搭建属于自己的在线文档库时，我们可以使用`VitePress`进行在线文档网站的快速搭建
 
-使用`Vitepress`进行在线文档的快速搭建：
+使用`VitePress`进行在线文档的快速搭建：
 
 1. 在指定的文档下运行`cmd`操作
 2. `npm add -D vitepress`
@@ -182,7 +182,7 @@ themeConfig: {
 
 ### 引入`Vue`进行模块的自定义
 
-我们可以对`Vitepress`项目的首页进行内容的自定义，可以使用前端框架`Vue`进行模块内容的编写，在此之前，我们需要进行全局的注册，同样在`index.js`文件上进行全局注册：
+我们可以对`VitePress`项目的首页进行内容的自定义，可以使用前端框架`Vue`进行模块内容的编写，在此之前，我们需要进行全局的注册，同样在`index.js`文件上进行全局注册：
 
 ```js
 import DefaultTheme from 'vitepress/theme'
