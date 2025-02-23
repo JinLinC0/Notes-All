@@ -295,6 +295,32 @@ import { AppService } from './app.service';
 export class AppModule {}
 ```
 
+注册服务的完整语法应该如下所示：
+
+```ts
+providers: [
+    {
+        provide: AppService,    // 注册服务的名字，可以进行修改，如改为'newName'
+        useClass: AppService,
+    },
+],
+```
+
+> 服务我们可以将其想象成一个对象，控制器在使用这个服务的时候，就是拿`key`：`AppService`去容器中找对应的方法，`provide`就是对象中的`key`，我们可以对其名字进行修改，但是在控制器中构造函数调用的时候依赖注入部分就要做相应的修改，使用装饰器进行依赖注入：
+>
+> ```ts
+> constructor(
+>     @Inject('newName')
+>     private readonly appService: AppService
+> ) {}
+> ```
+>
+> `appService: AppService`这两个名字不能一样，前面的是对象属性，后面的是类型修饰
+>
+> 但是这里`AppService`没有了`key`值匹配的作用，但是还有提供类型支持的作用
+>
+> 但是我们一般都不会写完整的注册语法，会进行简写
+
 在控制器文件中进行依赖注入后，回去模块的容器中查找，如果没有这个服务提供者，就会报错，提示找不到这个服务，所以我们一定要将服务放到容器中
 
 ### 新服务的创建
@@ -370,3 +396,379 @@ export class AppController {
 ```
 
 使用域名访问：`http://localhost:3000`进行访问，网页中会显示`Hello!`
+
+***
+
+### 基本类型提供者注册
+
+普通值类型也可以进行提供者的注册，也就是说，在模块容器中，我们可以自定义提供者，在模块文件中自定义提供者：
+
+```ts
+import { Module } from '@nestjs/common';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+
+@Module({
+  imports: [],
+  controllers: [AppController],
+  providers: [AppService, 
+              {   // 自定义基本类型的服务提供者
+                  provide: 'info',
+                  useValue: {
+                      name: 'jlc',
+                      age: '24',
+                  },
+              },
+             ],
+})
+export class AppModule {}
+```
+
+可以将这个服务写在外面，使逻辑更加清晰：
+
+```ts
+import { Module } from '@nestjs/common';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+
+const infoService = {
+  provide: 'info',
+  useValue: {
+      name: 'jlc',
+      age: '24',
+  },
+}
+
+@Module({
+  imports: [],
+  controllers: [AppController],
+  providers: [AppService, infoService],
+})
+export class AppModule {}
+```
+
+> - `useClass` 期望的是一个类，而不是一个对象字面量。 即用于提供类类型的依赖项
+> - `useValue`用于提供具体值（如对象字面量、字符串、数字等）
+> - `useFactory`用于提供通过工厂函数创建的依赖项 
+> - `useExisting`用于提供现有提供者的别名
+
+如果我们想要进行使用，在服务文件/控制器文件（不推荐，业务逻辑一般放服务文件中）中进行依赖注入即可：
+
+```ts
+import { Inject, Injectable } from '@nestjs/common';
+
+@Injectable()
+export class AppService {
+  constructor(@Inject('info') private info: any) {}
+  getHello(): string {
+    return 'Hello World!' + this.info.name;
+  }
+}
+```
+
+> `@Inject('info')`表示去容器中找到这个`key`值的服务提供者
+
+业务逻辑编写完成后，提供的业务在网站中显示为：`Hello World!jlc`
+
+***
+
+### 动态注册服务提供者
+
+服务是可编程的，我们可以根据不同的场景来注册不同的服务（如：开发的时候使用一个服务，上线的时候使用另一个服务）
+
+在模块文件中动态注册服务提供者，我们需要根据环境变量进行动态的设置，在根目录下新建`.env`文件，定义目前是一个开发环境：
+
+```txt
+NODE_ENV=development
+```
+
+在模块文件中尝试进行读取环境变量，并实现动态注册服务提供者
+
+读取环境变量时，我们需要安装一个插件`npm install dotenv`，后续环境变量一般使用第三方的包会比较简单
+
+```ts
+import { Module } from '@nestjs/common';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { DevService } from './dev.service';
+import { config } from 'dotenv';
+import { join } from 'path';
+
+config({ path: join(__dirname, ',,/.env') })
+
+const configService = {
+  provide: 'configService',
+  // 动态注册：根据环境变量选择哪个服务
+  useClass: process.env.NODE_ENV == 'development' ? DevService : AppService,
+}
+
+@Module({
+  imports: [],
+  controllers: [AppController],
+  providers: [configService],
+})
+export class AppModule {}
+```
+
+> `import { config } from 'dotenv'`只是从`dotenv`包中导出了`config`一个内容，如果我们想要包中的所有内容进行导出，统一使用一个变量来接收，我们需要修改为`import dotenv from 'dotenv'`，但是实际上`ts`是不支持的，我们要去`tsconfig.json`中进行配置，添加一个配置项：`"esModuleInterop": true`
+>
+> 配置完后，就可以使导出的内容进行一块接收，使用的时候`dotenv.`即可
+>
+> 这样读取环境变量的代码就可以修改为：
+>
+> ```ts
+> import dotenv from 'dotenv';
+> import path from 'path';
+> 
+> dotenv.config({ path: path.join(__dirname, ',,/.env') })
+> ```
+>
+> 后续发展：`import * as dotenv from 'dotenv';` 的方式引入库也可以直接全部导入，不用额外配置`ts`
+
+> 在开发环境下使用`DevService`，在上线环境下使用`AppService`
+>
+> 具体的两个服务为：
+>
+> ```ts
+> // app.service.ts
+> import { Injectable } from '@nestjs/common';
+> 
+> @Injectable()
+> export class AppService {
+>   get() {
+>     return 'AppService get';
+>   }
+> }
+> ```
+>
+> ```ts
+> // dev.service.ts
+> import { Injectable } from '@nestjs/common';
+> 
+> @Injectable()
+> export class DevService {
+>   get() {
+>     return 'DevService get';
+>   }
+> }
+> ```
+
+在控制器文件中进行注册：
+
+```ts
+import { Controller, Get, Inject } from '@nestjs/common';
+
+@Controller()
+export class AppController {
+  constructor(@Inject('configService') private readonly configService) {}
+
+  @Get()
+  getHello(): string {
+    return this.configService.get();
+  }
+}
+```
+
+在网页中，会显示`DevService get`，如果`.env`配置文件`NODE_ENV`不为`development`，那么网页中显示`AppService get`
+
+#### 根据环境动态的选择配置项
+
+对于开发环境和生产环境，可能有不同的配置项，我们可以将这些配置项全部放在`src/config`文件夹中，创建用于开发环境的配置项`development.config.ts`：
+
+```ts
+export const developmentConfig = {
+    url: 'localhost',
+    port: 5000
+}
+```
+
+线上环境的配置项`production.config.ts`：
+
+```ts
+export const productionConfig = {
+    url: '6.6.6.6',
+    port: 3000
+}
+```
+
+在根目录下新建`.env`文件，定义目前是一个开发环境：
+
+```txt
+NODE_ENV=development
+```
+
+在模块文件中进行环境变量的加载和配置项的加载：配置项加载的时候是使用它的值而不是类，要用到`useValue`
+
+```ts
+import { Module } from '@nestjs/common';
+import { AppController } from './app.controller';
+import { developmentConfig } from './config/development.config';
+import { productionConfig } from './config/production.config';
+import { AppService } from './app.service';
+import dotenv from 'dotenv';
+import path from 'path';
+
+dotenv.config({ path: path.join(__dirname, ',,/.env') })
+
+const ConfigService = {
+  provide: 'ConfigService',
+  useValue: process.env.NODE_ENV == 'development' ? developmentConfig : productionConfig,
+}
+
+@Module({
+  imports: [],
+  controllers: [AppController],
+  providers: [AppService, ConfigService],
+})
+export class AppModule {}
+```
+
+其中`app.service.ts`的内容为：在服务中动态读取配置
+
+```ts
+import { Inject, Injectable } from '@nestjs/common';
+
+@Injectable()
+export class AppService {
+  constructor(
+    @Inject('ConfigService') private readonly ConfigService: Record<string, any>
+  ) {}
+  getHello(): string {
+    return 'Hello World!' + `[${this.ConfigService.url}]`;
+  }
+}
+```
+
+> `Record<string, any>`表示使用类型工具进行定义，表示定义的是一个对象，其值是任意的类型
+
+在控制器中，还是使用`AppService`进行服务的调用：
+
+```ts
+import { Controller, Get } from '@nestjs/common';
+import { AppService } from './app.service';
+
+@Controller()
+export class AppController {
+  constructor(private readonly appService: AppService) {}
+
+  @Get()
+  getHello(): string {
+    return this.appService.getHello();
+  }
+}
+```
+
+> 网站中显示的结果为：`Hello World![localhost]`
+>
+> 如果环境变量发生了改变，不是`development`了，网站中的内容就变成了：`Hello World![6.6.6.6]`
+
+这样，就实现了根据环境，动态的选择我们的配置项
+
+***
+
+### 工厂函数注册提供者
+
+如果一个服务需要依赖其他的服务，如数据库服务调用配置项服务，这时我们可以把它定义成工厂函数
+
+创建一个数据库服务：`nest g s db --no-spec --flat`
+
+`db.service.ts`服务用于连接我们的数据库，具体代码如下：
+
+```ts
+import { Injectable } from '@nestjs/common';
+
+@Injectable()
+export class DbService {
+    constructor(private readonly options: Record<string, any>) {}
+    public connect(){
+      return `<h1 style="background:red">连接数据库 - 主机：${this.options.url}</h1>`;
+    }
+}
+```
+
+模块文件的具体代码：
+
+```ts
+import { Module } from '@nestjs/common';
+import { AppController } from './app.controller';
+import { developmentConfig } from './config/development.config';
+import { productionConfig } from './config/production.config';
+import { AppService } from './app.service';
+import { DbService } from './db.service';
+import dotenv from 'dotenv';
+import path from 'path';
+
+dotenv.config({ path: path.join(__dirname, ',,/.env') })
+
+const ConfigService = {
+  provide: 'ConfigService',
+  useValue: process.env.NODE_ENV == 'development' ? developmentConfig : productionConfig,
+}
+
+@Module({
+  imports: [],
+  controllers: [AppController],
+  providers: [AppService, ConfigService, {
+      provide: 'DbService',
+      inject: ['ConfigService'],
+      useFactory(configService) {
+        return new DbService(configService)    // 返回一个DbService的实例
+      },
+  }],
+})
+export class AppModule {}
+```
+
+> 我们要在数据库中使用配置项的信息，因此`DbService`服务要依赖`ConfigService`服务，我们要使用工厂函数来实现，数据库连接的参数在`ConfigService`服务中，使用`inject: ['ConfigService']`会将`ConfigService`服务作为工厂函数的参数传递过来
+>
+> `inject `属性可以注入多个依赖项。在这种情况下，工厂函数的参数将是一个包含这些依赖项的数组，依赖项的顺序与` inject `数组中的顺序相同。 多个依赖项的示例 假设我们有一个 `AppModule`，其中 `DbService` 依赖于 `ConfigService` 和另一个服务 `OtherService`。可以如下设置` inject` 属性和工厂函数：
+>
+> ```ts
+> import { Module } from '@nestjs/common';
+> import { AppController } from './app.controller';
+> import { ConfigService } from './config.service';
+> import { DbService } from './db.service';
+> import { OtherService } from './other.service';
+> 
+> @Module({
+>   imports: [],
+>   controllers: [AppController],
+>   providers: [ConfigService, OtherService,
+>     {
+>       provide: 'DbService',
+>       inject: [ConfigService, OtherService], // 注入 ConfigService 和 OtherService
+>       useFactory: (configService: ConfigService, otherService: OtherService) => {
+>         // 使用 ConfigService 和 OtherService 创建 DbService 实例
+>         return new DbService(configService, otherService);
+>       },
+>     },
+>   ],
+> })
+> export class AppModule {}
+> ```
+>
+> 但是在实际的开发中，我们会将其变成模块来开发
+
+在控制器中，引入放在容器中的服务：
+
+```ts
+import { Controller, Get } from '@nestjs/common';
+import { AppService } from './app.service';
+
+@Controller()
+export class AppController {
+  constructor(
+    private readonly appService: AppService,
+    @Inject('DbService')
+    private readonly dbService: DbService
+  ) {}
+
+  @Get()
+  getHello(): string {
+    return this.dbService.connect();
+  }
+}
+```
+
+> 网页中显示的内容：`连接数据库 - 主机：localhost`，如果环境变量的值不是`development`，网页中显示：`连接数据库 - 主机：6.6.6.6`
+
