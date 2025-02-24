@@ -328,6 +328,7 @@ providers: [
 创建一个新服务，使用命令行进行创建：`nest g s new --no-spec -d`
 
 > - `g s`：创建服务
+> - `--no-spec`：不创建测试文件
 > - `-d`表示只是返回执行的结果，不会实现真正的服务创建，想要真正的创建服务，要将`-d`去掉
 
 执行结果：在`src/new/new.service.ts`中创建一个新的服务，并更新到根模块的容器中，如果我们不想要子目录，我们可以加上`--flat`，具体修改为`nest g s new --no-spec --flat -d`
@@ -772,3 +773,239 @@ export class AppController {
 
 > 网页中显示的内容：`连接数据库 - 主机：localhost`，如果环境变量的值不是`development`，网页中显示：`连接数据库 - 主机：6.6.6.6`
 
+***
+
+### 异步服务提供者
+
+服务在容器注册的时候，可以支持异步操作，`app.module.ts`的代码如下所示：
+
+```ts
+import { Module } from '@nestjs/common';
+import { AppController } from './app.controller';
+import { developmentConfig } from './config/development.config';
+import { productionConfig } from './config/production.config';
+import { AppService } from './app.service';
+import { DbService } from './db.service';
+import dotenv from 'dotenv';
+import path from 'path';
+
+dotenv.config({ path: path.join(__dirname, ',,/.env') })
+
+const ConfigService = {
+  provide: 'ConfigService',
+  useValue: process.env.NODE_ENV == 'development' ? developmentConfig : productionConfig,
+}
+
+@Module({
+  imports: [],
+  controllers: [AppController],
+  providers: [
+      AppService, 
+      ConfigService, 
+      // 服务进行异步注册
+      {
+          provide: 'DbService',
+          inject: ['ConfigService'],
+          useFactory: async (configService) => {
+            return new new Promise((r) => {
+                setTimeout(() => {
+                    r('abc')
+                }, 3000)
+            })
+          },
+      }
+  ],
+})
+export class AppModule {}
+```
+
+控制器文件在调用时进行修改，具体文件`app.controller.ts`修改为：
+
+```ts
+import { Controller, Get, Inject } from '@nestjs/common';
+import { AppService } from './app.service';
+
+@Controller()
+export class AppController {
+  constructor(private readonly appService: AppService,
+              @Inject('DbService')
+              private readonly dbService: string) {}
+
+  @Get()
+  getHello(): string {
+    return this.dbService;
+  }
+}
+```
+
+项目在启动的时候，服务在进行注册的时候是有3秒的异步等待的，注册完后，在网页中还是正常显示`abc`
+
+服务实例在进行返回的时候，不是进行同步返回的，如查询数据库操作，就是一个典型的异步操作
+
+
+
+## 模块
+
+模块是单一的，通常一个模块对应一个具体的业务
+
+### 新模块的创建
+
+创建模块：`nest g mo new -d`
+
+> `-d`表示虚拟创建，返回创建的结果，实际不创建，如果要实际创建，将`-d`去掉即可
+>
+> 就会在根路径下创建新模块：`src/new/new.module.ts`
+>
+> `new.module.ts`文件的具体内容为：
+>
+> ```ts
+> import { Module } from '@nestjs/common';
+> 
+> @Module({})
+> export class NewModule {}
+> ```
+>
+> 并在根模块中进行导入更新了这个新模块，`app.module.ts`的内容为：
+>
+> ```ts
+> import { Module } from '@nestjs/common';
+> import { AppController } from './app.controller';
+> import { NewModule } from './new/new.module';
+> 
+> @Module({
+>   imports: [NewModule],
+>   controllers: [AppController],
+>   providers: [AppService],
+> })
+> export class AppModule {}
+> ```
+
+模块本身是干不了活的，需要搭配控制器中的路由和业务服务才能实现效果
+
+创建一个服务：`nest g s new --no-spec -d`    生成`src/new/new.service.ts`服务提供者文件
+
+在`new.module.ts`文件中，系统会自动的将这个新建的服务放到同目录下的模块中：
+
+```ts
+import { Module } from '@nestjs/common';
+import { NewService } from './new.service';
+
+@Module({
+    providers: [NewService], // 新建的服务已经注册到这个模块中，作用域是这个模块，在其他模块中不能使用
+})
+export class NewModule {}
+```
+
+我们可以按照这样的方式在创建一个`test`模块，这样系统中就有一个根模块和两个其他模块
+
+之后，我们创建控制器：`nest g co new -- no-spec -d`  生成`src/new/new.controller.ts`控制器文件：
+
+```ts
+import { Controller } from '@nestjs/common';
+
+@Controller('new')
+export class NewController {}
+```
+
+同时控制器会被添加到对应的同文件夹中的模块中：
+
+```ts
+import { Module } from '@nestjs/common';
+import { NewService } from './new.service';
+import { NewController } from './new.controller';
+
+@Module({
+    providers: [NewService],
+    controllers: [NewController],
+})
+export class NewModule {}
+```
+
+控制器中可以添加方法：
+
+```ts
+import { Controller, Get } from '@nestjs/common';
+
+@Controller('new')
+export class NewController {
+    @Get()
+    show() {
+        return 'new show method';
+    }
+}
+```
+
+这样我们就可以通过网页地址栏进行访问：`localhost:3000/new`，网页中显示的结果是`new show method`
+
+但是我们一般不将业务的方法放到控制器中，我们一般在控制器中存放路由即可，使用路由去服务提供者中查找具体的方法，从而进行调用
+
+### 模块的互相依赖
+
+服务是有具体的模块作用域的，但是不同的模块间是可以互相依赖的，如果一个模块想要使用其他模块的服务，我们将其他模块导入即可：
+
+```ts
+import { Module } from '@nestjs/common';
+import { NewService } from './new.service';
+import { NewController } from './new.controller';
+import { TestModule } from './../test/test.module';
+
+@Module({
+    imports: [TestModule],
+    providers: [NewService],
+    controllers: [NewController],
+})
+export class NewModule {}
+```
+
+`Test`模块有其作用域内的服务，`test.service.ts`的内容为：
+
+```ts
+import { Inject, Injectable } from '@nestjs/common';
+
+@Injectable()
+export class TestService {
+  get(): string {
+    return 'test show method';
+  }
+}
+```
+
+我们需要将提供服务的模块进行接口的开发，这样其他模块才可以使用该模块中的所有服务，为`TestModule`模块开放接口，`test.module.ts`修改为：
+
+```ts
+import { Module } from '@nestjs/common';
+import { TestService } from './test.service';
+
+@Module({
+    providers: [
+       TestService,
+       {
+           provide: 'test',
+           useValue: '测试服务值',
+       }
+    ],
+    exports: [TestService, 'test']    // 开放服务，将两个服务都暴露出去
+})
+export class NewModule {}
+```
+
+这样在`New`模块控制器中就可以使用`Test`模块中的服务了：
+
+```ts
+import { Controller, Get, Inject } from '@nestjs/common';
+import { TestService } from './../test/test.service';
+
+@Controller('new')
+export class NewController {
+    constructor(private readonly test: TestService,
+                @Inject('test') private testValue: string) {}
+    @Get()
+    show() {
+        return this.test.get() + this.testValue;
+    }
+}
+```
+
+通过网页地址栏进行访问：`localhost:3000/new`，网页中显示的结果是`test show method测试服务值`
+
+`New`模块成功的使用了`Test`模块中的服务和基本类型数据
