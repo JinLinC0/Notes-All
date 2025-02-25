@@ -1357,3 +1357,461 @@ export class ConfigService {
 }
 ```
 
+
+
+## 数据库相关
+
+`NestJs`后端在开发的过程中，需要与数据库进行交互，不断的进行存储和读取数据库中的数据，有许多的第三方包可以进行使用，推荐使用`prisma`包进行数据库的管理
+
+### `prisma`的安装
+
+安装命令：`pnpm add -D prisma @types/mockjs @nestjs/mapped-types @types/passport-local @types/passport-jwt @types/express @types/lodash @types/multer`
+
+也可以使用`npm`进行安装：`npm install -D prisma @types/mockjs @nestjs/mapped-types @types/passport-local @types/passport-jwt @types/express @types/lodash @types/multer`
+
+***
+
+### 配置数据库连接
+
+使用`prisma`包来执行数据库操作的相关指令可以查看：`npx prisma`
+
+- 初始化数据库：`npx prisma init`
+
+  初始化完成后，就会在根目录下生成一个`prisma`，内部有一个数据库文件：`schema.prisma`：
+
+  ```ts
+  generator client {
+    provider = "prisma-client-js"
+  }
+  
+  datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+  }
+  ```
+
+  > 我们可以在这个文件中定义我们的数据库结构
+
+  同时还在根目录下生成一个`.env`文件，用于存放我们数据库的配置：
+
+  ```ts
+  DATABASE_URL="postgresql://johndoe:randompassword@localhost:5432/mydb?schema=public"
+  ```
+
+- 连接配置：我们现在使用的是`MySQL`数据库，因此我们要在`.env`配置文件中进行如下的修改：
+
+  ```ts
+  DATABASE_URL="mysql://root:552259@localhost:3306/nest-blog"
+  ```
+
+  > 同时加入数据库的连接信息
+  >
+  > 账号:密码@主机地址:端口/连接的库
+
+- 建表：使用数据库表迁移文件文件：`schema.prisma`中进行表结构的声明，数据表在开发使用的过程中会不断的进行变化，在迁移文件中声明表结构，每次修改文件，就会生成一个新的版本
+
+  修改`schema.prisma`文件，并新增一个新的表模型：
+
+  ```ts
+  generator client {
+    provider = "prisma-client-js"
+  }
+  
+  datasource db {
+    provider = "mysql"
+    url      = env("DATABASE_URL")
+  }
+  
+  model User {
+    id        BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+    email     String   @db.Char(50)
+    password  String
+    name      String?
+    github    String?
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+  }
+  ```
+
+  > `@id`表示声明为主键；`@default(autoincrement())`定义默认值是自增的；`@db.UnsignedBigInt`设置值是非负的
+  >
+  > `String?`表示类型是字符串，且不是必填项
+  >
+  > `@default(now())`：获取该条数据创建时的时间戳
+  >
+  > `@updatedAt`：获取数据内容有更新时的时间戳
+
+- 数据库迁移：在定义完表结构后，我们要执行数据库的迁移（形成一个版本，后续如果表结构发生变化，会会生成新的版本）
+
+  迁移命令：`npx prisma migrate dev`
+
+  依次输入`Yes`；本次迁移的描述（对这次迁移操作做了什么）第一个可以写`init`
+
+  迁移完后就会看到本次迁移的执行结果和内部包含的本次迁移的`sql`文件：
+
+  ![image-20250225105633758](..\images\image-20250225105633758.png)
+
+  > `sql`文件的内容只有对本次修改的表结构内容进行设计，之前的表结构本次没有修改的不会体现
+
+  同时，对应的数据库中就会生成配置的数据库和表结构：
+
+  ![image-20250225110132905](..\images\image-20250225110132905.png)
+
+  最后将项目部署到服务器上的时候，我们只需要将迁移文件执行一下，系统就会按照迁移文件的日期一个一个的进行跑，将数据库迁移过去
+
+  命令：`npx prisma migrate reset`，将数据库重置一下，按照迁移文件依次的进行执行
+
+***
+
+### 多表关联的模型定义
+
+博客项目的数据库构建，初步思考：
+
+- 用户注册信息表：`User`
+
+  ```ts
+  model User {
+    id        BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+    email     String   @db.Char(50)
+    password  String
+    name      String?
+    avatar    String?   // 头像
+    github    String?
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+  }
+  ```
+
+- 博客栏目表：`category`
+
+  ```ts
+  model category {
+    id       BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+    title    String    @db.Char(50)
+    articles article[]
+  }
+  ```
+
+  > 一个主键，一个分类的标题
+  >
+  > 文章表和栏目表的关系：一个栏目可以包含多个文章（一对多的关系）：`articles`字段与文章模型`article`关联，要与多个文章关联，要加`[]`
+
+- 具体文章表：`article`
+
+  ```ts
+  model article {
+    id         BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+    title      String    @db.Char(50)
+    content    String    @db.Text
+    thumb      String
+    createdAt  DateTime  @default(now())
+    updatedAt  DateTime  @updatedAt
+    category   category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+    categoryId BigInt    @db.UnsignedBigInt
+  }
+  ```
+
+  > 主键`id`；文章的标题`title`；正文内容`content`；图片描述`thumb`
+  >
+  > 栏目的编号：`categoryId`（多的一方要记录少的一方，每篇文章要记录对应栏目的编号）；`category`表示定义关联方式：`categoryId`与栏目表的`id`进行关联，并保持两者的类型一致，`onDelete: Cascade`表示对关联关系进行约束，如果某个栏目删除后，对应文章表中该栏目下的具体文章也会删除
+  >
+  > 一般情况下，在栏目表中进行了关联，具体文章表的`category`和`categoryId`行会自动的出来，如果没有出来，我们可以在终端执行：`npx prisma format`，这行指令会自动分析文件结构，并补全格式化
+
+  在数据库的关联中，我们就可以看到这个外键关联将关联关系定义了：
+
+  ![image-20250225131827857](..\images\image-20250225131827857.png)
+
+  表中的作者与用户信息表中的作者进行关联
+
+***
+
+### 数据填充
+
+我们使用自动填充来生成测试数据，而不是通过手动的方式进行录入
+
+需要在`package.json`中配置一条命令：
+
+```json
+"prisma": {
+	"seed": "ts-node prisma/seed.ts"
+},
+```
+
+> 这个命令用于读取`prisma`文夹中的`seed.ts`文件，并执行这个文件，因此，我们在在这个路径下新建一个`seed.ts`文件，我们要在这个文件下执行数据的填充
+
+添加一条数据的代码示例：代码用于操作`mysql`中的对象
+
+```ts
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();   // 生成一个操作mysql的客户端
+
+async function main() {
+  await prisma.user.create({
+    data: {
+      email: "2794810071@qq.com",
+      password: "552259",
+      name: "JinLinC0",
+      github: "https://github.com/JinLinC0"
+    },
+  });
+}
+
+main()
+```
+
+> 除了创建`create`外，还有更新`update`、统计`count`等等操作命令
+
+在终端中运行：`npx prisma db seed`，执行成功后，就会将数据填充到数据库对应的表中，或者使用`npx prisma migrate reset`命令，使用这条命令后，会重新执行一次完整的数据迁移，并执行数据填充操作
+
+![image-20250225150005830](..\images\image-20250225150005830.png)
+
+#### 使用`mock.js`进行随机大量数据的填充
+
+安装`mock.js`：`npm install mockjs`
+
+引入`mock.js`包随机生成数据进行数据的填充：
+
+```ts
+import { PrismaClient } from "@prisma/client";
+import { Random } from "mockjs";
+
+const prisma = new PrismaClient();
+
+async function main() {
+    for (let i = 0; i < 20; i++) {
+        await prisma.user.create({
+            data: {
+                email: Random.email(),
+                password: Random.string(),
+                name: Random.string(),
+                avatar: Random.image("200x200"),
+                github: Random.url()
+            },
+        });
+    }
+}
+
+main()
+```
+
+> 终端中运行：`npx prisma db seed`或者`npx prisma migrate reset`，就可以在数据库的对应表中看到随机生成的20条数据：
+>
+> ![image-20250225151603535](..\images\image-20250225151603535.png)
+
+对于每张表随机数据的填充，我们应该将其放到独立的文件中，在`prisma`文件夹内创建一个文件夹`seeds`，用来存放不同表的随机数据填充文件，对于用户数据填充文件，新建一个`user.ts`文件：
+
+```ts
+import { PrismaClient } from "@prisma/client";
+import { Random } from "mockjs";
+
+const prisma = new PrismaClient();
+
+export async function user() {
+    for (let i = 0; i < 20; i++) {
+        await prisma.user.create({
+            data: {
+                email: Random.email(),
+                password: Random.string(),
+                name: Random.string(),
+                avatar: Random.image("200x200"),
+                github: Random.url()
+            },
+        });
+    }
+}
+```
+
+同理，创建用于其他表的数据填充文件，栏目的填充文件：`category.ts`：
+
+```ts
+import { PrismaClient } from "@prisma/client";
+import { Random } from "mockjs";
+
+const prisma = new PrismaClient();
+
+export async function category() {
+    for (let i = 0; i < 5; i++) {
+        await prisma.category.create({
+            data: {
+                title: Random.ctitle(2, 5)
+            },
+        });
+    }
+}
+```
+
+文章的填充文件：`article.ts`：
+
+```ts
+import { PrismaClient } from "@prisma/client";
+import { Random } from "mockjs";
+
+const prisma = new PrismaClient();
+
+export async function article() {
+    for (let i = 0; i < 10; i++) {
+        await prisma.article.create({
+            data: {
+                title: Random.ctitle(),
+                content: Random.cparagraph(10, 50),
+                thumb: Random.image("200x200"),
+                categoryId: Random.integer(1, 5)   // 外键关联，对应栏目表的id
+            },
+        });
+    }
+}
+```
+
+最后，在`seed.ts`文件中进行各种表数据填充函数的导入和使用：
+
+```ts
+import { user } from "./seeds/user";
+import { category } from "./seeds/category";
+import { article } from "./seeds/article";
+
+async function main() {
+    user();
+    category();
+    article()
+}
+
+main()
+```
+
+终端中运行：`npx prisma db seed`或者`npx prisma migrate reset`，将数据进行填充
+
+##### 使用帮助函数来简化代码
+
+对于冗余的代码，我们可以在`prisma`文件夹中创建一个帮助文件`helper.ts`，来同一存放具体的方法函数，供其他的文件使用，对于数据的循环填充，我们可以将循环抽离到帮助文件中，实际上就是一个回调函数，供其他使用者进行调用：
+
+```ts
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
+
+export async function create(count = 1, callback: (prisma: PrismaClient) => void) {
+    for (let i = 0; i < count; i++) {
+        callback(prisma);   // 循环执行回调函数
+    }
+}
+```
+
+在`user.ts`文件中，引入帮助函数进行简化代码：
+
+```ts
+import { PrismaClient } from "@prisma/client";
+import { Random } from "mockjs";
+import { create } from "../helper";
+
+export async function user() {
+    create(20, async (prisma: PrismaClient) => {
+        await prisma.user.create({
+            data: {
+                email: Random.email(),
+                password: Random.string(),
+                name: Random.string(),
+                avatar: Random.image("200x200"),
+                github: Random.url()
+            },
+        });
+    })
+}
+```
+
+#### 数据填充的异步阻塞
+
+对于栏目表和文章表，这两张表是存在一个外键关联，具有外键约束，在数据填充执行的时候使用的是一个异步函数，文章表填充数据和栏目表填充数据时不是阻塞的，这个时候可能会出现栏目正在创建的时候，文章也在创建，文章创建的时候对应的栏目`id`如果还不存在，这时就匹配不上，这时就会出现问题：`Foreign key constraint failed on the field: 'categoryId'`
+
+因此我们需要在`seed.ts`文件中，让各个方法函数依次进行执行（主要是让文章填充函数等栏目填充函数执行完后，再进行调用执行），之前的情况是没有指定异步执行的，现在设置栏目表执行异步，其他两张表不进行异步操作，具体修改如下：`seed.ts`文件：
+
+```ts
+import { user } from "./seeds/user";
+import { category } from "./seeds/category";
+import { article } from "./seeds/article";
+
+async function main() {
+    user();
+    await category();    // 执行时阻塞，执行完后再执行后面的内容
+    article();
+}
+
+main()
+```
+
+`user.ts`文件修改为：
+
+```ts
+import { PrismaClient } from "@prisma/client";
+import { Random } from "mockjs";
+import { create } from "../helper";
+
+export function user() {
+    create(20, async (prisma: PrismaClient) => {
+        await prisma.user.create({
+            data: {
+                email: Random.email(),
+                password: Random.string(),
+                name: Random.string(),
+                avatar: Random.image("200x200"),
+                github: Random.url()
+            },
+        });
+    })
+}
+```
+
+`category.ts`文件修改为：将栏目填充函数定义成异步的，栏目的数据填充完后，再执行后面的
+
+```ts
+import { PrismaClient } from "@prisma/client";
+import { Random } from "mockjs";
+import { create } from "../helper";
+
+export async function category() {
+    await create(5, async (prisma: PrismaClient) => {
+        await prisma.category.create({
+            data: {
+                title: Random.ctitle(2, 5)
+            },
+        });
+    })
+}
+```
+
+`article.ts`文件修改为：
+
+```ts
+import { PrismaClient } from "@prisma/client";
+import { Random } from "mockjs";
+import { create } from "../helper";
+
+export function article() {
+    create(10, async (prisma: PrismaClient) => {
+        await prisma.article.create({
+            data: {
+                title: Random.ctitle(),
+                content: Random.cparagraph(10, 50),
+                thumb: Random.image("200x200"),
+                categoryId: Random.integer(1, 5),
+            },
+        });
+    })
+}
+```
+
+`helper.ts`文件修改为：
+
+```ts
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
+
+export async function create(count = 1, callback: (prisma: PrismaClient) => Promise<void>) {
+    for (let i = 0; i < count; i++) {
+        await callback(prisma);   // 所有异步函数执行
+    }
+}
+```
+
+以上操作修改完后，就不会出现：``Foreign key constraint failed on the field: 'categoryId'``报错
