@@ -2149,3 +2149,151 @@ export async function create(count = 1, callback: (prisma: PrismaClient) => Prom
 
 
 
+## 管道与验证
+
+- 管道：后端是服务用户的，对于用户提交的数据，对于用户传递的五花八门的数据，我们需要借助管道来进行限定，限定用户传递某种内容。还有一种情况，当我们通过网络请求的时候，传递过来的数字1是一个字符串类型，但是`ts`是严格类型要求的，我们要求这个数字必须是数值类型，我们这时可以使用管道，将这个传递过来的内容的类型进行转化，总之，管道是对进入的数据进行处理的
+- 验证：对于用户提交的数据，我们需要进行验证，如内容长度太长，或者内容为空，这些情况是不会通过验证的，也就存储不到数据库中
+
+我们可以使用`Apifox`在线工具来测试我们的接口，我们先创建一个项目，在项目中配置测试环境，本地开发测试环境可以设置为`http://localhost:3000`，新建一个接口，选择测试环境，输入路径进行接口的请求，其中`/`表示根路径
+
+![image-20250226194124681](..\images\image-20250226194124681.png)
+
+> 请求得到的内容和在网页中展示的内容是一致的
+
+对于项目中的根控制器`app.controller.ts`：
+
+```ts
+import { Controller, Get, Param } from '@nestjs/common';
+import { AppService } from './app.service';
+
+@Controller()
+export class AppController {
+  constructor(private readonly appService: AppService) {}
+
+  @Get(':id')
+  getHello(@Param('id') id: number) {
+    return id;
+  }
+}
+```
+
+> 对于`@Get()`装饰器，是可以添加参数的，如`@Get(':id')`，与`vue`的写法类似
+>
+> 对于`getHello()`具体函数，可以使用`@Param()`装饰器来接收这个`id`，同时将这个值赋值给为数值变量类型的`id`
+>
+> 最后将`id`进行返回
+>
+> 在接口测试器中发送`http://localhost:3000/1`，就可以接收到这个参数1，同时在网页中显示
+
+但是如果我们对这个返回的参数进行其类型的打印：`console.log(typeof id)`，我们会发现这个`id`的类型是字符串类型，如果我们使用这个`id`去匹配数据库表中的对应为数值类型的字段，就会显示类型报错：
+
+```ts
+import { Controller, Get, Param } from '@nestjs/common';
+import { PrismaClient } from '@prisma/client';
+import { AppService } from './app.service';
+
+@Controller()
+export class AppController {
+  prisma: PrismaClient;
+  constructor(private readonly appService: AppService) {
+    this.prisma = new PrismaClient();
+  }
+
+  @Get(':id')
+  getHello(@Param('id') id: number) {
+    return this.prisma.article.findUnique({
+      where: {
+        id: id,
+      }
+    });
+  }
+}
+```
+
+> 我们尝试进行查询，在测试环境中发送`/1`，后端就会报错：`Invalid value for argument `id`: invalid digit found in string. Expected big integer String.`，说明：传入的是一个字符串类型，但是匹配需要的是数值类型，因此，我们需要使用管道来解决这个问题
+
+### 转换数值管道
+
+创建管道：`nest g pi new --no-spec`，执行后就会在`src/new`文件中创建管道文件`new.pipe.ts`
+
+在根控制器`app.controller.ts`中使用管道：
+
+```ts
+import { Controller, Get, Param } from '@nestjs/common';
+import { PrismaClient } from '@prisma/client';
+import { AppService } from './app.service';
+import { NewPipe } from './new/new.pipe';
+
+@Controller()
+export class AppController {
+  prisma: PrismaClient;
+  constructor(private readonly appService: AppService) {
+    this.prisma = new PrismaClient();
+  }
+
+  @Get(':id')
+  getHello(@Param('id', NewPipe) id: number) {
+    return this.prisma.article.findUnique({
+      where: {
+        id: +id,
+      }
+    });
+  }
+}
+```
+
+> `@Param('id', NewPipe)`：当数据进来的时候，就会使用跟在后面的`NewPipe`管道，使用管道先进行数据的处理，在管道中我们需要进行拦截操作
+
+编辑`new.pipe.ts`文件，使管道对传入的内容进行类型的转换：如果要求的类型是数值类型，就将其转换为数值类型，如果要求的类型不是数值类型，就不做任何处理，直接将值进行返回：
+
+```ts
+import { ArgumentMetadata, Injectable, PipeTransform } from '@nestjs/common';
+
+@Injectable()
+export class NewPipe implements PipeTransform {
+  transform(value: any, metadata: ArgumentMetadata) {
+    return metadata.metatype == Number ? +value : value;
+  }
+}
+```
+
+> 管道中有两个参数：
+>
+> - `value`：用户传入的参数值
+>
+> - `metadata`：原数据，包含了数据的额外的信息
+>
+>   `{ metatype: [Function: Number], type: 'param', data: 'id' }`
+>
+>   - `metatype`：数据类型，构造函数是一个`Number`的数据类型
+>   - `type`：请求的类型，`param`表示地址栏参数
+>   - `data`：接收的参数，接收`id`的值
+>
+> 这样就可以解决传入类型与数据库匹配字段类型不同的问题了，在接口测试工具中输入`/1`，就可以返回文章表中`id`为1的这一条数据的全部内容了
+
+对于一些高频使用的管道，系统都有提供，如：将数据类型转化为数值类型的管道`ParseIntPipe`
+
+```ts
+import { Controller, Get, Param, ParseIntPipe } from '@nestjs/common';
+import { PrismaClient } from '@prisma/client';
+import { AppService } from './app.service';
+
+@Controller()
+export class AppController {
+  prisma: PrismaClient;
+  constructor(private readonly appService: AppService) {
+    this.prisma = new PrismaClient();
+  }
+
+  @Get(':id')
+  getHello(@Param('id', ParseIntPipe) id: number) {
+    return this.prisma.article.findUnique({
+      where: {
+        id: id,
+      }
+    });
+  }
+}
+```
+
+> 效果和我们自己写的`NewPipe`管道相同
