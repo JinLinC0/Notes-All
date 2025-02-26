@@ -1359,6 +1359,337 @@ export class ConfigService {
 
 
 
+## 配置管理
+
+在模块中，手写过配置项模块，但是为了加快开发的速度，提高开发的效率，通过使用安装`ConfigModule`包来进行配置项的管理
+
+### 安装依赖
+
+在开发`NestJs`后端的时候，一般需要使用到以下的包：
+
+安装命令：`pnpm add -D prisma-binding @prisma/client mockjs @nestjs/config class-validator class-transformer argon2 @nestjs/passport passport passport-local @nestjs/jwt passport-jwt lodash multer dayjs express`
+
+或者：`npm install -D prisma-binding @prisma/client mockjs @nestjs/config class-validator class-transformer argon2 @nestjs/passport passport passport-local @nestjs/jwt passport-jwt lodash multer dayjs express`
+
+> 命令中的一系列开发依赖项：
+>
+> - `prisma-binding`：`Prisma Binding` 是 `Prisma` 的一个` JavaScript `客户端库，它提供了一组用于构建 `GraphQL` 解析器的工具。可以轻松地将` Prisma Client `集成到` GraphQL `服务器中
+>
+> - `@prisma/client`：`Prisma Client `是` Prisma` 自动生成的用于与数据库进行交互的 `JavaScript/TypeScript `客户端库。它提供了一组 `API `来执行 `CRUD `操作以及其他与数据库相关的操作
+>
+> - `mockjs`：`Mock.js` 是一个用于生成随机数据的` JavaScript` 库，它可以帮助你模拟开发和测试环境中的数据
+>
+> - `@nestjs/config`：`NestJS` 的配置模块，用于管理应用程序的配置信息。可以帮助我们从不同的源（如环境变量、配置文件等）加载配置，并在整个应用程序中使用
+>
+> - `class-validator`：于验证类和对象的 `TypeScript/JavaScript `库，帮助我们轻松地定义和应用验证规则，以确保数据的有效性和完整性
+>
+> - `class-transformer`：用于转换类和对象的` TypeScript/JavaScript` 库，可以帮助我们轻松地在不同的数据结构之间进行转换和映射
+>
+> - `argon2`：一种密码哈希算法，密码安全性更高的替代方案，可以帮助你安全地存储用户密码
+> - `@nestjs/passport`：`NestJS `的` Passport `模块，用于在 `NestJS `应用程序中实现身份验证和授权功能
+>
+> - `passport`：是` Node.js `中一个流行的身份验证中间件，提供了一组易于使用的策略来实现身份验证功能
+>
+> - `passport-local`：`Passport `中用于处理本地身份验证的策略，它允许用户使用用户名和密码进行身份验证
+>
+> - `@nestjs/jwt`：`NestJS` 的 `JWT `模块，用于在 `NestJS `应用程序中实现` JWT`（`JSON Web Token`）身份验证和授权功能
+>
+> - `passport-jwt`：`Passport` 中用于处理 `JWT `身份验证的策略，它允许我们使用 `JWT` 来实现无状态的身份验证
+>
+> - `lodash`：`Lodash` 是` JavaScript `中一个实用工具库，提供了许多常用的工具函数，可以帮助你简化 `JavaScript `编程
+>
+> - `multer`：`Multer` 是一个 `Node.js` 中用于处理文件上传的中间件，它可以帮助我们处理表单数据中的文件上传功能
+>
+> - `dayjs`：`Day.js `是一个轻量级的` JavaScript `日期处理库，它提供了简单易用的 `API `来处理日期和时间
+
+`@nestjs/config`这个包是用来管理我们配置项的，使用方式和我们手写的配置项模块类似
+
+***
+
+### 加载配置项
+
+#### 根配置文件`.env`中配置项加载
+
+我们先要到`app.module.ts`文件中导入并定义这个模块：
+
+```ts
+import { Module } from '@nestjs/common';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { ConfigModule } from '@nestjs/config';
+
+@Module({
+  imports: [ConfigModule.forRoot({
+      isGlobal: true,
+  })],
+  controllers: [AppController],
+  providers: [AppService],
+})
+export class AppModule {}
+```
+
+在使用的时候，我们去我们创建的`.env`（`.env`文件在根目录中创建）配置文件中读取我们添加的配置项内容：
+
+```ts
+BLOG_NAME = JBLOG
+```
+
+> 在本地开发的时候，会有一些其他的配置项，如阿里云的密钥等，这些密钥一般是隐私的，我们不能将其提交到代码仓库的，所以`.env`这个文件一般要在`git`的忽略文件中进行忽略，如果代码部署到服务器上的时候，我们在拉取代码后，将`.env`这个文件复制过去即可
+
+`ConfigModule`模块会自动的读取这个配置文件
+
+在控制器文件`app.controller.ts`中，将读取配置项服务引入：
+
+```ts
+import { Controller, Get } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { AppService } from './app.service';
+
+@Controller()
+export class AppController {
+  constructor(private readonly appService: AppService,
+              private readonly config: ConfigService) {}
+
+  @Get()
+  getHello() {
+    return this.config.get('BLOG_NAME');
+  }
+}
+```
+
+> 在网页地址中输入：`localhost:3000`，可以看到读取的配置项内容：`JBLOG`
+
+对于配置项操作，一般简单的项目，我们将配置项内容放在`.env`文件中即可
+
+#### 其他配置文件的配置项加载
+
+我们可以在`src`文件夹中自定义创建一些模块的配置文件，比如，为根模块创建一个配置文件：`app.config.ts`，具体内容为：
+
+```ts
+export default () => ({
+    app: {
+        name: 'JBLOG'
+    }
+})
+```
+
+`ConfigModule`模块是不认这个配置文件的，我们需要在`app.module.ts`文件中为`ConfigModule`模块添加一个选项，将这个配置文件加载过来：
+
+```ts
+import { Module } from '@nestjs/common';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { ConfigModule } from '@nestjs/config';
+import { appConfig } from './app.config'
+
+@Module({
+  imports: [ConfigModule.forRoot({
+      isGlobal: true,
+      load: [appConfig]
+  })],
+  controllers: [AppController],
+  providers: [AppService],
+})
+export class AppModule {}
+```
+
+> 加载之后，自定义的配置文件就会和`.env`根配置文件进行合并，可以一起被`ConfigModule`模块读取到
+
+在控制器文件`app.controller.ts`中，将读取配置项服务引入：
+
+```ts
+import { Controller, Get } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { AppService } from './app.service';
+
+@Controller()
+export class AppController {
+  constructor(private readonly appService: AppService,
+              private readonly config: ConfigService) {}
+
+  @Get()
+  getHello() {
+    return this.config.get('app.name');
+  }
+}
+```
+
+> 在网页地址中输入：`localhost:3000`，可以看到读取的配置项内容：`JBLOG`
+
+***
+
+### `process.env`环境变量
+
+`process.env`可以读取到当前的环境变量，包括当前的工作目录、操作系统等等，其中项目中的`.env`配置也会加载到环境变量中
+
+对于`.env`文件的内容：
+
+```ts
+BLOG_NAME = JBLOG
+```
+
+我们也可以使用`process.env.BLOG_NAME`的方式进行配置内容的读取，不单单只是通过`ConfigService`服务进行配置项内容的读取
+
+#### 根据当前环境读取不同配置项内容
+
+`.env`文件，加上`NODE_ENV`项进行区分不同的开发环境：
+
+```ts
+NODE_ENV = development
+BLOG_NAME = JBLOG
+```
+
+在`app.config.ts`文件中进行当前环境的判断，具体内容为：
+
+```ts
+export default () => ({
+    app: {
+        name: 'JBLOG',
+        isDev: process.env.NODE_ENV === 'development'
+    }
+})
+```
+
+在`app.module.ts`文件中为`ConfigModule`模块添加一个选项，将这个配置文件加载过来：
+
+```ts
+import { Module } from '@nestjs/common';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { ConfigModule } from '@nestjs/config';
+import { appConfig } from './app.config'
+
+@Module({
+  imports: [ConfigModule.forRoot({
+      isGlobal: true,
+      load: [appConfig]
+  })],
+  controllers: [AppController],
+  providers: [AppService],
+})
+export class AppModule {}
+```
+
+在控制器文件`app.controller.ts`中，将读取配置项服务引入：
+
+```ts
+import { Controller, Get } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { AppService } from './app.service';
+
+@Controller()
+export class AppController {
+  constructor(private readonly appService: AppService,
+              private readonly config: ConfigService) {}
+
+  @Get()
+  getHello() {
+      if (this.config.get('app.isDev')){
+          return this.config.get('app.name');
+      }
+  }
+}
+```
+
+> 当前为开发环境的时候，进行对应内容的打印
+>
+> 在网页地址中输入：`localhost:3000`，可以看到读取的配置项内容：`JBLOG`
+
+这样对于不同的开发环境选择不同的策略，如对于生产环境，是不是需要进行运行日志的打印
+
+***
+
+### 多配置文件定义
+
+多配置文件就是我们采用多个文件来定义不同模块的配置项，最后将其都放到一个`config`文件夹中进行统一管理，一般在这个文件夹中写一个入口文件`index.ts`，进行所有配置项的统一导出管理
+
+在`config`文件夹下编写两个模块的配置项文件，如：`app.config.ts`和`db.config.ts`：
+
+```ts
+export default () => ({
+    app: {
+        name: 'JBLOG'
+    }
+})
+```
+
+```ts
+export default () => ({
+    database: {
+        host: 'localhost'
+    }
+})
+```
+
+编写入口文件`index.ts`：
+
+```ts
+import appConfig from './app.config';
+import dbConfig from './db.config';
+
+export default [appConfig, dbConfig];
+```
+
+在根模块中，配置模块调用加载，使用`ConfigModule`模块可以找到这个自定义的配置项内容：
+
+```ts
+import { Module } from '@nestjs/common';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { ConfigModule } from '@nestjs/config';
+import { config } from './config'
+
+@Module({
+  imports: [ConfigModule.forRoot({
+      isGlobal: true,
+      load: [...config]    // 是一个数组，需要进行展开
+  })],
+  controllers: [AppController],
+  providers: [AppService],
+})
+export class AppModule {}
+```
+
+但是这种情况在调用的时候`this.config.get('app.name')`，输入`app`，系统是不会给出类型提示的
+
+#### 命名空间配置项
+
+为了解决上述没有代码提示的情况，我们需要进行基于命名空间的配置，在配置文件中进行修改，以`db.config.ts`修改为例：
+
+```ts
+import { registerAs } from '@nestjs/config';
+
+export default registerAs('database', () => ({
+	host: 'localhost'
+}))
+```
+
+在控制器服务调用的`app.controller.ts`文件中进行依赖的注入和类型的添加：
+
+```ts
+import { Controller, Get } from '@nestjs/common';
+import { ConfigService, ConfigType } from '@nestjs/config';
+import { AppService } from './app.service';
+import dbConfig from './config/db.config'
+
+@Controller()
+export class AppController {
+  constructor(private readonly appService: AppService,
+              private readonly config: ConfigService
+              // 将配置内容当作模块文件中providers的对象内容进行使用，调用时需进行注入
+              @Inject(dbConfig.KEY) private database: ConfigType<typeof dbConfig>) {}
+
+  @Get()
+  getHello() {
+      return this.database.host    // 这时再输入database后，就会有代码提示，告知对象下的所有KEY
+  }
+}
+```
+
+> `@nestjs/config`包中为我们提供了类型提示工具：`ConfigType`，将所需要的配置内容`typeof dbConfig`传入即可，后续在使用的时候，就会有代码提示
+
+
+
 ## 数据库相关
 
 `NestJs`后端在开发的过程中，需要与数据库进行交互，不断的进行存储和读取数据库中的数据，有许多的第三方包可以进行使用，推荐使用`prisma`包进行数据库的管理
@@ -1818,236 +2149,3 @@ export async function create(count = 1, callback: (prisma: PrismaClient) => Prom
 
 
 
-## 配置管理
-
-在模块中，手写过配置项模块，但是为了加快开发的速度，提高开发的效率，通过使用安装`ConfigModule`包来进行配置项的管理
-
-### 安装依赖
-
-在开发`NestJs`后端的时候，一般需要使用到以下的包：
-
-安装命令：`pnpm add -D prisma-binding @prisma/client mockjs @nestjs/config class-validator class-transformer argon2 @nestjs/passport passport passport-local @nestjs/jwt passport-jwt lodash multer dayjs express`
-
-或者：`npm install -D prisma-binding @prisma/client mockjs @nestjs/config class-validator class-transformer argon2 @nestjs/passport passport passport-local @nestjs/jwt passport-jwt lodash multer dayjs express`
-
-> 命令中的一系列开发依赖项：
->
-> - `prisma-binding`：`Prisma Binding` 是 `Prisma` 的一个` JavaScript `客户端库，它提供了一组用于构建 `GraphQL` 解析器的工具。可以轻松地将` Prisma Client `集成到` GraphQL `服务器中
->
-> - `@prisma/client`：`Prisma Client `是` Prisma` 自动生成的用于与数据库进行交互的 `JavaScript/TypeScript `客户端库。它提供了一组 `API `来执行 `CRUD `操作以及其他与数据库相关的操作
->
-> - `mockjs`：`Mock.js` 是一个用于生成随机数据的` JavaScript` 库，它可以帮助你模拟开发和测试环境中的数据
->
-> - `@nestjs/config`：`NestJS` 的配置模块，用于管理应用程序的配置信息。可以帮助我们从不同的源（如环境变量、配置文件等）加载配置，并在整个应用程序中使用
->
-> - `class-validator`：于验证类和对象的 `TypeScript/JavaScript `库，帮助我们轻松地定义和应用验证规则，以确保数据的有效性和完整性
->
-> - `class-transformer`：用于转换类和对象的` TypeScript/JavaScript` 库，可以帮助我们轻松地在不同的数据结构之间进行转换和映射
->
-> - `argon2`：一种密码哈希算法，密码安全性更高的替代方案，可以帮助你安全地存储用户密码
-> - `@nestjs/passport`：`NestJS `的` Passport `模块，用于在 `NestJS `应用程序中实现身份验证和授权功能
->
-> - `passport`：是` Node.js `中一个流行的身份验证中间件，提供了一组易于使用的策略来实现身份验证功能
->
-> - `passport-local`：`Passport `中用于处理本地身份验证的策略，它允许用户使用用户名和密码进行身份验证
->
-> - `@nestjs/jwt`：`NestJS` 的 `JWT `模块，用于在 `NestJS `应用程序中实现` JWT`（`JSON Web Token`）身份验证和授权功能
->
-> - `passport-jwt`：`Passport` 中用于处理 `JWT `身份验证的策略，它允许我们使用 `JWT` 来实现无状态的身份验证
->
-> - `lodash`：`Lodash` 是` JavaScript `中一个实用工具库，提供了许多常用的工具函数，可以帮助你简化 `JavaScript `编程
->
-> - `multer`：`Multer` 是一个 `Node.js` 中用于处理文件上传的中间件，它可以帮助我们处理表单数据中的文件上传功能
->
-> - `dayjs`：`Day.js `是一个轻量级的` JavaScript `日期处理库，它提供了简单易用的 `API `来处理日期和时间
-
-`@nestjs/config`这个包是用来管理我们配置项的，使用方式和我们手写的配置项模块类似
-
-***
-
-### 加载配置项
-
-#### 根配置文件`.env`中配置项加载
-
-我们先要到`app.module.ts`文件中导入并定义这个模块：
-
-```ts
-import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { ConfigModule } from '@nestjs/config';
-
-@Module({
-  imports: [ConfigModule.forRoot({
-      isGlobal: true,
-  })],
-  controllers: [AppController],
-  providers: [AppService],
-})
-export class AppModule {}
-```
-
-在使用的时候，我们去我们创建的`.env`（`.env`文件在根目录中创建）配置文件中读取我们添加的配置项内容：
-
-```ts
-BLOG_NAME = JBLOG
-```
-
-> 在本地开发的时候，会有一些其他的配置项，如阿里云的密钥等，这些密钥一般是隐私的，我们不能将其提交到代码仓库的，所以`.env`这个文件一般要在`git`的忽略文件中进行忽略，如果代码部署到服务器上的时候，我们在拉取代码后，将`.env`这个文件复制过去即可
-
-`ConfigModule`模块会自动的读取这个配置文件
-
-在控制器文件`app.controller.ts`中，将读取配置项服务引入：
-
-```ts
-import { Controller, Get } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { AppService } from './app.service';
-
-@Controller()
-export class AppController {
-  constructor(private readonly appService: AppService,
-              private readonly config: ConfigService) {}
-
-  @Get()
-  getHello() {
-    return this.config.get('BLOG_NAME');
-  }
-}
-```
-
-> 在网页地址中输入：`localhost:3000`，可以看到读取的配置项内容：`JBLOG`
-
-#### 其他配置文件的配置项加载
-
-我们可以在`src`文件夹中自定义创建一些模块的配置文件，比如，为根模块创建一个配置文件：`app.config.ts`，具体内容为：
-
-```ts
-export default () => ({
-    app: {
-        name: 'JBLOG'
-    }
-})
-```
-
-`ConfigModule`模块是不认这个配置文件的，我们需要在`app.module.ts`文件中为`ConfigModule`模块添加一个选项，将这个配置文件加载过来：
-
-```ts
-import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { ConfigModule } from '@nestjs/config';
-import { appConfig } from './app.config'
-
-@Module({
-  imports: [ConfigModule.forRoot({
-      isGlobal: true,
-      load: [appConfig]
-  })],
-  controllers: [AppController],
-  providers: [AppService],
-})
-export class AppModule {}
-```
-
-> 加载之后，自定义的配置文件就会和`.env`根配置文件进行合并，可以一起被`ConfigModule`模块读取到
-
-在控制器文件`app.controller.ts`中，将读取配置项服务引入：
-
-```ts
-import { Controller, Get } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { AppService } from './app.service';
-
-@Controller()
-export class AppController {
-  constructor(private readonly appService: AppService,
-              private readonly config: ConfigService) {}
-
-  @Get()
-  getHello() {
-    return this.config.get('app.name');
-  }
-}
-```
-
-> 在网页地址中输入：`localhost:3000`，可以看到读取的配置项内容：`JBLOG`
-
-***
-
-### `process.env`环境变量
-
-`process.env`可以读取到当前的环境变量，包括当前的工作目录、操作系统等等，其他项目中的`.env`配置也会加载到环境变量中
-
-对于`.env`文件的内容：
-
-```ts
-BLOG_NAME = JBLOG
-```
-
-我们也可以使用`process.env.BLOG_NAME`的方式进行配置内容的读取，不单单只是通过`ConfigService`服务进行配置项内容的读取
-
-#### 根据当前环境读取不同配置项内容
-
-`.env`文件，加上`NODE_ENV`项进行区分不同的开发环境：
-
-```ts
-NODE_ENV = development
-BLOG_NAME = JBLOG
-```
-
-在`app.config.ts`文件中进行当前环境的判断，具体内容为：
-
-```ts
-export default () => ({
-    app: {
-        name: 'JBLOG',
-        isDev: process.env.NODE_ENV === 'development'
-    }
-})
-```
-
-在`app.module.ts`文件中为`ConfigModule`模块添加一个选项，将这个配置文件加载过来：
-
-```ts
-import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { ConfigModule } from '@nestjs/config';
-import { appConfig } from './app.config'
-
-@Module({
-  imports: [ConfigModule.forRoot({
-      isGlobal: true,
-      load: [appConfig]
-  })],
-  controllers: [AppController],
-  providers: [AppService],
-})
-export class AppModule {}
-```
-
-在控制器文件`app.controller.ts`中，将读取配置项服务引入：
-
-```ts
-import { Controller, Get } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { AppService } from './app.service';
-
-@Controller()
-export class AppController {
-  constructor(private readonly appService: AppService,
-              private readonly config: ConfigService) {}
-
-  @Get()
-  getHello() {
-    return this.config.get('app.name');
-  }
-}
-```
-
-> 在网页地址中输入：`localhost:3000`，可以看到读取的配置项内容：`JBLOG`
-
-***
-
-### 
