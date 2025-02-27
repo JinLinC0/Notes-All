@@ -2592,7 +2592,100 @@ export class AppController {
 
 #### 使用`DTO`进行验证
 
-`DTO`是数据传输对象，对前端传递过来的数据进行处理
+`DTO`是数据传输对象，对前端传递过来的数据进行处理，使用`DTO`进行验证有很好的复用性
 
-我们在`src`目录中创建`dto`文件夹，在文件夹中创建`create.article.dto.ts`文件，用来实现对传递过来的文章数据进行验证
+我们在`src`目录中创建`dto`文件夹，在文件夹中创建`create.article.dto.ts`文件，用来实现对传递过来的文章数据进行验证处理：
 
+```ts
+import { IsNotEmpty, Length } from 'class-validator';
+
+export default class CreateArticleDto {
+    @IsNotEmpty({ message: '标题不能为空' })
+    @Length(1, 10, { message: '标题长度在1到10之间' })
+    title: string;
+    @IsNotEmpty({ message: '内容不能为空' })
+    content: string;
+}
+```
+
+> 这里使用的是类`class`，而没有使用接口的方式进行定义。因为在`ts`文件最终被编译成`js`的时候，`ts`这些声明都是会被忽略掉的，我们这里使用类进行定义，保证被编译成`js`时，这个验证过程还是有效的
+>
+> 使用`@IsNotEmpty()`装饰器对数据进行验证，这个装饰器需要使用`class-validator`包进行导入，`@IsNotEmpty()`装饰器的验证规则是不能为空，字段内容的属性都会经过这个装饰器进行验证处理，如果数据，没有值，就会抛出异常，我们可以在`@IsNotEmpty()`中定义错误消息：`@IsNotEmpty({message:'内容不能为空'})`
+>
+> `@Length()`装饰器是对内容长度的验证，可以将多条验证规矩进行一起使用，但都是管道最近的一个字段
+>
+> 具体的详细规则可以去`class-validator`包的文档中进行查看
+
+如果有其他的输入数据进行验证，我们可以创建不同的验证文件
+
+之后，在控制器文件`app.controller.ts`中进行如下的修改：
+
+```ts
+import { Body, Controller, Post } from '@nestjs/common';
+import { AppService } from './app.service';
+import { RequestPipe } from './request/request.pipe';
+import CreateArticleDto from './dto/create.article.dto';
+import { PrismaClient } from '@prisma/client';
+
+@Controller()
+export class AppController {
+  prisma: PrismaClient;
+  constructor(private readonly appService: AppService) {
+    this.prisma = new PrismaClient();
+  }
+
+  @Post('store')
+  async add(@Body(RequestPipe) dto: CreateArticleDto) {
+   	// 往数据库中添加数据
+    await this.prisma.article.create({
+        data: {
+            title: dto.title,
+            content: dto.content,
+            thumb: "https://www.baidu.com",   // 由于数据表设计，加上额外的两个字段内容
+            categoryId: 1,
+        },
+    });
+  }
+}
+```
+
+> 我们要在控制器中要告知`dto`这个数据是`CreateArticleDto`类型的
+
+在管道文件`request.pipe.ts`中：
+
+```ts
+import { ArgumentMetadata, HttpException, HttpStatus, Injectable, PipeTransform } from '@nestjs/common';
+import { plainToInstance } from 'class-transformer';
+import { validate } from 'class-validator';
+
+@Injectable()
+export class RequestPipe implements PipeTransform {
+  async transform(value: any, metadata: ArgumentMetadata) {
+    const object = metadata.metatype ? plainToInstance(metadata.metatype, value) : value;
+    const errors = await validate(object);
+    // 深入读取错误信息
+    if (errors.length) {
+      const message = errors.map((error) => ({
+        name: error.property,
+        message: Object.values(error.constraints ? error.constraints : {}).map((v) => v),
+      }));
+      throw new HttpException(message, HttpStatus.BAD_REQUEST);
+    }
+    return value;
+  }
+}
+```
+
+> `metadata`：原数据包含内容的数据类型就变成了`class CreateArticleDt`
+>
+> `{ metatype: [class CreateArticleDto], type: 'body', data: undefined }`
+>
+> 但是`value`是没有类型的，只会显示`Object`，因此，对于这个数据要按照`CreateArticleDt`类去实例化出对象，我们需要使用工具`plainToInstance()`，将数据`value`通过`metadata.metatype`构造函数，去实例化出一个对象，这时`object`的类型就是类`CreateArticleDt`，其内容就是`value`的内容，数据会依次分配给新生成的对象
+>
+> 我们需要使用`validate()`方法让装饰器`@IsNotEmpty()`执行，`validate()`返回的是`Promise`，因此需要使用异步去加载
+
+![image-20250227214512835](..\images\image-20250227214512835.png)
+
+如果输入符合添加的内容，就会往数据库中进行数据的添加：
+
+![image-20250227222601454](..\images\image-20250227222601454.png)
