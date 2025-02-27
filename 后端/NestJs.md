@@ -2297,3 +2297,302 @@ export class AppController {
 ```
 
 > 效果和我们自己写的`NewPipe`管道相同
+
+***
+
+### 管道的定义方式
+
+管道定义方式一共有以下几种：
+
+- 控制器
+
+  将管道注册在控制器层面，这样就会影响控制器内部所有的方法：
+
+  ```ts
+  import { Controller, Get, Param } from '@nestjs/common';
+  import { PrismaClient } from '@prisma/client';
+  import { AppService } from './app.service';
+  import { NewPipe } from './new/new.pipe';
+  
+  @Controller()
+  @UsePipes(NewPipe)
+  export class AppController {
+    prisma: PrismaClient;
+    constructor(private readonly appService: AppService) {
+      this.prisma = new PrismaClient();
+    }
+  
+    @Get(':id')
+    getHello(@Param('id') id: number) {
+      return this.prisma.article.findUnique({
+        where: {
+          id: +id,
+        }
+      });
+    }
+  }
+  ```
+
+  > 结果还是正常的，可以根据输入的参数，获取对数据库中对应匹配的值
+
+- 控制器方法
+
+  控制器方法层面，我们可以进行以下方式的注册：
+
+  ```ts
+  import { Controller, Get, Param } from '@nestjs/common';
+  import { PrismaClient } from '@prisma/client';
+  import { AppService } from './app.service';
+  import { NewPipe } from './new/new.pipe';
+  
+  @Controller()
+  export class AppController {
+    prisma: PrismaClient;
+    constructor(private readonly appService: AppService) {
+      this.prisma = new PrismaClient();
+    }
+  
+    @Get(':id')
+    @UsePipes(NewPipe)
+    getHello(@Param('id') id: number) {
+      return this.prisma.article.findUnique({
+        where: {
+          id: +id,
+        }
+      });
+    }
+  }
+  ```
+
+  > 结果还是正常的，可以根据输入的参数，获取对数据库中对应匹配的值
+
+- 方法参数
+
+  方法参数层面进行管道的注册，将管道注册在对应的参数后面
+
+  ```ts
+  import { Controller, Get, Param } from '@nestjs/common';
+  import { PrismaClient } from '@prisma/client';
+  import { AppService } from './app.service';
+  import { NewPipe } from './new/new.pipe';
+  
+  @Controller()
+  export class AppController {
+    prisma: PrismaClient;
+    constructor(private readonly appService: AppService) {
+      this.prisma = new PrismaClient();
+    }
+  
+    @Get(':id')
+    getHello(@Param('id', NewPipe) id: number) {
+      return this.prisma.article.findUnique({
+        where: {
+          id: +id,
+        }
+      });
+    }
+  }
+  ```
+
+  > 结果还是正常的，可以根据输入的参数，获取对数据库中对应匹配的值
+  >
+  > 一般情况对于参数，我们管道注册在参数后面即可：`@Param('id', NewPipe)`
+
+- 模块
+
+  我们也可以将管道放到模块中进行注册，我们在根模块`app.module.ts`中进行管道的注册：
+
+  ```ts
+  import { Module } from '@nestjs/common';
+  import { AppController } from './app.controller';
+  import { AppService } from './app.service';
+  import { APP_PIPE } from '@nestjs/core';
+  import { NewPipe } from './new/new.pipe';
+  
+  @Module({
+    imports: [],
+    controllers: [AppController],
+    providers: [AppService, 
+               {  // 定义管道
+                   provide: APP_PIPE,// 起一个NestJs要使用的管道名称，内部要APP_PIPE名称的提供者
+                   useClass: NewPipe
+               }],
+  })
+  export class AppModule {}
+  ```
+
+  > 可以在管道模块中进行`@Inject`依赖的注入
+
+- 全局管道
+
+  在`main.ts`文件中进行全局管道的注册：
+
+  ```ts
+  import { NestFactory } from '@nestjs/core';
+  import { AppModule } from './app.module';
+  import { NewPipe } from './new/new.pipe';
+  
+  async function bootstrap() {
+    const app = await NestFactory.create(AppModule);
+    app.useGlobalPipes(new NewPipe());    // 全局进行管道的注册
+    await app.listen(process.env.PORT ?? 3000);
+  }
+  bootstrap();
+  ```
+
+  > 全局注册后，我们就可以在任何地方去使用这个管道，但是在全局文件中进行注册是不能进行后续的依赖注入的
+
+***
+
+### 系统提供的常用管道
+
+有些管道的逻辑在开发中是非常常用的，因此，系统将这些管道分装好，直接提供给我们进行使用
+
+系统提供的常用管道有：
+
+- `ParseIntPipe`：将参数的数据类型转化为数值类型
+
+  内置管道` ParseIntPipe `是用于转换 `number `类型中的“整数”的。 如果说想转的值是浮点型或者` NaN `，像这些值虽然也属于 `number `类型，但由于它们不属于“整数”，所以` ParseIntPipe`会抛出异常
+
+- `ParseFloatPipe`：将参数的数据类型转化为浮点数类型
+
+- `ParseBoolPipe`：将参数的数据类型转化为布尔类型
+
+- `ParseArrayPipe`：将参数的数据类型转化为数组类型
+
+- `ParseUUIDPipe`：将参数的数据类型转化为`UUID`类型
+
+- `ParseEnumPipe`：将参数的数据类型转化为枚举类型
+
+- `ParseFilePipe`：将参数的数据类型转化为文件类型
+
+- `ParseDatePipe`：将参数的数据类型转化为日期类型
+
+- `DefaultValuePipe`：默认值管道，如果没有传递参数，可以使用默认值管道，使用默认值
+
+  ```ts
+  @Get()
+  getHello(@Param('id', new DefaultValuePipe(1)) id: number) {
+      return this.prisma.article.findUnique({
+        where: {
+          id: +id,
+        }
+      });
+  }
+  ```
+
+  > 当`id`没有进行传参的时候，就使用默认值管道中的默认值1
+
+- `ValidationPipe`：校验时必须要在`Query`,`Body`等装饰器上加上`ValidationPipe`管道才能对请求数据进行验证 
+
+***
+
+### 验证
+
+对于用户提交上来的数据，我们需要使用管道进行对其内容的验证，保证其内容是符合规定的，对于不符合规定的数据，我们要对其进行拦截，使其不能往数据库中进行写入
+
+根控制器`app.controller.ts`文件：
+
+```ts
+import { Body, Controller, Post } from '@nestjs/common';
+import { AppService } from './app.service';
+
+@Controller()
+export class AppController {
+  constructor(private readonly appService: AppService) {}
+
+  @Post('store')
+  add(@Body() dto: Record<string, any>) {
+    console.log(dto);
+    return dto;
+  }
+}
+```
+
+> 使用装饰器`@Body()`来接收数据`dto`
+>
+> `@Post('store')`中`@Post()`装饰器内部的字符串是地址，名称可以任意的取
+>
+> 在接口测试工具中，可以添加一个`POST`接口，进行数据的发送，选择测试环境，在地址中输入`/store`
+>
+> 选择`Body`的数据方式：
+>
+> ![image-20250227165655745](..\images\image-20250227165655745.png)
+>
+> 我们还可以在命令终端以命令行的形式进行数据的发送：
+>
+> `curl -H "Content-Type:application/json" -X POST -d '{"title":"NestJs的使用","content":"管道的验证操作"}' http://localhost:3000/store`
+>
+> - `-H`表示指定头信息
+> - `"Content-Type:application/json"`：告诉后端，我们发送的是一个`JSON`数据
+> - `-X`：表示要发送的请求方式，指定的是`POST`请求
+> - `-d`：表示要传递过去的数据，后面接传递过去的数据，数据要使用`JSON`格式，键和值都要用引号包裹
+>
+> 发送成功后，在后端就可以看到数据：
+>
+> ![image-20250227164241890](..\images\image-20250227164241890.png)
+
+上述情况下，我们如果发送的数据没有内容，也是可以进行接收的，这个在实际的项目中就不合理，我们需要设计管道来进行验证，如果`title`或者`content`的内容为空时，我们会抛出异常
+
+创建一个管道`nest g pi request --no-spec`，用来对用户提交的内容进行验证，管道验证的内容为：
+
+```ts
+import { ArgumentMetadata, BadRequestException, Injectable, PipeTransform } from '@nestjs/common';
+
+@Injectable()
+export class RequestPipe implements PipeTransform {
+  transform(value: any, metadata: ArgumentMetadata) {
+    if (!value.title) {
+      throw new BadRequestException('标题不能为空');
+    }
+    if (!value.content) {
+      throw new BadRequestException('内容不能为空');
+    }
+    return value;
+  }
+}
+```
+
+> `value`：接收的对象数据
+>
+> `metadata`：原数据包含如下的内容
+>
+> `{ metatype: [Function: Object], type: 'body', data: undefined }`
+>
+> - `metatype`：数据类型，构造函数是一个`Object`的数据类型，定义的是一个对象
+> - `type`：接收的类型，`POST`数据，类型是`body`
+> - `data`：接收的参数，对于对象，没有指定某一个`KEY`，所以返回的是空
+>
+> `BadRequestException`：错误请求异常
+
+修改后的根控制器`app.controller.ts`文件，引入了管道进行验证：
+
+```ts
+import { Body, Controller, Post } from '@nestjs/common';
+import { AppService } from './app.service';
+import { RequestPipe } from './request/request.pipe';
+
+@Controller()
+export class AppController {
+  constructor(private readonly appService: AppService) {}
+
+  @Post('store')
+  add(@Body(RequestPipe) dto: Record<string, any>) {
+    console.log(dto);
+    return dto;
+  }
+}
+```
+
+当发送内容为空时，会抛出异常：
+
+![image-20250227171109266](..\images\image-20250227171109266.png)
+
+> 但是这种验证方式的复用性比较差，一个网站中提交的数据不单单只是文章的数据，还会有其他需要验证的数据，这时就要重新定义另外的验证管道进行验证，这样是不方便的
+
+#### 使用`DTO`进行验证
+
+`DTO`是数据传输对象，对前端传递过来的数据进行处理
+
+我们在`src`目录中创建`dto`文件夹，在文件夹中创建`create.article.dto.ts`文件，用来实现对传递过来的文章数据进行验证
+
