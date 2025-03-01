@@ -898,7 +898,7 @@ export class NewModule {}
 
 我们可以按照这样的方式在创建一个`test`模块，这样系统中就有一个根模块和两个其他模块
 
-之后，我们创建控制器：`nest g co new -- no-spec -d`  生成`src/new/new.controller.ts`控制器文件：
+之后，我们创建控制器：`nest g co new --no-spec -d`  生成`src/new/new.controller.ts`控制器文件：
 
 ```ts
 import { Controller } from '@nestjs/common';
@@ -2663,7 +2663,7 @@ export class RequestPipe implements PipeTransform {
   async transform(value: any, metadata: ArgumentMetadata) {
     const object = metadata.metatype ? plainToInstance(metadata.metatype, value) : value;
     const errors = await validate(object);
-    // 深入读取错误信息
+    // 深入读取错误信息，自定义错误消息内容
     if (errors.length) {
       const message = errors.map((error) => ({
         name: error.property,
@@ -2689,3 +2689,348 @@ export class RequestPipe implements PipeTransform {
 如果输入符合添加的内容，就会往数据库中进行数据的添加：
 
 ![image-20250227222601454](..\images\image-20250227222601454.png)
+
+#### 使用系统验证管道
+
+上节是我们自己编写的管道进行验证，当用户没有按照规范提交消息的时候，会抛出异常提示，验证和抛出异常的逻辑，我们可以不用自己进行编写，系统提供了系统管道验证供我们进行直接使用，在定义完管道后，我们可以进行直接的调用
+
+在入口文件`main.ts`中进行定义：
+
+```ts
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
+import { ValidationPipe } from '@nestjs/common';
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+  app.useGlobalPipes(new ValidationPipe());     // 定义全局验证管道
+  await app.listen(process.env.PORT ?? 3000);
+}
+bootstrap();
+```
+
+`ValidationPipe`就是一个`js`的普通类，我们可以对其进行继承，继承之后加入一些自定义的内容，我们使用命令来创建类：`nest g cl validate --no-spec`，创建完后，就在`src/validate`目录中出现`validate.ts`文件
+
+在`validate.ts`文件中，对系统提供的`ValidationPipe`验证管道类进行继承：
+
+```ts
+import { ValidationError, ValidationPipe } from "@nestjs/common";
+
+export class Validate extends ValidationPipe {
+    protected mapChildrenToValidationErrors(
+        error: ValidationError, 
+        parentPath?: string
+    ): ValidationError[]{
+        // 对错误的验证消息进行处理
+        const errors = super.mapChildrenToValidationErrors(error, parentPath);
+        errors.map(error => {
+            for (const key in error.constraints) {
+                error.constraints[key] = error.property + '-' + error.constraints[key];
+            }
+        })
+        return errors;
+    }
+}
+```
+
+> 我们可以点入`ValidationPipe`类中查看该类的所有方法：
+>
+> ```ts
+> export declare class ValidationPipe implements PipeTransform<any> {
+>     protected isTransformEnabled: boolean;
+>     protected isDetailedOutputDisabled?: boolean;
+>     protected validatorOptions: ValidatorOptions;
+>     protected transformOptions: ClassTransformOptions | undefined;
+>     protected errorHttpStatusCode: ErrorHttpStatusCode;
+>     protected expectedType: Type<any> | undefined;
+>     protected exceptionFactory: (errors: ValidationError[]) => any;
+>     protected validateCustomDecorators: boolean;
+>     constructor(options?: ValidationPipeOptions);
+>     protected loadValidator(validatorPackage?: ValidatorPackage): ValidatorPackage;
+>     protected loadTransformer(transformerPackage?: TransformerPackage): TransformerPackage;
+>     transform(value: any, metadata: ArgumentMetadata): Promise<any>;
+>     createExceptionFactory(): (validationErrors?: ValidationError[]) => unknown;
+>     protected toValidate(metadata: ArgumentMetadata): boolean;
+>     protected transformPrimitive(value: any, metadata: ArgumentMetadata): any;
+>     protected toEmptyIfNil<T = any, R = T>(value: T, metatype: Type<unknown> | object): R | object | string;
+>     protected stripProtoKeys(value: any): void;
+>     protected isPrimitive(value: unknown): boolean;
+>     protected validate(object: object, validatorOptions?: ValidatorOptions): Promise<ValidationError[]> | ValidationError[];
+>     protected flattenValidationErrors(validationErrors: ValidationError[]): string[];
+>     protected mapChildrenToValidationErrors(error: ValidationError, parentPath?: string): ValidationError[];
+>     protected prependConstraintsWithParentProp(parentPath: string, error: ValidationError): ValidationError;
+> }
+> ```
+>
+> 我们可以使用`mapChildrenToValidationErrors`方法来处理我们的错误消息
+
+对于全局定义的管道，我们也不需要在根控制器文件中进行引入，会自动生效的，根控制器文件：
+
+```ts
+import { Body, Controller, Post } from '@nestjs/common';
+import { AppService } from './app.service';
+import CreateArticleDto from './dto/create.article.dto';
+import { PrismaClient } from '@prisma/client';
+
+@Controller()
+export class AppController {
+  prisma: PrismaClient;
+  constructor(private readonly appService: AppService) {
+    this.prisma = new PrismaClient();
+  }
+
+  @Post('store')
+  async add(@Body() dto: CreateArticleDto) {
+    await this.prisma.article.create({
+        data: {
+            title: dto.title,
+            content: dto.content,
+            thumb: "https://www.baidu.com",
+            categoryId: 1,
+        },
+    });
+  }
+}
+```
+
+当我们没有按照要求发送内容是，会显示我们自定义的错误消息内容：
+
+![image-20250301122515353](..\images\image-20250301122515353.png)
+
+#### 使用过滤器处理验证异常
+
+使用管道的时候，异常都会被系统捕获到，捕获到后会处理这个异常，这个异常可以通过过滤器来进行控制
+
+创建过滤器：`nest g f validate-exception --no-spec`
+
+过滤器的绑定方式和管道类似，下面展示在入口文件`main.ts`中进行全局绑定：
+
+```ts
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
+import { Validate } from './validate/validate';
+import { ValidateExceptionFilter } from './validate-exception/validate-exception.filter';
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+  app.useGlobalPipes(new Validate());     // 定义全局验证管道
+  app.useGlobalFilters(new ValidateExceptionFilter);   // 定义全局过滤器
+  await app.listen(process.env.PORT ?? 3000);
+}
+bootstrap();
+```
+
+在过滤器文件中`validate-exception.filter.ts`可以对我们的异常进行处理：
+
+```ts
+import { ArgumentsHost, Catch, ExceptionFilter } from '@nestjs/common';
+
+@Catch()
+export class ValidateExceptionFilter<T> implements ExceptionFilter {
+  catch(exception: T, host: ArgumentsHost) {
+      console.log(123)
+  }
+}
+```
+
+> 当我们发生异常的时候，就会被过滤器捕获，如果用户输入不符合规范，就会在终端中显示123
+
+一般，我们会在过滤器中进行异常的判断，对特定的异常进行处理：
+
+```ts
+import { ArgumentsHost, BadRequestException, Catch, ExceptionFilter, HttpStatus } from '@nestjs/common';
+
+@Catch()
+export class ValidateExceptionFilter<T> implements ExceptionFilter {
+  catch(exception: T, host: ArgumentsHost) {
+      // 接收一下异常，获取http中的上下文
+      const ctx = host.switchToHttp();
+      // 获取一下响应对象
+      const response = ctx.getResponse();
+      // 对表单验证异常进行判断，异常来源于请求错误，格式化响应错误
+      if (exception instanceof BadRequestException) {
+          const responseObject = exception.getResponse() as any;
+          // 返回的状态码是422
+          return response.status(HttpStatus.UNPROCESSABLE_ENTITY).json({
+              // 设置返回的状态码和消息
+              code: HttpStatus.UNPROCESSABLE_ENTITY,
+              message: responseObject.message.map((error) => {
+                  const info = error.split('-')
+                  return {field:info[0],message:info[1]}
+              })
+          })
+      }
+      // 如果不是表单异常，就响应以下的内容，返回的状态码是400
+      response.status(400).json({})
+  }
+}
+```
+
+> 我们要保证异常有响应的内容，否则就会被阻塞
+
+输入不规范的内容，会显示：
+
+![image-20250301133518921](..\images\image-20250301133518921.png)
+
+有了错误的消息，前端就会拿这个错误的消息进行验证
+
+#### 自定义验证规则
+
+不管系统为我们提供多少的验证规则，在特殊的情况下都可能会出现不够用的情况，因此我们需要自定义验证规则来满足我们的需求
+
+##### 密码比对验证规则
+
+用户在登录的时候，我们后端要对用户两次输入的密码进行比对验证，我们需要自定义密码比对验证规则
+
+###### 自定义类来进行验证
+
+- 对于用户`User`表解构：
+
+  ```ts
+  model User {
+    id        Int      @id @default(autoincrement()) @db.UnsignedInt
+    email     String   @db.Char(50)
+    password  String
+    name      String?
+    avatar    String?
+    github    String?
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+  }
+  ```
+
+- 创建一个模块和控制器：`nest g mo auth --no-spec`     `nest g co auth --no-spec`
+
+  在控制器`auth.controller.ts`中完成注册，同时引入`dto`验证：
+
+  ```ts
+  import { Body, Controller, Post } from '@nestjs/common';
+  import RegisterDto from './dto/register.dto';
+  
+  @Controller('auth')
+  export class AuthController {
+      @Post('register')
+      register(@Body() dto: RegisterDto) {
+          console.log(dto);
+          return dto;
+      }
+  }
+  ```
+
+- 创建一个`dto`文件进行验证：在`src/auth/dto/register.dto.ts`，`register.dto.ts`文件的内容为：
+
+  ```ts
+  import { IsNotEmpty, Length, Validate } from 'class-validator';
+  import { IsConfirmed } from 'src/rules/is-confirmed.rule';
+  
+  export default class RegisterDto {
+      @IsNotEmpty({ message: '用户名不能为空' })
+      name: string;
+      @IsNotEmpty({ message: '密码不能为空' })
+      @Validate(IsConfirmed, { message: '确认密码输入错误' })
+      password: string;
+  }
+  ```
+
+  > `@IsNotEmpty`是直接使用系统提供的规则进行验证，使用装饰器进行验证
+  >
+  > `@Validate`是使用类来进行验证
+
+- 创建一个密码确认验证规则：创建验证比对文件`src/rules/is-confirmed.rule.ts `，`is-confirmed.rule.ts`的内容为：
+
+  ```ts
+  import { ValidationArguments, ValidatorConstraint, ValidatorConstraintInterface } from "class-validator";
+  
+  @ValidatorConstraint()
+  export class IsConfirmed implements ValidatorConstraintInterface {
+      // 进行密码比对
+      async validate(value: string, args: ValidationArguments) {
+          // 返回假表示验证失败
+          return value === args.object[args.property + '_confirmed'];
+      }
+      // 默认消息：比对失败的提示消息
+      defaultMessage(args: ValidationArguments) {
+          return '比对失败';
+      }
+  }
+  ```
+
+  > - `value`：表示传入的内容值，在`dto`文件中`@Validate(IsConfirmed)`下面定义的数据内容
+  >
+  > - `args`：表示原数据
+  >
+  >   ![image-20250301142329630](..\images\image-20250301142329630.png)
+  >
+  >   - `property`：表示验证哪个字段
+  >   - `object`：表示整个表单提交的数据
+  >   - `value`：验证表单字段的具体值
+
+如果发送的两个密码不一致，就会显示确认密码输入错误：
+
+![image-20250301143327596](..\images\image-20250301143327596.png)
+
+如果两次密码一致，数据就会被成功发送
+
+###### 自定义装饰器进行验证
+
+在之前的基础上加上一个规则：如果数据库中已经有了当前输入`name`字段内容一致的数据，那么不能进行注册，使用自定义装饰器进行验证：
+
+- 在`src/rules`文件夹中添加自定义装饰器`is-not-exists.rule.ts`，具体内容为：
+
+  ```ts
+  import { PrismaClient } from "@prisma/client";
+  import { registerDecorator, ValidationArguments, ValidationOptions } from "class-validator";
+  
+  // 装饰器执行的函数，函数可以进行参数的设置，从外界中传入参数
+  export function IsNotExistsRule(
+  	// table表示定义具体操作数据中的哪张表
+      table: string,
+      validationOptions?: ValidationOptions,
+  ) { 
+      return function (object: Record<string, any>, propertyName: string) {
+          registerDecorator({
+              name: "IsNotExistsRule",
+              target: object.constructor,
+              propertyName: propertyName,
+              constraints: [table],
+              options: validationOptions,
+              validator: {
+                  async validate(value: string, args: ValidationArguments) {
+                      const prisma = new PrismaClient();
+                      const user = await prisma[table].findFirst({
+                          where: {
+                              // propertyName变量的属性名是name
+                              [propertyName]: args.value,
+                          },
+                      });
+                      // 返回假表示验证失败
+                      return !Boolean(user);
+                  },
+              },
+          })
+      }
+  }
+  ```
+
+  > 参数：`value`和`args`一个表示具体值，一个表示原数据，和类中返回的参数差不多
+
+- 在`dto`文件中直接使用自定义的装饰器：
+
+  ```ts
+  import { IsNotEmpty, Length, Validate } from 'class-validator';
+  import { IsConfirmed } from 'src/rules/is-confirmed.rule';
+  import { IsNotExistsRule } from 'src/rules/is-not-exists.rule';
+  
+  export default class RegisterDto {
+      @IsNotEmpty({ message: '用户名不能为空' })
+      @IsNotExistsRule('user', { message: '用户已经存在' })   // 第一个参数表示验证哪张表
+      name: string;
+      @IsNotEmpty({ message: '密码不能为空' })
+      @Validate(IsConfirmed, { message: '确认密码输入错误' })
+      password: string;
+  }
+  ```
+
+如果输入的`name`的内容在数据库中已经存在，就会提示用户已经存在：
+
+![image-20250301151243371](..\images\image-20250301151243371.png)
