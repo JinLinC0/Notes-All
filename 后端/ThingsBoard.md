@@ -4,6 +4,34 @@ ThingsBoard是一个开源的物联网平台，可以实现物联网项目的快
 
 ## 环境搭建
 
+在`Ubuntu`操作系统中进行搭建：
+
+基础配置
+
+- `sudo apt update`
+- `sudo apt install nodejs`
+- `sudo apt install npm`
+- `sudo apt install openjdk-11-jdk`
+- `sudo apt install maven`
+- `sudo apt install curl`
+- `curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -`
+- `echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list`
+- `sudo apt install yarn`
+
+下载`thingsboard`源码，进入下载下来的源码目录，编译`thingsboard`源码：
+
+- `mvn clean install -DskipTests`
+
+
+
+遇到Server UI FAILURE错误的问题，解决方案：
+
+网络问题造成的报错：
+
+继续编译：`mvn package -DskipTests`    不要加clean，不然之前编译好了的又得重新编译
+
+
+
 环境安装在操作系统为windows平台下进行的
 
 数据库安装：`https://www.enterprisedb.com/downloads/postgres-postgresql-downloads#windows`
