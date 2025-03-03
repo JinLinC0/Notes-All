@@ -3268,3 +3268,199 @@ export class AuthService {
 验证规则是用户在对应的数据表中必须存在，这样才能查询到完整的数据，否则就会抛出对应的异常：
 
 ![image-20250301204613531](..\images\image-20250301204613531.png)
+
+
+
+## `JWT`认证
+
+我们一般使用`JWT`对身份进行认证，核心是基于`token`，用户向客户端发送`token`，客户端携带这个`token`来进行身份验证
+
+### 使用`jwt`认证进行用户登录
+
+- 创建一个`user`数据表，来存放用户的信息，用户表结构信息如下：
+
+  ```ts
+  model User {
+    id        BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+    name      String
+    password  String
+    email     String
+  }
+  ```
+
+- 创建一个模块：`nest g mo jwd --no-spec`
+
+  ```ts
+  import { Module } from '@nestjs/common';
+  import { JwdService } from './jwd.service';
+  import { JwdController } from './jwd.controller';
+  import { JwtModule } from '@nestjs/jwt';
+  import { ConfigModule, ConfigService } from '@nestjs/config';
+  
+  @Module({
+    imports: [
+      // 注册jwt模块
+      JwtModule.registerAsync({
+        // 引入配置模块和服务
+        imports: [ConfigModule],
+        inject: [ConfigService],
+        // 编写一个工厂函数，将服务实例引入，后续在工厂函数内部就可以使用configService来获取配置文件中的配置项
+        useFactory: (config: ConfigService) => {
+          return {
+            secret: config.get('TOKEN_SECRET'), // 读取并设置token的密钥
+            signOptions: { expiresIn: '100d' }  // 设置token过期时间:100天
+          }
+        }
+      })
+    ],
+    providers: [JwdService],
+    controllers: [JwdController]
+  })
+  export class JwdModule {}
+  ```
+
+- 创建一个服务：`nest g s jwd --no-spec`，在服务中完成注册业务：
+
+  ```ts
+  import { Injectable } from '@nestjs/common';
+  import RegisterDto from './dto/register.dto';
+  import { PrismaService } from './../prisma/prisma.service';
+  import { hash } from 'argon2';
+  import { JwtService } from '@nestjs/jwt';
+  import { User } from '@prisma/client';
+  
+  @Injectable()
+  export class JwdService {
+      // 依赖注入，拿取prisma服务
+      constructor(
+          private readonly prisma: PrismaService,
+          private jwt: JwtService
+      ) {}
+      // 注册用户
+      async register(dto: RegisterDto) {
+          const user = await this.prisma.user.create({
+              data: {
+                  name: dto.name,
+                  password: await hash(dto.password),  // 密码加密
+                  email: dto.email
+              }
+          })
+          return this.token(user)
+      }
+  
+      // 生成token   User为prisma中定义的User类型
+      async token({ name, id }: User) {
+          // 使用jwt服务生成签名
+          return {
+              token: await this.jwt.signAsync({ 
+                  // 将要存储的内容放入
+                  name,
+                  sub: id   // 后续就可以根据这个token值得到这个id，通过这个id查找到用户
+              })
+          }
+      }
+  }
+  ```
+
+- 创建一个控制器：`nest g co jwd --no-spec`
+
+  ```ts
+  import { Body, Controller, Post } from '@nestjs/common';
+  import { JwdService } from './jwd.service';
+  import RegisterDto from './dto/register.dto';
+  
+  @Controller('jwd')
+  export class JwdController {
+      // 将服务的依赖注入
+      constructor(private readonly jwd: JwdService) {}
+  
+      // 写一个注册路由
+      @Post('register')
+      // 接收注册提交的表单数据
+      register(@Body() dto: RegisterDto) {
+          return this.jwd.register(dto);
+      }
+  }
+  ```
+
+- 在`jwd`文件夹中创建一个`dto`文件夹，新建`register.dto.ts`，为后续提供类型提示：
+
+  ```ts
+  import { IsNotEmpty } from 'class-validator';
+  
+  export default class RegisterDto {
+      @IsNotEmpty({ message: '用户名不能为空' })
+      name: string;
+      @IsNotEmpty({ message: '密码不能为空' })
+      password: string;
+      @IsNotEmpty({ message: '确认密码不能为空' })
+      password_confirmed: string;
+      @IsNotEmpty({ message: '邮箱不能为空' })
+      email: string;
+  }
+  ```
+
+- 创建`prisma`模块，用来提供与数据库进行交互：`nest g mo prisma --no-spec`
+
+  ```ts
+  import { Global, Module } from '@nestjs/common';
+  import { PrismaService } from './prisma.service';
+  
+  // 将模块变成全局，并且将服务暴露出去
+  @Global()
+  @Module({
+    providers: [PrismaService],
+    exports: [PrismaService],
+  })
+  export class PrismaModule {}
+  ```
+
+- 为`prisma`模块创建服务：`nest g s prisma --no-spec`
+
+  ```ts
+  import { Injectable } from '@nestjs/common';
+  import { PrismaClient } from '@prisma/client';
+  
+  @Injectable()
+  export class PrismaService extends PrismaClient {
+      constructor() {
+          // 后端命令行中会打印出我们的数据库相关的操作日志
+          super({ log: ['query'] })
+      }
+  }
+  ```
+
+  ![image-20250302202931445](..\images\image-20250302202931445.png)
+
+- 在`.env`配置文件中配置数据库连接和`Token`密钥：
+
+  ```python
+  # 数据库连接
+  DATABASE_URL="mysql://root:552259@localhost:3306/nest-blog"
+  # Token密钥，保护我们的网站密钥，使密钥是唯一的
+  TOKEN_SECRET="JinLinC"
+  ```
+
+- 在根模块中进行配置项加载的配置：
+
+  ```ts
+  import { Module } from '@nestjs/common';
+  import { ConfigModule } from '@nestjs/config';
+  import { PrismaModule } from './prisma/prisma.module';
+  import { JwdModule } from './jwd/jwd.module';
+  
+  @Module({
+    imports: [ConfigModule.forRoot( { isGlobal: true } ), PrismaModule, JwdModule],
+    controllers: [AppController],
+    providers: [],
+  })
+  export class AppModule {}
+  ```
+
+  
+
+![image-20250302204333949](..\images\image-20250302204333949.png)
+
+
+
+![image-20250302204409986](..\images\image-20250302204409986.png)
