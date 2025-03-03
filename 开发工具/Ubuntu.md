@@ -227,13 +227,23 @@
 
 
 
-## 配置`ssh`
+## 安装`Git`和配置`ssh`
 
 在开发的过程中，经常需要在代码的拖放平台进行克隆和提交代码，我们需要在`Ubuntu`中配置`ssh`，与代码托管平台建立连接
 
-- 在终端中运行：`ssh-keygen -t rsa -C "2794810071@qq.com"`     之后一直敲回车
-- 进入`.ssh`文件中：`cd .ssh`，复制`id_rsa.pub`中的内容
-- 将内容复制到在线代码托管平台的`SSH keys`中
+在`ubuntu`中下载`Git`：
+
+- `sudo apt update`
+- `sudo apt install git`
+- `git --version`来查看是否下载完成
+
+配置`Git`和`SSH`：
+
+- `git config --global user.name jlc`
+- `git config --global user.email 2794810071@qq.com`
+- `git config --list`来查看是否配置完成
+- `ssh-keygen`    回车
+- `ls ~/.ssh`   点击ctrl+h查看隐藏文件，找到`id_rsa.pub`文件复制其密钥在`GitHub`中添加
 
 
 
@@ -259,4 +269,18 @@
 - `Tab`自动补全系统命令、文件名
 - `ctrl+alt+t`：快速打开新终端
 - `ctrl+shift+t`：新建终端标签页，新标签直接从当前位置出发
+
+
+
+## 问题记录
+
+### `ubuntu`安装时遇到的问题
+
+改变系统窗口的分辨率，使窗口界面可以更好的展示
+
+- `ctrl+alt+t`唤出终端
+
+- 终端中输入`xrandr`
+
+- 更改分辨率：比如输入`xrandr -s 1440x900`
 
