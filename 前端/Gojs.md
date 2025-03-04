@@ -4110,7 +4110,7 @@ myDiagram.nodeTemplate =
 
 ##### `Binding error`
 
-```ssh
+```txt
 Binding error: TypeError: Cannot read properties of null (reading 'commandHandler') setting target property "visible" on Panel(Auto)#543 with conversion function: function(o) {
             return o.diagram.commandHandler.canRedo();
           }
