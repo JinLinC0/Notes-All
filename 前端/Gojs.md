@@ -1,12 +1,12 @@
-# `Gojs`
+# `GoJs`
 
-`GoJS` 是一个` JavaScript` 库，可以在现代 `Web`浏览器中轻松创建交互式图表，`GoJS` 支持图形模板和图形对象属性到模型数据的数据绑定
+## 基本概念
 
-`GoJS`是一个依赖`HTML5`特性的`JavaScript`库，所以开发的页面是在`HTML5`的基础上
+`GoJS` 是一个依赖`HTML5`特性的`JavaScript`库，所以开发的页面是在`HTML5`的基础上，可以在现代 `Web`浏览器中轻松创建交互式图表，`GoJS` 支持图形模板和图形对象属性到模型数据的数据绑定
 
 安装依赖：`npm i gojs`
 
-在`vue`中引入`Gojs`基础图表的构建：
+在`vue`中引入`GoJs`基础图表的构建：
 
 ```vue
 <template>
@@ -16,7 +16,7 @@
   
 <script setup lang="ts">
 import { onMounted } from 'vue';
-import go from 'gojs';  //引入
+import go from 'gojs';  // 引入
 
 function initDiagram(){
     // 给go.GraphObject.make起简称，后续调用更加方便
@@ -59,21 +59,20 @@ onMounted(() => {
 </script>
 ```
 
+### 核心思想
 
+图表(`Diagram`)中的基本元素：点(`Node`)、线(`Link`)，点和线自由组合就变成了组(`Group`)
 
-## 基本概念
-
-图表(`Diagram`)：基本元素：点(`Node`)、线(`Link`)，点和线自由组合就变成了组(`Group`)
-
-所有的元素都处在图层(`Layer`) 上，并且可以对他们进行布局(`Layout`)，每一个点和线都是通过模板来描述他们的文本、形状、颜色等信息以及交互行为。每一个模板其实就是一个面板(`Panel`)，每个图表都是通过数据模型(`Model`) 来填充和确定点的信息和线的所属关系，我们只需创建好 点 和 线 的模板以及数据模型，其他事情都交给`gojs`处理
-
-`Model`又分为了以下三种类型：
+所有的元素都处在图层(`Layer`) 上，并且可以对他们进行布局(`Layout`)，每一个点和线都是通过模板来描述他们的文本、形状、颜色等信息以及交互行为。每一个模板其实就是一个面板(`Panel`)，每个图表都是通过数据模型(`Model`) 来填充和确定点的信息和线的所属关系，`Model`又分为了以下三种类型：
 
 - `Model`：最基本的（不带连线）
 - `GraphLinksModel` ：高级点的动态连线图
 - `TreeModel`：树形图的模型
 
-`gojs`通过`Model.nodeDataArray`方法和`GraphLinksModel.linkDataArray`方法自动加载模型并构建元素；通过`ToolManager`对象管理工具类(交互行为)，如管理`CommandHandler`对象用来添加一些键盘命令
+我们只需创建好点和线的模板以及数据模型，其他事情都交给`gojs`处理：
+
+- 通过`Model.nodeDataArray`方法和`GraphLinksModel.linkDataArray`方法自动加载模型并构建元素；
+- 通过`ToolManager`对象管理工具类(交互行为)，如管理`CommandHandler`对象用来添加一些键盘命令
 
 `gojs`定义了一个用于创建`GraphObject`对象的静态函数`GraphObject.make`；`GraphObject`是所有图形对象的抽象类，这个类的子类包括`Panel`、`Shape`、`TextBlock`、`Picture`和`Placeholder`：
 
@@ -87,11 +86,7 @@ onMounted(() => {
 
 - `Panel`：容器来保存其他Node的集合
 
-
-
-## 图表(`Diagram`)
-
-### `GraphObject`构造方法
+#### `GraphObject`构造方法
 
 `GraphObject`是一个抽象类，一个节点`Node`是一个`GraphObject`，包含`TextBlocks`，`shapes`，`Pictures`和`Panels`
 
@@ -129,7 +124,9 @@ var $ = go.GraphObject.make;
     ));
 ```
 
-***
+
+
+## 图表(`Diagram`)
 
 ### 图表的属性
 
@@ -765,20 +762,20 @@ myDiagram.nodeTemplate = $(go.Node, "Auto",
 
 `go.Shape`属性主要用于改变形状样式，其通用的属性有：
 
-|    属性     |          描述          |                         具体介绍                          |
-| :---------: | :--------------------: | :-------------------------------------------------------: |
-|   stroke    |        边框颜色        |           null为无边框，可填"#87CEFA"，"red"等            |
-|   margin    |        边框间距        |                                                           |
-|   visible   |   设置是元素是否可见   |                 true为可见，false为不可见                 |
-|  textAlign  |        文本位置        |                       "center"居中                        |
-|  editable   |     文本是否可编辑     |                        true，false                        |
-|    font     |          字体          |       "bold 8pt Microsoft YaHei, Arial, sans-serif"       |
-|    fill     |        背景颜色        |                  可填"#87CEFA"，"red"等                   |
-|  alignment  |      元素位置设置      |                  go.Spot.BottomLeft/左下                  |
-| isMultiline |   编辑时是否允许换行   |                         默认true                          |
-|  maxLines   | 设置文本显示的最大行数 |                                                           |
-|   minSize   |        最小大小        | new go.Size(10, 16)，控制了最大大小后，文本就会自动换行了 |
-|   maxSize   |        最大大小        |                                                           |
+|     属性      |          描述          |                          具体介绍                           |
+| :-----------: | :--------------------: | :---------------------------------------------------------: |
+|   `stroke`    |        边框颜色        |         `null`为无边框，可填`"#87CEFA"`，`"red"`等          |
+|   `margin`    |        边框间距        |                                                             |
+|   `visible`   |   设置是元素是否可见   |                `true`为可见，`false`为不可见                |
+|  `textAlign`  |        文本位置        |                       `"center"`居中                        |
+|  `editable`   |     文本是否可编辑     |                       `true`，`false`                       |
+|    `font`     |          字体          |       `"bold 8pt Microsoft YaHei, Arial, sans-serif"`       |
+|    `fill`     |        背景颜色        |                 可填`"#87CEFA"`，`"red"`等                  |
+|  `alignment`  |      元素位置设置      |                  `go.Spot.BottomLeft`/左下                  |
+| `isMultiline` |   编辑时是否允许换行   |                         默认`true`                          |
+|  `maxLines`   | 设置文本显示的最大行数 |                                                             |
+|   `minSize`   |        最小大小        | `new go.Size(10, 16)`，控制了最大大小后，文本就会自动换行了 |
+|   `maxSize`   |        最大大小        |                                                             |
 
 ***
 
@@ -2121,7 +2118,7 @@ if (nodeData) {
 |       属性        |                             描述                             |
 | :---------------: | :----------------------------------------------------------: |
 |      `angle`      | 旋转角度，获取或设置此 `GraphObject` 的角度转换（以度为单位），默认值为 0 |
-|   `background`    |          设置背景颜色， 默认值为 null -- 不绘制背景          |
+|   `background`    |         设置背景颜色， 默认值为` null `-- 不绘制背景         |
 |     `cursor`      | 设置光标类型，默认值为空字符串，常用的光标字符串类型为：`help`（箭头右下加问号）、`wait`（加载转圈）、`crosshair`（截屏十字架）、`not-allowed`（禁止）、`zoom-in`（放大镜）、`grab`（拖动手）、`pointer`（手）和`move`（十字移动）等等 |
 |   `desiredSize`   |  设置此属性值的宽度或高度：`desiredSize: new go.Size(6, 6)`  |
 |     `height`      |                           设置高度                           |
@@ -4176,11 +4173,11 @@ function toggleEditMode() {
 
 在编辑模式下的界面如下所示，从节点1的上端口连接到节点2的下端口：
 
-![image-20240626160133922](D:\Myproject\项目学习文档\images\image-20240626160133922.png)
+![image-20240626160133922](..\images\image-20240626160133922.png)
 
 在切换到预览模式后，端口会进行隐藏后，但是连接线没有从端口位置进出，而是通过节点1向节点2进行连接
 
-![image-20240626160149702](D:\Myproject\项目学习文档\images\image-20240626160149702.png)
+![image-20240626160149702](..\images\image-20240626160149702.png)
 
 在一开始的时候，在端口模板中是将`visible`属性绑定在主面板上的，切换`visible`属性可能会导致该端口上的连接失效：
 
@@ -4215,21 +4212,21 @@ $(go.Shape, 'Rectangle',
 
 经过上述修改后，在预览模式下，端口隐藏后，其连接线就可以正常显示了
 
-![image-20240626160332811](D:\Myproject\项目学习文档\images\image-20240626160332811.png)
+![image-20240626160332811](..\images\image-20240626160332811.png)
 
 #### 预览模式切换回编辑模式时连线路径变化
 
 在编辑模式中改变连接线的位置形态，如下图所示：
 
-![image-20240626164411643](D:\Myproject\项目学习文档\images\image-20240626164411643.png)
+![image-20240626164411643](..\images\image-20240626164411643.png)
 
 切换到预览模式，正常显示：
 
-![image-20240626164443731](D:\Myproject\项目学习文档\images\image-20240626164443731.png)
+![image-20240626164443731](..\images\image-20240626164443731.png)
 
 但是从新切换回编辑模式，连接线的路径就发生了变化，不再按照原路径连接：
 
-![image-20240626164544092](D:\Myproject\项目学习文档\images\image-20240626164544092.png)
+![image-20240626164544092](..\images\image-20240626164544092.png)
 
 经过排查，了解到在 `GoJS `中，默认情况下，链接（`Link`）会尝试使用最短路径进行连接。如果你想要取消这种最短路径连接属性，可以使用不同的路由（`Routing`）策略。
 
@@ -4248,4 +4245,4 @@ $(go.Link,
 
 修改为`Orthogonal`路由策略后，连接线在从预览模式切换回编辑模式后，其形态不会发生变化：
 
-![image-20240626165013003](D:\Myproject\项目学习文档\images\image-20240626165013003.png)
+![image-20240626165013003](..\images\image-20240626165013003.png)
