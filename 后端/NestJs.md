@@ -3832,3 +3832,303 @@ export class AuthController {
 }
 ```
 
+
+
+## 文件上传
+
+### 基本上传功能实现
+
+创建一个文件上传的模块：`nest g mo upload --no-spec`，并导入文件上传的模块：
+
+```ts
+import { Global, Module } from '@nestjs/common'
+import { MulterModule } from '@nestjs/platform-express'
+import { diskStorage } from 'multer'
+import { extname } from 'path'
+import { UploadController } from './upload.controller'
+@Global()
+@Module({
+  imports: [
+    // 系统提供的上传模块MulterModule
+    MulterModule.registerAsync({
+      useFactory() {
+        return {
+          storage: diskStorage({
+            // 文件储存位置
+            destination: 'uploads',
+            // 文件名定制
+            filename: (req, file, callback) => {
+              // 时间戳加上随机数再加上文件后缀名
+              const path = Date.now() + '-' + Math.round(Math.random() * 1e10) + extname(file.originalname)
+              callback(null, path)
+            },
+          }),
+        }
+      },
+    }),
+  ],
+  controllers: [UploadController],
+})
+export class CommonModule {}
+```
+
+创建一个文件上传的控制器：`nest g co upload --no-spec`
+
+```ts
+import { Controller, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { TransformInterceptor } from 'src/Transforminterceptor';
+
+@Controller('upload')
+// 使用自定义的拦截器
+@UseInterceptors(new TransformInterceptor())
+export class UploadController {
+    @Post('image')
+    // 使用拦截器，上传的拦截器，file表示字段名，即表单的名字
+    @UseInterceptors(FileInterceptor('file'))
+    // 使用装饰器来接收这个上传的文件
+    image(@UploadedFile() file: Express.Multer.File) {
+        return file
+    }
+}
+```
+
+> `file: Express.Multer.File`声明了类型，我们可以取文件中的数据，`Express.Multer.File`是我们最终上传之后的文件类型，有了这个类型，我们就可以获取文件中具体的内容：`file.originalname`
+
+在`src`目录下创建一个自定义拦截器`TransformInterceptor.ts`（打印日志和数据用`data`进行包裹返回）：
+
+```ts
+import { CallHandler, ExecutionContext, Injectable, Logger, NestInterceptor } from "@nestjs/common";
+import { map } from "rxjs/operators";
+import { Request } from "express";
+
+@Injectable()
+export class TransformInterceptor implements NestInterceptor {
+    intercept(context: ExecutionContext, next: CallHandler) {
+        // 控制器请求之前，调用拦截器时，会捕获用户请求的数据
+        console.log("拦截器前")
+        const request = context.switchToHttp().getRequest() as Request;
+        // 定义一个当前的时间
+        const startTime = Date.now();
+        return next.handle().pipe(
+            map((data) => {
+                // 控制器请求之后，又调用拦截器
+                const endTime = Date.now();
+                // 打印一次日志，request.path表示当前请求的地址，request.method表示当前请求的方法
+                new Logger().log(`TIME:${endTime - startTime}\tURL:${request.path}\tMETHOD:${request.method}`)
+                // 所有返回的数据都被data进行包裹
+                return {
+                    data,
+                };
+            }),
+        );
+    }
+}
+```
+
+> 拦截器：用户每次发送请求的时候，先走到路由，再到控制器，在控制器的前面可以设置拦截器，从路由进入到控制器时，会经过我们设置的拦截器，在控制器处理完后，返回的时候，也会经过我们的拦截器，拦截器在控制器的前后都会执行到
+
+上传图片的时候，就会返回上传之后的文件，由于使用了我们自定义的拦截器`TransformInterceptor`，返回的数据就会被`data`进行包裹：
+
+![image-20250308204346001](..\images\image-20250308204346001.png)
+
+同时在日志中会打印对应的日志信息：
+
+![image-20250308204552329](..\images\image-20250308204552329.png)
+
+***
+
+### 上传类型验证
+
+我们可以对文件的大小、类型进行控制，在拦截器`FileInterceptor`中进行设置：
+
+```ts
+import { Controller, MethodNotAllowedException, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { TransformInterceptor } from 'src/Transforminterceptor';
+
+@Controller('upload')
+@UseInterceptors(new TransformInterceptor())
+export class UploadController {
+    @Post('image')
+    // 使用拦截器，使用上传的拦截器
+    @UseInterceptors(FileInterceptor('file', {
+        // 控制文件的最大字节2Mb
+        limits: { fileSize: 1024 * 1024 * 2 },
+        // 控制文件的类型
+        fileFilter(req: any, file: Express.Multer.File, callback: (error: Error | null, acceptFile: boolean) => void) {
+            // 如果上传的类型不是图片，则抛出异常
+            if(!file.mimetype.includes('image')) {
+                callback(new MethodNotAllowedException('文件类型错误'), false)
+            } else {
+                // 类型正确：为图片，正常放行
+                callback(null, true)
+            }
+        }
+    }))
+    // 使用装饰器来接收这个上传的文件
+    image(@UploadedFile() file: Express.Multer.File) {
+        return file
+    }
+}
+```
+
+> 具体可以点开`FileInterceptor`中的`MulterOptions`类进行查看，里面有完整的控制验证
+
+当文件的类型不是图片的时候，就会出现异常报错：
+
+![image-20250308211040846](..\images\image-20250308211040846.png)
+
+#### 使用装饰器分装代码
+
+将所有的验证逻辑全部放在控制器中，会使控制器内容过多，我们应该将其验证内容分装出去，使代码更加简洁，在`upload`文件夹中定义一个装饰器文件`decorator`夹，内部定义一个上传的装饰器`upload.decorator.ts`，将所有逻辑放到聚合装饰器中：
+
+```ts
+import { applyDecorators, MethodNotAllowedException, UseGuards, UseInterceptors } from '@nestjs/common'
+import { FileInterceptor } from '@nestjs/platform-express'
+import { MulterOptions } from '@nestjs/platform-express/multer/interfaces/multer-options.interface'
+
+// 对类型进行封装
+export function fileFilter(type: string) {
+    return (req: any, file: Express.Multer.File, callback: (error: Error | null, acceptFile: boolean) => void) => {
+        if(!file.mimetype.includes(type)) {
+            callback(new MethodNotAllowedException('文件类型错误'), false)
+        } else {
+            callback(null, true)
+        }
+    }
+}
+
+export function Upload(field='file', options: MulterOptions) {
+  return applyDecorators(UseInterceptors(FileInterceptor(field, options)))
+}
+```
+
+> 实现文件名可以自定义传入，选项的类型是`MulterOptions`的继承的所有类型
+
+在文件上传控制器中进行调用分装的函数：
+
+```ts
+import { Controller, MethodNotAllowedException, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { TransformInterceptor } from 'src/Transforminterceptor';
+import { fileFilter, Upload } from './decorator/upload.decorator';
+
+@Controller('upload')
+@UseInterceptors(new TransformInterceptor())
+export class UploadController {
+    @Post('image')
+    @Upload('file', {
+        // 控制文件的最大字节2Mb
+        limits: { fileSize: 1024 * 1024 * 2 },
+        // 控制文件的类型
+        fileFilter: fileFilter('image')
+    })
+    // 使用装饰器来接收这个上传的文件
+    image(@UploadedFile() file: Express.Multer.File) {
+        return file
+    }
+}
+```
+
+#### 根据不同类型单独控制上传
+
+我们可以在自定义的聚合装饰器中进一步的进行图片/文档上传的分装：
+
+```ts
+import { applyDecorators, MethodNotAllowedException, UseGuards, UseInterceptors } from '@nestjs/common'
+import { FileInterceptor } from '@nestjs/platform-express'
+import { MulterOptions } from '@nestjs/platform-express/multer/interfaces/multer-options.interface'
+
+// 对类型进行封装
+export function fileFilter(type: string[]) {
+    return (req: any, file: Express.Multer.File, callback: (error: Error | null, acceptFile: boolean) => void) => {
+        // 读取数值中的所有类型
+        const check = type.some((t) => file.mimetype.includes(t))
+        if(!check) {
+            callback(new MethodNotAllowedException('文件类型错误'), false)
+        } else {
+            callback(null, true)
+        }
+    }
+}
+
+export function Upload(field='file', options: MulterOptions) {
+  return applyDecorators(UseInterceptors(FileInterceptor(field, options)))
+}
+
+// 进一步分装实现专门用于图片的上传
+export function UploadImage(field='file') {
+    return Upload(field, {
+        limits: { fieldSize: 1024 * 1024 * 3 },
+        fileFilter: fileFilter(['image'])
+    })
+}
+
+// 进一步分装实现专门用于文档的上传
+export function UploadDocument(field='file', type: string[] = ['pdf', 'vnd.openxmlformats-officedocument.wordprocessingml.document']) {
+    return Upload(field, {
+        limits: { fieldSize: 1024 * 1024 * 3 },
+        fileFilter: fileFilter(type)
+    })
+}
+```
+
+在文件上传控制器中进行调用进一步分装的图片上传函数：
+
+```ts
+import { Controller, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { TransformInterceptor } from 'src/Transforminterceptor';
+import { UploadDocument, UploadImage } from './decorator/upload.decorator';
+
+@Controller('upload')
+@UseInterceptors(new TransformInterceptor())
+export class UploadController {
+    // 图片的上传
+    @Post('image')
+    @UploadImage()
+    image(@UploadedFile() file: Express.Multer.File) {
+        return file
+    }
+	
+    // 文档的上传
+    @Post('document')
+    @UploadDocument()
+    document(@UploadedFile() file: Express.Multer.File) {
+        return file
+    }
+}
+```
+
+接收为`pdf`的文件内容：
+
+![image-20250308221215168](..\images\image-20250308221215168.png)
+
+***
+
+### 通过`URL`访问文件
+
+一般情况下，通过`url`是得不到静态资源的，需要在入口文件`main.ts`中进行修改：
+
+```ts
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
+import { NestExpressApplication } from '@nestjs/platform-express';
+
+async function bootstrap() {
+  // 声明NestExpressApplication
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  // 定义静态的访问地址
+  app.useStaticAssets('uploads', { prefix: '/uploads' });
+  await app.listen(process.env.PORT ?? 3000);
+}
+bootstrap();
+```
+
+在浏览器中输入：`http://localhost:3000/uploads/1741444046019-5534214495.png`（后半段是上传信息中的`path`内容），输入`url`就可以在浏览器中静态访问我们的资源了：
+
+![image-20250308222842700](..\images\image-20250308222842700.png)
+
+如果访问的静态资源是文件，就会将这个文件进行下载：
+
+![image-20250308223128292](..\images\image-20250308223128292.png)
