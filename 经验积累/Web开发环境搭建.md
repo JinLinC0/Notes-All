@@ -47,8 +47,8 @@
 
 7. 下载`gorm`包：
 
-   - go get -u gorm.io/gorm
-   - go get -u gorm.io/driver/sqlite
+   - `go get -u gorm.io/gorm`
+   - `go get -u gorm.io/driver/sqlite`
 
 8. 在代码中导入：
 
@@ -70,14 +70,30 @@
 在`GitHub`中的个人仓库中创建一个新的项目仓库
 
 1. 进入项目文件，打开`git`终端
+
 2. 初始化仓库：`git init`
+
 3. 添加一个`README.md`文件：`git add README.md`
+
 4. 添加所有文件到暂存区：`git add .`
+
 5. 添加一条说明：`git commit -m "feat : 2024/5/11创建项目"`
+
 6. 切换分支：`git branch -M main`
+
 7. 指定push的源：`git remote add origin https://github.com/jinlinchao123/vue3-crud.git`
+
+   > 如果想要将项目同时提交到`github`和`gitee`上，我们可以将`origin`使用`github`和`gitee`进行替代，后面分别跟着各自代码托管平台的路径即可
+
 8. `push`提交：`git push -u origin main`
+
+   > 如果想要将项目同时提交到`github`和`gitee`上，我们可以将`origin`使用`github`和`gitee`进行替代
+
 9. 修改后的代码提交：
    1. `git add .`
+
    2. `git commit -m "修改描述"`
-   3. `git push -u origin main`
+
+   3. `git push`
+
+      > 如果想要将项目同时交到`github`和`gitee`上，分别推送：`git push gitee`和`git push github`
