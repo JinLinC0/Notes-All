@@ -4333,3 +4333,130 @@ bootstrap();
 ```
 
 在`apifox`接口工具的测试环境改为：`http://localhost:3000/api`即可
+
+
+
+## 角色验证
+
+在实际的项目中，往往是有不同的角色，来进行不同权限的管理，如管理员角色，普通用户角色等等
+
+通过对角色的验证来检测用户是否有对控制器方法的访问权限
+
+在用户表`user`中添加一个新的字段`role`，来区分用户的不同权限
+
+创建策略文件 `auth/strategy/jwt.strategy.ts` 用于获取当前登录用户信息：
+
+```ts
+import { Injectable } from "@nestjs/common";
+import { PassportStrategy } from "@nestjs/passport";
+import { ExtractJwt, Strategy, StrategyOptionsWithoutRequest } from "passport-jwt";
+import { PrismaService } from "@/prisma/prisma.service";
+import { ConfigService } from "@nestjs/config";
+
+// 对token进行验证
+@Injectable()
+export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
+    constructor(configService: ConfigService, private prisma: PrismaService) {
+        super({
+            // 解析用户提交的Bearer Token header数据，如果token有效，会自动调用validate方法，如果token是无效的，会自动抛出异常，可以通过前端来跳转到具体的登录界面
+            jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+            // 告知加密使用的是哪个密钥，.env文件中的密钥配置
+            secretOrKey: configService.get('TOKEN_SECRET'),
+            ignoreExpiration: false,
+        } as StrategyOptionsWithoutRequest); // 明确类型
+    }
+
+    // 验证通过后（token有效）结果用户资料
+    async validate({ sub: id }) {
+        // 查询user表，得到这个token对应的用户，放到全局的Request.user中
+        return this.prisma.user.findUnique({
+            where: {
+                id: id
+            }
+        })
+    }
+}
+```
+
+创建 `auth/enum.ts `文件，通过枚举来定义角色类型：
+
+```ts
+export enum Role {
+  ADMIN = 'admin',
+}
+```
+
+创建 `auth/decorators/auth.decorator.ts `聚合装饰器：
+
+```ts
+import { applyDecorators, SetMetadata, UseGuards } from '@nestjs/common'
+import { AuthGuard } from '@nestjs/passport'
+import { Role } from '../enum'
+import { RolesGuard } from '../guards/roles.guard'
+
+export function Auth(...roles: Role[]) {
+  // 通过SetMetadata函数将角色信息保存
+  return applyDecorators(SetMetadata('roles', roles), UseGuards(AuthGuard('jwt'), RolesGuard))
+}
+```
+
+> 通过设置元信息`Roles` 来声明该方法可访问的角色
+>
+> 保存角色的时候，有上下文，请求的是`CategoryController`控制器和`create`方法
+
+创建` auth/guards/roles.guard.ts `守卫文件，用于对角色进行验证：
+
+```ts
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common'
+import { Reflector } from '@nestjs/core'
+import { user } from '@prisma/client'
+import { Observable } from 'rxjs'
+import { Role } from '../enum'
+
+@Injectable()
+export class RolesGuard implements CanActivate {
+  constructor(private reflector: Reflector) {}
+  canActivate(context: ExecutionContext): boolean | Promise<boolean> | Observable<boolean> {
+    const user = context.switchToHttp().getRequest()?.user as user
+
+    const roles = this.reflector.getAllAndOverride<Role[]>('roles', [context.getHandler(), context.getClass()])
+    // 有角色的时候进行验证，没有角色的时候返回验证都通过
+    return roles.length ? roles.some((r) => user.role == r) : true
+  }
+}
+```
+
+> 使用 `reflector `反射获取上面在控制器方法中定义的角色数据
+>
+> - `context.getHandler `当前请求方法
+> - `context.getClass` 当前控制器
+> - `roles`就是我们要得到的角色
+> - `user.role == r`表示当前用户的角色等于枚举字典中的角色
+
+在控制器中使用角色验证，通过角色验证的路由方法，则可以被这个角色进行使用：
+
+```ts
+import { Auth } from '@/auth/decorators/auth.decorator'
+import { Role } from '@/auth/enum'
+...
+
+@Controller('category')
+export class CategoryController {
+  constructor(private readonly articleService: ArticleService) {}
+	
+  @Post()
+  @Auth(Role.ADMIN)   // 下面的create()方法，只能是Role.ADMIN这个角色可以进行访问
+  create(@Body() createCategoryDto: CreateCategoryDto) {
+    return this.categoryService.create(createCategoryDto);
+  }
+  ...
+}
+```
+
+> `Role.ADMIN`角色是通过聚合装饰器 `auth/decorators/auth.decorator.ts `传递过来的
+>
+> 如果`@Auth(Role.ADMIN)`不传入角色，那就是登录就可以使用这个接口方法
+
+如果用户的角色不是枚举中声明的类型，就不能使用添加栏目的接口，发送数据就会出现以下的报错：
+
+![image-20250311143011749](..\images\image-20250311143011749.png)
