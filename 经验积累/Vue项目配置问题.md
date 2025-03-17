@@ -21,8 +21,33 @@
   })
   ```
 
-  
 
-  
+在`main.ts`文件中使用`@`别名代替`src`文件夹，出现的报错问题：
 
-  
+一般情况下，我们需要对`tsconfig.json`文件进行配置，但是如果`tsconfig.json`文件内容是：
+
+```ts
+{
+  "files": [],
+  "references": [
+    { "path": "./tsconfig.app.json" },
+    { "path": "./tsconfig.node.json" }
+  ],
+}
+```
+
+那我们就需要在`tsconfig.app.json`中添加：
+
+```ts
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    },
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue"]
+}
+```
+
+这样在`main.ts`文件中，就可以正常使用`@`别名了
