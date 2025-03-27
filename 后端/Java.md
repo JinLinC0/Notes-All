@@ -1594,10 +1594,54 @@ class Cat {
 }
 ```
 
+> - 访问修饰符：控制方法的使用范围，常用的方法修饰符有四个
+>
 > - 形参列表：表示成员方法的输入
-> - 返回的数据类型：表示成员方法输出，`void`表示没有返回值
-> - 方法主体：表示为了实现某一功能代码块
-> - `return`语句不是必须的
+>
+>   - 一个方法可以有0个参数，也可以有多个参数，中间使用逗号隔开
+>   - 参数类型可以为任意类型，包含基本类型或引用类型，同一列表的参数类型可以是不同的类型
+>   - 调用参数的方法时，一定对应着参数列表传入相同类型或兼容类型（可以进行自动转换）的参数
+>   - 方法定义时的参数称为形式参数，简称行参；方法调用时传入的参数称为实际参数，简称实参，实参和形参的类型要一致或兼容，个数、顺序必须一致
+>
+> - 返回的数据类型：表示成员方法输出，`void`表示没有返回值，返回的类型可以为任意类型，包含基本类型和引用类型，但是接收返回值时，需要声明与返回值同类型的变量去接收
+>
+>   一个方法最多只有一个返回值，如果需要多个返回值，我们可以返回数组
+>
+>   ```java
+>   // 返回两个数的和差
+>   class Num {
+>       public int[] getSumAndSub(int n1, int n2) {
+>           int res[] = new int[2];
+>           res[0] = n1 + n2;
+>           res[1] = n1 - n2;
+>           return res;
+>       }
+>   }
+>   ```
+>
+> - 方法主体：表示为了实现某一功能代码块，可以为输入、输出、运算、分支、循环、方法调用，但是在方法主体中不能再定义方法，即：方法不能嵌套定义
+>
+> - `return`语句不是必须的，如果方法要求有返回数据类型，则方法体中最后的执行语句必须为`return`值，而且要求返回值类型必须和`return`的值类型一致或者兼容（可以自动转换的）
+>
+>   ```java
+>   // 类型一样，编译通过
+>   public double f1() {
+>       return 1.1;
+>   }
+>   
+>   // 兼容（可以自动转换），编译通过
+>   public double f1() {
+>       int n = 1;
+>       return n;
+>   }
+>   
+>   // 类型不一致，且不能自动转换，编译不通过
+>   public int f1() {
+>       return 1.1;
+>   }
+>   ```
+>
+>   如果方法是`void`，则方法中可以没有`return`语句，或者只写`return;`，但是不能返回具体的内容
 
 成员方法简称为方法，用于声明一些具体的行为
 
@@ -1649,19 +1693,193 @@ class Person {
 
 成员方法的好处：减少代码冗余，提高了代码的复用性；同时可以将实现的细节封装起来，然后供其他用户来调用
 
+方法调用细节：
 
+- 同一个类中的方法调用：直接调用即可
 
+  ```java
+  class A {
+      public void print(int n) {
+          System.out.println("print()方法被调用 n=" + n);
+      }
+      
+      public void sayOk() {
+          // 调用同一个类中的print()方法
+          print(10);
+      }
+  }
+  ```
 
+- 跨类中的方法A类调用B类的方法：需要通过对象名调用，跨类的方法调用共和方法访问修饰符相关
 
+  ```java
+  class A {
+      public void print(int n) {
+          System.out.println("print()方法被调用 n=" + n);
+      }
+  }
+  
+  class B {
+      public void sayOk() {
+          // 创建一个A类的对象
+          A a = new A();
+          // 调用a对象的方法
+          a.print(10);
+      }
+  }
+  ```
 
+***
 
+#### 方法的传参机制
 
+方法的传参机制在编程中是非常重要的：
 
+- 对于基本数据类型的传参机制，传递的是值（值拷贝），形参的任何改变不影响实参
 
+  ```java
+  public class MethodParameter {
+  	public static void main(String[] args) {
+          int a = 10;
+          int b = 20;
+          // 实例化AA对象
+          AA obj = new AA();
+          obj.swap(a, b);
+          System.out.prinln(a, b);    // 10 20
+  	}
+  }
+  
+  class AA {
+      public void swap(int a, int b) {
+          System.out.prinln(a, b);   // 10 20
+          int temp = a;
+          a = b;
+          b = temp;
+          System.out.prinln(a, b);   // 20 10
+      }
+  }
+  ```
 
+  通过内存来进行辅助理解：
 
+  调用`obj.swap(a, b);`方法，传递的是10和20，`swap()`方法中接收的是10和20，两个栈是独立的空间，其基本数据类型的变量是不冲突的
 
+- 对于引用数据类型的传参机制，传递的是地址（传递的也是值，但这个值是地址），形参的改变会影响实参
 
+  ```java
+  public class MethodParameter {
+  	public static void main(String[] args) {
+          int[] arr = {1, 2, 3};
+          BB obj = new BB();
+          obj.test(arr);    // 200 2 3
+          
+          // 遍历数组
+          for(int i = 0; i < arr.length; i++) {
+              System.out.print(arr[i] + "\t");
+          }
+          System.out.println();    // 200 2 3
+  	}
+  }
+  
+  class BB {
+      public void test(int arr) {
+          arr[0] = 200;   // 修改了传递进来的数组元素
+          // 遍历数组
+          for(int i = 0; i < arr.length; i++) {
+              System.out.print(arr[i] + "\t");
+          }
+          System.out.println();
+      }
+  }
+  ```
+
+  ```java
+  public class MethodParameter {
+  	public static void main(String[] args) {
+          Person p = new Person();
+          p.name = "jlc";
+          p.age = 25;
+          BB b = new BB();
+          b.test(p);
+          System.out.println(p.age);   // 100
+  	}
+  }
+  
+  class Person {
+      String name;
+      int age;
+  }
+  
+  class BB {
+      public void test(Person p) {
+          p.age = 100;
+      }
+  }
+  ```
+
+  小变化：
+
+  ```java
+  public class MethodParameter {
+  	public static void main(String[] args) {
+          Person p = new Person();
+          p.name = "jlc";
+          p.age = 25;
+          BB b = new BB();
+          b.test(p);
+          System.out.println(p.age);   // 10
+  	}
+  }
+  
+  class Person {
+      String name;
+      int age;
+  }
+  
+  class BB {
+      public void test(Person p) {
+          p = null;
+      }
+  }
+  ```
+
+  `BB`类中的将传入的`p`对象设置为`null`，是切断了当前方法栈空间中的`P`指向的堆中的对象，但是不会影响原先`main`栈空间中`p`的指向，`p`还是指向堆中的对象，因此，其值还是25
+
+  ![image-20250327211100538](..\images\image-20250327211100538.png)
+
+***
+
+### 克隆对象
+
+克隆对象，要求新对象和原来对象是两个独立的对象，只是他们的属性和属性值完全相同
+
+```java
+public class MethodParameter {
+	public static void main(String[] args) {
+        Person p = new Person();
+        p.name = "jlc";
+        p.age = 25;
+        MyTools myTools = new MyTools();
+        Person p2 = myTools.copyPerson(p);
+        // p和p2都是Person对象，但是是两个独立的对象，其属性和属性值相同
+	}
+}
+
+class Person {
+    String name;
+    int age;
+}
+
+class MyTools {
+    public Person copyPerson(Person p) {
+        // 创建一个新对象
+        Person p2 = new Person();
+        p2.name = p.name;   // 将原来对象的名字赋值给p2.name
+        p2.age = p.age;
+        return p2;
+    }
+}
+```
 
 
 
