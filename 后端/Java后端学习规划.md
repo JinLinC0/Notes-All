@@ -1,0 +1,31 @@
+`Java`后端开发学习主要涉及到以下的几个方面，学习是一个循序渐进的过程，学习了前面五个部分后，可以配合实际的项目，进行变做项目边拓展知识：
+
+- `Java`基础：变量、控制结构、数组、面向对象、`API`、异常和处理、集合、泛型、`IO`流、反射和网络通信
+- `Java`高级：`Java`多线程和高并发（难点和重点）（包括并发基础、线程、锁、线程池、并发容器和`JUC`）、数据结构和算法、设计模式和`JVM`
+- `JavaWEB`：前端基础、前端框架和`JavaWEB`后端（包括`Tomcat`、`Servlet`、`JSP`）
+- 主流框架和项目管理：
+  - 主流框架：`Linux`、`Nginx`（反向代理的`WEB`服务器）、`SSM`（包括`Spring`（轻量级的容器框架）、`SpringMVC`（分层的`WEB`开发框架）、`MyBatis`（持久化框架））
+  - 项目管理：`Maven`、`Git`
+  - 数据库：`Redis`、`Mysql`、`Oracle`
+  - 其他框架：`WebService`（面向服务编程框架）、`Activiti`（工作流框架）、`Shiro`（安全框架）、`JPA`（持久化）、`SpringData`（持久层的通用解决方案）
+- 分布式 微服务 并行架构：
+  - `Netty`
+  - ``Dubbo`（RPC框架）
+  - `FastDFS`（分布式文件系统）
+  - `Docker`（应用容器引擎）
+  - `Spring`家族（`SpringBoot`、`SpringCloud`（组件很多：`Nacos`（阿里服务发现、配置和管理）、`Seata`（阿里分布式事务中间件）、`Sentinel`（阿里流量控制、熔断和系统负载保护）、`GateWay`（网关、限流、日志、监控和鉴权）、`OpenFeign`（服务间调用）））
+  - 搜索引擎（`ElasticSearch`和`Solr`）
+  - 中间件：`MyCat`（数据库中间件、分库分表）、`ActiveMQ`、`RabbitMQ`和`KafKa`（消息中间件）
+    - 日志分析与监控（`ELK`）：`ElasticSearch`（收集和存储数据）、`LogStash`（分析日志）、`Kibana`（可视化）
+  - `Zookeepr`：一致性服务，如：配置维护、域名维护和分布式同步
+- 开发运维一体化：又叫自动化部署管理项目，解决`CI`和`CD`
+  - `k8s`：让部署容器化的应用简单高效
+  - `prometheus`：系统监控和报警
+  - `Jenkins`：监控持续的工作（部署、集成和交付）
+  - `Harbor`：容器的镜像化仓库
+  - `Sonarqube`：项目工程代码质量检测
+- 大数据部分：`Hadoop`、`Hive`、`Impals`、`spark`和`flink`
+- 项目：至少三个以上的项目，电商、金融和教育项目
+- 高频面试题：主要涉及`Java`高级、`ssm`框架、`Redls`优化、`Spring`家族、中间件和实际项目等等
+- 底层原码和内核研究
+
