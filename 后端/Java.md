@@ -32,7 +32,9 @@
 
 一开始在学习的时候，推荐使用`Sublime Text`代码编辑器进行敲代码，后续大规模开发的时候，推荐使用`IDEA`代码编辑器进行代码的编写，该编辑器有较好的代码提示，能帮助我们快速的编写代码
 
-##### `Sublime Text`常见的问题
+##### `Sublime Text`
+
+###### 常见的问题
 
 1. 汉化`Sublime Text`
    - 打开`Sublime Text`代码编辑器
@@ -46,6 +48,15 @@
    - 输入`Package Control: Install Package`
    - 在搜索框输入`converToUTF8`，选择并安装
    - 后续在文件->`Set File Encoding to`中就可以选择`gbk`进行编码了
+
+##### `IntelliJ IDEA`
+
+[下载官网](https://www.jetbrains.com/)
+
+- 从官网下载安装包，推荐使用专业版
+- 右键，以管理员身份运行
+- 指定安装目录，选择64位，其他都不选，点击下一步
+- 打开安装好的代码编辑器，新建一个项目，选择一个`Java`项目，默认会加载电脑中安装的`JDK`环境，如果没有加载上，我们手动添加即可，选择到本地安装的`JDK`的顶级安装目录即可
 
 #### `JDK`的安装
 
@@ -1628,13 +1639,13 @@ class Cat {
 >   public double f1() {
 >       return 1.1;
 >   }
->     
+>       
 >   // 兼容（可以自动转换），编译通过
 >   public double f1() {
 >       int n = 1;
 >       return n;
 >   }
->     
+>       
 >   // 类型不一致，且不能自动转换，编译不通过
 >   public int f1() {
 >       return 1.1;
@@ -2054,6 +2065,172 @@ class D {
 局部变量只能在本类中对应的方法中使用
 
 全局变量/属性可以加修饰符；但是局部变量不能加修饰符
+
+***
+
+### 构造器
+
+构造器也叫构造方法，主要作用是完成对新对象的初始化，我们可以通过构造器，在创建对象的时候，直接指定这个对象的具体属性值（即在创建对象时，系统会自动调用该类的构造器，完成对象的初始化）
+
+基本语法：
+
+```java
+修饰符 方法名(形参列表) {
+    方法体;
+}
+```
+
+> - 构造器的修饰符可以默认，也可以是`public`、`protected`和`private`
+> - 构造器没有返回值，也不能写`void`
+> - 构造器的方法名和类的名字必须一样
+> - 参数列表和成员方法一样的规则
+> - 构造器的调用由系统完成，即在`new`的时候，系统会自动完成构造器中的方法
+
+```java
+public class Constructor01 {
+	public static void main(String[] args) {
+		// 当我们new一个对象时，直接通过构造器指定属性值
+        Person p = new Person("jlc", 25);
+	}
+}
+
+class Person {
+    String name;
+    int age;
+    // 构造器
+    public Person(String pName, int pAge) {
+        name = pName;
+        age = pAge;
+    }
+}
+```
+
+注意事项：
+
+- 一个类可以定义多个不同的构造器，即构造器的重载，如我们可以再给`Person`类定义一个构造器，用来创建对象的时候，只指定姓名，不需要指定年龄，那么后续初始化对象的时候，年龄就是默认值
+- 构造器是完成对象的初始化，并不是创建对象
+- 如果程序员没有定义构造器，系统会自动给类生成一个默认无参构造器（也叫默认构造方法），如`Person() {}`，可以通过反编译`javap Person.class`进行查看
+- 一旦定义了自己的构造器，默认的构造器就被覆盖了，就不能再使用默认的无参构造器，除非显示的定义一个，即：`Person() {}`
+
+#### 引入构造器后的对象创建流程
+
+引入构造器后的对象创建流程是一个经典的面试题
+
+![image-20250329134442728](..\images\image-20250329134442728.png)
+
+> 1. 先在方法区中加载类信息
+> 2. 在堆中开辟空间
+> 3. 对属性进行默认初始化
+> 4. 根据是否赋值，进行显式的初始化（如`age = 90;`）
+> 5. 通过构造器进行属性初始化，引用类型的属性值在常量池中，通过地址进行指向，基本类型的数据直接在堆空间中修改
+> 6. 最后将堆中的地址进行放回，供实例化的对象`p`进行指向（真正的对象在堆中，`p`只是对象的引用，只是一个对象名）
+
+上述流程简而言之：
+
+1. 加载`Person`类信息（`Person.class`），只会加载一次
+2. 在堆中分配空间（地址）
+3. 完成对象的初始化
+   1. 默认初始化 `age = 0  name = null`
+   2. 显式初始化 `age = 90`
+   3. 构造器的初始化 `age = 20  name = “小倩”`
+4. 对象在堆中的地址，返回给`p`（对象名，也可以理解为对象的引用）
+
+***
+
+### `this`关键字
+
+构造器的输入参数名不是非常友好，如果能将`pName`改成`name`就好了，但是由于变量作用域的原因，`name`的值最后是`null`，这时我们就要引入`this`关键字来解决
+
+```java
+public class Constructor01 {
+	public static void main(String[] args) {
+		// 当我们new一个对象时，直接通过构造器指定属性值
+        Person p = new Person("jlc", 25);
+	}
+}
+
+class Person {
+    String name;
+    int age;
+    // 构造器
+    public Person(String name, int age) {
+        // this.name表示当前对象的name属性   后面的name是局部变量，就近访问，找不到在访问属性
+        this.name = name;   
+        this.age = age;
+    }
+}
+```
+
+`java`虚拟机给每个对象分配了`this`，代表当前对象，比如，人是一个对象，这个人说我的，就表示`this`
+
+![image-20250329141242726](..\images\image-20250329141242726.png)
+
+在堆中开辟空间后，除了属性，还有一个隐藏的属性`this`，引用的地址是对象的地址，指向的是对象自己
+
+总之，哪个对象调用，`this`就代表哪个对象
+
+注意事项：
+
+- `this`关键字可以用来访问本类的属性、方法和构造器
+
+- `this`用于区分当前类的属性和局部变量
+
+- 访问成员方法的语法：`this,方法名(参数列表);`
+
+  ```java
+  class T {
+      public void f1() {
+          System.out.println("f1方法");
+      }
+      public void f2() {
+          System.out.println("f2方法");
+          // 调用本类的f1()方法
+          // 方式一：传统方法
+          f1();
+          // 方式二：使用this关键字
+          this.f1();
+      }
+  }
+  ```
+
+- 访问构造器语法：`this(参数列表);`   只能在构造器中使用（即只能在构造器中访问另一个构造器）
+
+  ```java
+  class T {
+      public T() {
+          // 通过this关键字访问另一个构造器
+          this("jlc", 25);
+          System.out.println("T()构造器");
+      }
+      public T(String name, int age) {
+          System.out.println("T(String name, int age)构造器");
+      }
+  }
+  ```
+
+  > 注意：访问构造器语法：`this(参数列表);`，必须放在第一条语句中
+
+- `this`不能再类定义的外部使用，只能在类定义的方法中使用
+
+  ```java
+  class Person {
+      String name = "jlc";
+      int age = 25;
+      public void f() {
+          String name = "abc";
+          System.out.println(name, age);   // abc, 25
+          System.out.println(this.name, this.age);   // jlc, 25
+      }
+  }
+  ```
+
+  > `this.name`表示当前对象的`name`属性   后面的`name`是局部变量，就近访问，找不到在访问属性
+
+
+
+## 面向对象编程
+
+
 
 
 
