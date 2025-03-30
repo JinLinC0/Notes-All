@@ -133,6 +133,8 @@ import './tailwindcss.css'
 
   `items-start`, `items-center`, `items-end`, `items-stretch`
 
+目前`felx`也可以使用`gap`来设置元素的间距，如`gap-2`
+
 
 
 ## `grid`类
@@ -142,6 +144,10 @@ import './tailwindcss.css'
 - `grid`：使用栅格布局，开启栅格布局
 
   `grid-row`, `grid-col`: 设置主轴为行或列，如`grid-col-2`表示设置列为两列
+  
+  `grid-flow-col`根据元素的个数自动分列
+
+可以通过`gap`来设置元素的间距
 
 
 
@@ -237,40 +243,88 @@ import './tailwindcss.css'
 
 显示/隐藏类用于控制元素的可见性
 
-- `hidden`: 元素隐藏
-- `block`: 块级元素显示
+- `hidden`: 元素隐藏，相当于` display: none`
+- `block`: 块级元素显示，相当于 `display: block`
+- `inline`：设置元素为行内元素，相当于` display: inline`
 - `md:inline`: 在中等屏幕大小以上以内联形式显示
 - `overflow-hidden`：设置溢出隐藏，对于将图片整个填充到圆角的元素区域，对于矩形的图片会溢出圆角的范围，我们需要设置溢出隐藏，来使图片溢出的区域隐藏，使图片也是圆角的
 
 
 
-
-
-#### 伪类和状态类
+## 伪类和状态类
 
 伪类和状态类用于处理特定状态下的样式
 
-- hover:bg-gray-200: 鼠标悬停时背景颜色变为灰色
-- focus:outline-none: 获取焦点时移除默认的外边框
+- `hover:bg-gray-200`：鼠标悬停时背景颜色变为灰色
 
-### 工具类
+- `focus:outline-none`：获取焦点时移除默认的外边框
 
-Tailwind CSS 的工具类是一组用于处理布局、定位、显示、隐藏等任务的类。这些工具类提供了一种简洁而强大的方式来操纵元素的外观和行为
-
-#### 显示/隐藏类
-
-用于控制元素的可见性
-
-hidden: 隐藏元素，相当于 display: none;
-block: 设置元素为块级元素，相当于 display: block;
-inline: 设置元素为行内元素，相当于 display: inline;
-flex: 设置元素为弹性盒，相当于 display: flex;
-inline-flex: 设置元素为内联弹性盒，相当于 display: inline-flex;
+  获取焦点时出现蓝色的外边线：`focus:border-blue-500`
 
 
 
+## 过渡类
+
+过渡类用于动画样式，或者悬停聚焦时的过渡时间设置，控制动画效果出现的快慢
+
+- `duration-300`：过渡设置为300毫秒
 
 
 
+## 响应式处理
 
-使用`class="h-[calc(100%-30px)]"`时`100%-30px`中间不能使用空格分割，不然会使样式不生效
+对于不同的设备之间进行页面的展示，其尺寸可能会发生变化，如果我们希望在不同的设备中，控制某些元素的显示和隐藏，我们可以使用响应式处理
+
+常见的响应式布局有：
+
+| Breakpoint prefix | Minimum width |                 CSS                  |
+| :---------------: | :-----------: | :----------------------------------: |
+|       `sm`        |     640px     | `@media (min-width: 640px) { ... }`  |
+|       `md`        |     768px     | `@media (min-width: 768px) { ... }`  |
+|       `lg`        |    1024px     | `@media (min-width: 1024px) { ... }` |
+|       `xl`        |    1280px     | `@media (min-width: 1280px) { ... }` |
+|       `2xl`       |    1536px     | `@media (min-width: 1536px) { ... }` |
+
+> 我们可以将`sm`定义为手机的尺寸；将`md`定义为平板的尺寸；后面三个可以定义成桌面端显示器的尺寸
+
+对于某些元素在手机端隐藏，我们可以如下定义：`sm:hidden `
+
+对于某些元素在平板端显示，我们可以如下定义：`md:block`
+
+只有在平板模式的时候，才显示栅格：`md:grid grid-cols-2`
+
+
+
+## 封装复用的样式
+
+对于有一些用的比较多的`TailwindCSS`语句，我们可以将其封装起来，实现统一管理和复用
+
+封装之前，先下载`scss`包：`npm install -D sass`
+
+```vue
+<template>
+    <div>
+        <input type="text" placeholder="请输入用户名" class="login-input" />
+        <input type="text" placeholder="请输入密码" class="login-input mt-5" />
+    </div>
+</template>
+
+<script setup>
+
+</script>
+
+<style lang="scss">
+.login-input {
+    @apply w-full border border-gray-300 rounded-md p-2 mt-4 outline-none
+    placeholder:text-xs focus:border-blue-500 duration-300
+}
+</style>
+```
+
+我们引用封装的类型后，还可以在其后面继续写样式，如`class="login-input mt-5"`
+
+
+
+## 使用积累
+
+- 使用`class="h-[calc(100%-30px)]"`时`100%-30px`中间不能使用空格分割，不然会使样式不生效
