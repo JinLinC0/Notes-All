@@ -106,6 +106,38 @@
 
 - 自动分配变量名：在变量后面加`.var`回车即可
 
+###### 模板快捷键
+
+模块快捷键可以帮助我们加快代码的编写速度，只需要输入定义的快捷键内容，就可以得到对于的代码模板
+
+我们可以在`file`-->`settings`-->`editor`-->`Live templates`-->查看有哪些模板快捷键/自定义模板快捷键
+
+系统提供的常用模板快捷键有：
+
+- `main`模板快捷键对应的内容：
+
+  ```java
+  public static void main(String[] args) {
+      
+  }
+  ```
+
+- `sout`模板快捷键对应的内容：
+
+  ```java
+  System.out.println("hello,world");
+  ```
+
+- `fori`模板快捷键对应的内容：
+
+  ```java
+  for (int i = 0; i < ; i++) {
+      
+  }
+  ```
+
+对于自定义的模板快捷键，我们点击右上角的加号，输入快捷键的名字和内容，同时设置应用的范围，我们一般要应用给`Java`使用
+
 #### `JDK`的安装
 
 `JDK`是`Java`开发工具包，`JDK`=`JRE`+`Java`的开发工具（`java`、`javac`、`javadoc`、`javap`等）
@@ -1687,13 +1719,13 @@ class Cat {
 >   public double f1() {
 >       return 1.1;
 >   }
->       
+>         
 >   // 兼容（可以自动转换），编译通过
 >   public double f1() {
 >       int n = 1;
 >       return n;
 >   }
->       
+>         
 >   // 类型不一致，且不能自动转换，编译不通过
 >   public int f1() {
 >       return 1.1;
