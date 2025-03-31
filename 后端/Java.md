@@ -1719,13 +1719,13 @@ class Cat {
 >   public double f1() {
 >       return 1.1;
 >   }
->         
+>           
 >   // 兼容（可以自动转换），编译通过
 >   public double f1() {
 >       int n = 1;
 >       return n;
 >   }
->         
+>           
 >   // 类型不一致，且不能自动转换，编译不通过
 >   public int f1() {
 >       return 1.1;
@@ -2428,6 +2428,8 @@ demo.ab12.oa   // 正确
 
 ## 面向对象编程
 
+面向对象编程有三大特征：封装、继承和多态
+
 ### 访问修饰符
 
 `Java`一共提供了四种访问控制修饰符，用于控制方法和属性（成员变量）的访问权限（范围）：
@@ -2486,4 +2488,414 @@ public class B {
     System.out.println(a.n1);   // a.n2   a.n3  a.n4访问不到
 }
 ```
+
+***
+
+### 封装
+
+封装就是把抽象出的数据（属性）和对数据操作的方法封装在一起，数据被保护在内部，程序的其他部分只有通过被授权的操作（方法），才能对数据进行操作。对电视机的封装操作就是典型的封装，开关等按键被暴露出来了
+
+封装有以下的好处：
+
+- 隐藏了实现细节，只需在调用时传递参数即可
+- 可以对数据进行验证（对于一些非常不合理的数据进行验证处理，如`age = 1000;`，显然是不合理的），保证安全合理
+
+#### 封装步骤
+
+1. 将属性进行私有化`private`，在外部不能直接的修改属性
+
+2. 提供一个公共（`public`）的`set`方法，用于属性判断并赋值
+
+   ```java
+   public void setXxx(类型 参数名) {  // xxx表示某个属性
+       // 加入数据验证的业务逻辑
+       属性 = 参数名;
+   }
+   ```
+
+3. 提供一个公共（`public`）的`get`方法，用于获取属性的值
+
+   ```java
+   public XX getXxx() {   // xxx表示某个属性
+       // 权限判断
+       return xx;
+   }
+   ```
+
+封装小案例：封装一个`Person`类，不能随便查看人的年龄，工资等隐私，并对设置的年龄进行合理的验证（1-120岁之间），年龄合理就设置，否则使用默认的年龄，工资不能直接查看，`name`的长度在2-6个字符之间，具体封装如下：
+
+```java
+package com.jlctest.encap;
+
+public class Encapsulation01 {
+    Person person = new Person();
+    person.setName("jlc");
+    person.setAge("25");
+    person.setSalary(20000);
+    // 不能通过person.salary进行访问当前对象的薪水，只能通过person.getSalary()进行薪水的访问
+    // 读取信息
+    System.out.println(person,info());
+}
+
+class Person {
+    public String name;   // 名字公开
+    private int age;     // 年龄私有化
+    private double salary;  // 工资私有化
+    
+    // 给每个属性提供set和get方法，可以使用快捷键alt+insert，选择Getter and Setter
+    // 之后根据要求来完善代码
+    public void setName(String name) {
+        // 对名字长度的校验
+        if (name.length() >= 2 && name.length() <= 6) {
+            this.name = name;
+        }
+        else {
+            System.out.println("名字长度不合法");
+            // 设置默认的名字
+            this.name = "null";
+        }
+    }
+    public String getName() {
+        return name;
+    }
+    public void setAge(int age) {
+        // 合理范围判断
+        if (age >= 1 && age <= 120) {
+            this.age = age;
+        }
+        else {
+            System.out.println("年龄要在1-120之间");
+            // 不符合范围设置给定的默认值
+            this.age = 18;
+        }
+    }
+    public int getAge() {
+        return age;
+    }
+    public void setSalary(double salary) {
+        this.salary = salary;
+    }
+    public double getSalary() {
+        // 可以在这里增加对当前对象的权限判断
+        return salary;
+    }
+    
+    // 写一个方法，返回属性信息
+    public String info() {
+        return "信息为： name:" + name + "age:" + age + "salary:" + salary;
+    } 
+}
+```
+
+#### 封装结合构造器
+
+使用构造器会导致封装的过滤校验机制失效，如果我们不希望校验方法失效，我们可以将`set`方法在构造器中进行调用，如：
+
+```java
+package com.jlctest.encap;
+
+public class Encapsulation01 {
+    Person person = new Person();
+    person.setName("jlc");
+    person.setAge("25");
+    person.setSalary(20000);
+    // 不能通过person.salary进行访问当前对象的薪水，只能通过person.getSalary()进行薪水的访问
+    // 读取信息
+    System.out.println(person,info());
+    
+    // 通过构造器初始化
+    Person person1 = new Person("JLC", 125, 20000);
+    System.out.println(person1,info());   // JLC 18 20000
+}
+
+class Person {
+    public String name;   // 名字公开
+    private int age;     // 年龄私有化
+    private double salary;  // 工资私有化
+    
+    // 使用构造器
+    public Person(String name, int age, double salery) {
+        //// 下面方式会使验证失效
+        //this.name = name;
+        //this.age = age;
+        //this.salary = salary;
+        // 如果需要用到验证，需要调用set方法
+        this.setName(name);
+        this.setAge(age);
+        this.setSalary(salary);
+    }
+    
+    // 给每个属性提供set和get方法，可以使用快捷键alt+insert，选择Getter and Setter
+    // 之后根据要求来完善代码
+    public void setName(String name) {
+        // 对名字长度的校验
+        if (name.length() >= 2 && name.length() <= 6) {
+            this.name = name;
+        }
+        else {
+            System.out.println("名字长度不合法");
+            // 设置默认的名字
+            this.name = "null";
+        }
+    }
+    public String getName() {
+        return name;
+    }
+    public void setAge(int age) {
+        // 合理范围判断
+        if (age >= 1 && age <= 120) {
+            this.age = age;
+        }
+        else {
+            System.out.println("年龄要在1-120之间");
+            // 不符合范围设置给定的默认值
+            this.age = 18;
+        }
+    }
+    public int getAge() {
+        return age;
+    }
+    public void setSalary(double salary) {
+        this.salary = salary;
+    }
+    public double getSalary() {
+        // 可以在这里增加对当前对象的权限判断
+        return salary;
+    }
+    
+    // 写一个方法，返回属性信息
+    public String info() {
+        return "信息为： name:" + name + "age:" + age + "salary:" + salary;
+    } 
+}
+```
+
+***
+
+### 继承
+
+对于两个类的属性和方法，有很多是相同的，这个时候，我们就需要用到继承的概念，实现代码的复用性，同时代码的扩展性和维护性提高了
+
+继承可以解决代码的复用，让我们的编程更加靠近人类的思维，当多个类存在相同的属性（变量）和方法时，可以从这些类中抽象出父类，在父类中定义这些相同的属性和方法，所有的子类不需要重新定义这些属性和方法，只需要通过`extends`来声明继承父类即可，继承的示意图如下：
+
+![image-20250331150518850](..\images\image-20250331150518850.png)
+
+> `B`类和`C`类中有很多属性和方法是相同的，我们将`B`类和`C`类中共有的属性写在`A`类中，供`B`类和`C`类进行继承，在`B`类和`C`类中只写该类特有的属性和方法，我们可以在写一个类`D`来继承`B`类，这样`D`类就同时拥有了`B`类和`A`类的所有方法
+
+继承的基本语法：
+
+```java
+class 子类 extends 父类 {
+    ...
+}
+```
+
+> - 子类会自动拥有父类定义的属性和方法
+> - 父类又叫超类或基类
+> - 子类又叫派生类
+
+代码描述：创建一个学生的父类，和小学生子类、大学生子类，父类文件代码：
+
+```java
+package com.jlctest.extend;
+
+// 父类
+public class Student {
+    // 共有的属性
+    public String name;
+    public int age;
+    private double score;
+    
+    // 共有的方法
+    public void setScore(double score) {
+        this.score = score;
+    }
+    public void showInfo() {
+        System.out.println("学生名：" + name + "年龄：" + age + "成绩：" + score);
+    }
+}
+```
+
+创建子类进行继承父类和编写子类独特的属性和方法：
+
+```java
+package com.jlctest.extend;
+
+// 小学生子类 Pupil继承Student父类
+public class Pupil extends Student {
+    public void testing() {
+        System.out.println("小学生" + name + "正在考试...");
+    }
+}
+```
+
+```java
+package com.jlctest.extend;
+
+// 大学生子类 Graduate继承Student父类
+public class Graduate extends Student {
+    public void testing() {
+        System.out.println("大学生" + name + "正在考试...");
+    }
+}
+```
+
+测试文件：
+
+```java
+package com.jlctest.extend;
+
+public class Extends01 {
+    public static void main(String[] args) {
+        com.jlctest.extend.Pupil pupil = new Pupil();
+        pupil.name = "abc";
+        pupil.age = 12;
+        pupil.testing();
+        pupil.setScore(60);
+        pupil.showInfo();
+    }
+}
+```
+
+注意事项：
+
+- 子类继承了所有的属性和方法，但是私有属性不能在子类中直接访问（但是可以间接访问的），要通过父类提供的公共方法去访问
+
+  代码解释：先创建一个父类`Base`：
+
+  ```java
+  package com.jlctest.extend;
+  
+  public class Base {
+      public int n1 = 100;    // 公共属性
+      protected int n2 = 200; // 受保护属性
+      int n3 = 300;           // 默认属性
+      private int n4 = 400;   // 私有属性
+      
+      // 无参构造器
+      public Base() {
+          System.out.println("Base...");
+      }
+      // 公共方法
+      public void test100() {
+          System.out.println("test100...");
+      }
+      // 受保护方法
+      protected void test200() {
+          System.out.println("test200...");
+      }
+      // 默认方法
+      void test300() {
+          System.out.println("test300...");
+      }
+      // 私有方法
+      private void test400() {
+          System.out.println("test400...");
+      }
+      
+      // 父类提供一个公共的方法去返回私有的属性
+      public int getN4() {
+          return n4;
+      }
+      
+      // 父类提供一个公共的方法去返回私有的方法
+      public void callTest400() {
+          test400();
+      }
+  }
+  ```
+
+  创建一个子类`Sub`继承父类`Base`：
+
+  ```java
+  package com.jlctest.extend;
+  
+  public class Sub extends Base {
+      // 子类的构造器
+      public Sub() {
+          System.out.println("Sub...");
+      }
+      
+      public void sayOk() {
+          // 非私有的属性和方法可以在子类中直接访问
+          System.out.println(n1, n2, n3);   // n4是私有属性，不能直接访问
+          // 通过父类提供的公共方法去访问私有的属性
+          System.out.println(getN4());
+          
+          test100();
+          test200();
+          test300();    // test400()是私有方法，不能直接访问
+          // 通过父类提供的公共方法去访问私有的方法
+          callTest400();
+      }
+  }
+  ```
+
+- 子类必须调用父类的构造器，完成父类的初始化
+
+  在创建子类的时候，父类的无参构造器也会被调用，会先于子类的无参构造器调用（先完成对父类的初始化）
+
+  在子类中有一个默认的被省略的语句`super();`，完整的子类构造器语句为：
+
+  ```java
+  package com.jlctest.extend;
+  
+  public class Sub extends Base {
+      // 子类的构造器
+      public Sub() {
+          super();   // 默认调用父类的无参构造器
+          System.out.println("Sub...");
+      }
+  }
+  ```
+
+- 当创建子类对象时，不管使用子类的哪个构造器，默认情况下总会去调用父类的无参构造器，如果父类没有提供无参构造器，则必须在子类的构造器中用`super`去指定父类的哪个构造器完成对父类的初始化工作，否则编译不会通过
+
+  ```java
+  package com.jlctest.extend;
+  
+  public class Base {
+      public int n1 = 100;    // 公共属性
+      protected int n2 = 200; // 受保护属性
+      int n3 = 300;           // 默认属性
+      private int n4 = 400;   // 私有属性
+      
+      // 有参构造器，覆盖了默认的无参构造器
+      public Base(int n1) {
+          System.out.println("Base(int n1)...");
+      }
+  }
+  ```
+
+  子类在调用的时候，需要指定父类中具体的构造器：
+
+  ```java
+  package com.jlctest.extend;
+  
+  public class Sub extends Base {
+      // 子类的构造器
+      public Sub() {
+          super(150);    // 指定一个构造器合法的实例，显示的调用一下
+          System.out.println("Sub...");
+      }
+  }
+  ```
+
+- 如果希望指定去调用父类的某个构造器，则显式的用`super()`调用一下，如果不写，则默认调用父类的无参构造器
+
+- `super`在使用时，必须放在构造器第一行
+
+- `super()`和`this()`都只能放在构造器第一行，因此这两个方法不能共存在一个构造器中
+
+- `Java`所有的类都是`Object`类的子类，`Object`是所有类的基类
+
+- 父类构造器的调用不限于直接调用上级的父类，可以一直往上追溯到`Object`类（顶级父类），但是注意`Object`的无参构造器是没有任何输出的
+
+- 子类最多只能继承一个父类（指直接继承），即`Java`中是单继承机制的
+
+  如果想要让`A`类继承`B`类和`C`类，我们可以让`A`类先继承`B`类，再让`B`类去继承`C`类
+
+- 不能滥用继承，子类和父类之间必须满足`is-a`（是一个...）的逻辑关系
+
+  `Person is a Music?`   人不是音乐，不合理，不应该是继承关系
 
