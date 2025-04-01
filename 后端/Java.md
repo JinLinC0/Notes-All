@@ -1719,13 +1719,13 @@ class Cat {
 >   public double f1() {
 >       return 1.1;
 >   }
->           
+>             
 >   // 兼容（可以自动转换），编译通过
 >   public double f1() {
 >       int n = 1;
 >       return n;
 >   }
->           
+>             
 >   // 类型不一致，且不能自动转换，编译不通过
 >   public int f1() {
 >       return 1.1;
@@ -2899,3 +2899,130 @@ public class Extends01 {
 
   `Person is a Music?`   人不是音乐，不合理，不应该是继承关系
 
+练习题：
+
+```java
+public class ExtendsExercise01 {
+    public static void main(String[] args) {
+        B b = new B();   // 执行内容：a    b name   b
+    }
+}
+
+class A {
+    A() {
+        System.out.println("a");
+    }
+    A(String name) {
+        System.out.println("a name");
+    }
+}
+class B extends A {
+    B() {
+        this("abc");    // 执行B(String name){}
+        System.out.println("b");
+    }
+    B(String name) {
+        // 默认为super();   // 执行A()
+        System.out.println("b name");
+    }
+}
+```
+
+#### 继承的本质
+
+继承的本质可以帮助我们理解，当子类继承父类时，创建子类对象时，内存中发生了什么（结论：当子类对象创建好后，内存中会建立查找关系）
+
+```java
+public class ExtendsTheory {
+    public static void main(String[] args) {
+        Son son = new Son();    // new一个Son时，内存到底发生了什么，内存的布局是怎么样的
+        // 当我们使用实例出的子类去访问属性时，是根据什么规则呢？
+        System.out.println(son.name);  // 大头儿子
+        System.out.println(son.age);  // 45   子类没有，访问的父类的属性
+        System.out.println(son.hobby);  // 旅游   子类父类都没有，继续往上找
+    }
+}
+
+class GrandPa {
+    String name = "大头爷爷";
+    String hobby = "旅游";
+}
+class Father extends GrandPa {
+    String name = "大头爸爸";
+    int age = 45;
+}
+class Son extends Father {
+    String name = "大头儿子";
+}
+```
+
+![image-20250401133057334](..\images\image-20250401133057334.png)
+
+> `new`一个`Son`类的时候，首先会加载类信息，在加载`Son`类信息的时候，会先加载顶层的父类信息，也就是`Object`类，之后依次加载`GrandPa`的类信息和`Father`的类信息，等父类的信息加载完后，最后才会加载`Son`的类信息
+>
+> 加载完类信息之后，会在堆中分配地址空间，首先会给爷爷类分配属性；再会开辟一个空间，为爸爸类分配属性，最后为子类自己开辟空间，分配属性
+
+当我们使用实例出的子类去访问属性时，是根据什么规则呢？我们需要按照查找关系来返回数据，查找规则如下：
+
+1. 首先看子类是否有目前要访问的属性，如果子类有这个属性，并且可以访问，则返回信息
+2. 如果子类没有这个属性，就看父类有没有这个属性，如果父类有这个属性，并且可以访问，就返回信息
+3. 如果父类没有这个属性，就继续往上找，直到`Object`类
+
+如果父级中的一个属性是私有的，那么子类是不可以进行直接访问的（但是这个私有的属性在内存地址中还是存在的），只是我们需要通过公共的方法进行访问
+
+另外，如果爸爸类中有一个`age`是私有的，爷爷类中也有一个`age`是公共的，那我们子类访问`age`属性会卡在爸爸类中（直接访问报错，即有一个堵住了，不会跳过这个继续往上查找），不会继续往爷爷类去查找（即使爷爷类中的`age`是私有的）
+
+#### `super`关键字
+
+`super`代表父类的引用，用于访问父类的属性、方法和构造器
+
+- `super`可以访问父类的属性（访问方式：`super.属性名;`），但不能访问父类的私有属性
+- `super`可以访问父类的方法（访问方式：`super.方法名(参数列表);`），但不能访问父类的私有方法
+- `super`可以访问父类的构造器（访问方式：`super(参数列表);`），只能放在构造器的第一句
+
+```java
+package com.jlctest.super;
+
+// 父类
+public class A {
+    // 四个属性
+    public int n1 = 100;
+    protected int n2 = 200;
+    int n3 = 300;
+    private n4 = 400;
+    
+    // 四个方法
+    public void test100() {}
+    protected void test200() {}
+    void test300() {}
+    private void test400() {}
+}
+```
+
+```java
+package com.jlctest.super;
+
+// 子类
+public class B extends A {
+    public void h1() {
+        System.out.println(super.n1, super.n2, super.n3);   // super.n4不能访问，报错
+    }
+    public void ok() {
+        super.test100();
+        super.test200();
+        super.test300();
+        // super.test400();不能访问，报错
+    }
+}
+```
+
+`super`关键字可以给编程带来便利：
+
+- 调用父类的构造器的好处：分工明确，父类属性由父类初始化，子类的属性由子类初始化
+- 当子类中有和父类中的成员（属性和方法）重名时，为了访问父类的成员，必须通过`super`（`super`访问属性和方法时，是没有查找本类该属性和方法的过程，直接去父类中进行查找，这个和`this`和直接访问是有区别的）；如果没有重名，使用`super`、`this`和直接访问是一样效果的
+- 对于父类中私有的属性和方法，访问会报错：`cannot access`；如果父类中都没有这个属性和方法，会提示属性或方法不存在
+- `super`的访问不限于直接父类，如果爷爷类和本类中有同名的成员，也可以使用`super`去访问爷爷类的成员，如果多个基类（上级类）中都有同名的成员，使用`super`访问遵循就近原则。当然也需要遵循访问权限的相关规则（如私有属性和方法是不能访问的）
+
+##### `super`和`this`的比较
+
+![image-20250401151555174](..\images\image-20250401151555174.png)
