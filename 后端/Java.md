@@ -1719,13 +1719,13 @@ class Cat {
 >   public double f1() {
 >       return 1.1;
 >   }
->             
+>                 
 >   // 兼容（可以自动转换），编译通过
 >   public double f1() {
 >       int n = 1;
 >       return n;
 >   }
->             
+>                 
 >   // 类型不一致，且不能自动转换，编译不通过
 >   public int f1() {
 >       return 1.1;
@@ -3026,3 +3026,209 @@ public class B extends A {
 ##### `super`和`this`的比较
 
 ![image-20250401151555174](..\images\image-20250401151555174.png)
+
+#### 方法重写
+
+方法重写也叫方法覆盖，就是子类有一个方法和父类（这里的父类可以一直追溯到顶级父类）的某个方法的名称、返回类型、形参列表都一样，那么我们就说子类的这个方法覆盖了父类的方法
+
+对于一个`Animal`父类中，有一个方法：
+
+```java
+package com.jlctest.override;
+
+public class Animal {
+    public void cry() {
+        System.out.println("动物叫..");
+    }
+}
+```
+
+对于子类`Dog`中，也有`cry`这个方法：
+
+```java
+package com.jlctest.override;
+
+public class Dog extends Animal {
+    public void cry() {
+        System.out.println("狗叫..");
+    }
+}
+```
+
+> 因为`Dog`是`Animal`的子类，`	Dog`的`cry`方法和`Animal`的`cry`方法的定义形式一样（名称、返回类型和形参列表），这时我们就说`Dog`的`cry`方法重写了`Animal`的`cry`方法
+
+在一个测试文件中进行测试：
+
+```java
+package com.jlctest.override;
+
+public class Test {
+    public static void main(String[] args) {
+        Dog dog = new Dog();
+        dog.cry();   // 狗叫..
+    }
+}
+```
+
+方法重写的注意事项：
+
+- 子类的方法的形参列表，方法名称要和父类方法的形参列表，方法名称和返回类型完全一样，会出现方法的重写
+
+- 在方法名称和形参列表一样的基础上，如果父类方法的返回类型是子类方法返回类型的父类，也会构成方法的重写（如：父类方法返回的类型是`Object`，子类方法返回的类型是`String`）`String`类型的本质就是`Object`，如果子类方法返回的类型是`Object`，父类方法返回的类型是`String`，系统会直接报错
+
+- 对于方法的重写，子类方法不能缩小父类方法的访问权限（可以扩大，但是不能缩小）
+
+  对于访问修饰符的权限，由大到小依次为：`public`>`protected`>默认>`private`
+
+  如果父类的方法是`public`，那么子类的方法必须为`public`，否则报错
+
+  如果父类的方法是`protected`，那么子类的方法可以为`protected`和`public`
+
+- 对于重写后的方法，如果我们想要重新使用子类的方法，我们可以使用`super.父类方法()`的形式调用
+
+方法重写和方法重载的比较：
+
+![image-20250402151355754](..\images\image-20250402151355754.png)
+
+***
+
+### 多态
+
+多态，通俗来讲就说多种状态，是面向对象的第三大特征，多态是建立在封装和继承的基础上的
+
+多态可以提高我们代码的复用性，从而利于维护
+
+#### 方法的多态
+
+重写和重载就体现了方法的多态
+
+```java
+package com.jlctest.Ploy;
+
+public class Ploy {
+    public static void main(String[] args) {
+        B b = new B();
+        A a = new A();
+        // 方法的重载体现多态：这里我们传入不同的参数，就会调用不同的sum方法，就体现多态
+        System.out.println(a.sum(10, 20));   // 30
+        System.out.println(a.sum(10, 20, 30));  // 60
+        // 方法重写体现多态：
+        a.say();   // A say
+        b.say();   // B say
+    }
+}
+
+// 父类
+class B {
+    public void say() {
+        System.out.println("B say");
+    }
+}
+
+// 子类
+class A extends B {
+    public int sum(int n1, int n2) {
+        return n1 + n2;
+    }
+    public int sum(int n1, int n2, int n3) {
+        return n1 + n2 + n3;
+    }
+    
+    public void say() {
+        System.out.println("A say");
+    }
+}
+```
+
+#### 对象的多态
+
+对象的多态是多态的核心：
+
+- 一个对象的编译类型和运行类型可以不一致（可以使用父类的引用指向子类的对象）
+- 编译类型在定义对象时，就确定了，不能改变
+- 运行类型是可以变化的
+- 编译类型看定义时等号的左边，运行类型看等号的右边
+
+```java
+// Dog类是Animal类的子类
+// 可以使用父类的引用指向子类的对象
+Animal animal = new Dog();
+
+animal = new Cat();   // animal的运行类型变成了Cat，但是编译类型仍然是Animal
+```
+
+> 其中`animal`的编译类型是`Animal`，运行类型是`Dog`
+
+```java
+// animal的编译类型是Animal，运行类型是Dog
+Animal animal = new Dog();
+animal,cry(); // 因为运行时，执行到该行时，animal的运行类型是Dog，所以这里的cry方法，就是Dog类中的方法
+
+// 将animal的运行类型改为Cat，但是编译类型还是为Animal
+animal = new Cat();
+animal.cry();   // 运行类型为Cat，执行的是Cat类中的cry方法
+```
+
+> 运行类型可以理解为真实的当前类型
+
+多态的注意事项：
+
+- 多态的前提是两个对象（类）存在继承关系
+
+- 多态的向上转型：
+
+  - 本质：父类的引用指向了子类的对象
+
+  - 语法：`父类类型 引用名 = new 子类类型();`
+
+  - 特点：编译类型看左边，运行类型看右边
+
+    可以调用父类中的所有成员（需遵循访问权限）
+
+    不能调用子类中特有成员
+
+    最终运行的效果看子类的具体实现
+
+    ```java
+    Animal animal = new Cat();     // 父类的引用指向了子类的对象
+    // 实例出的animal的类型完全是由编译器决定的，遵循的是引用类型Animal
+    animal.*;     // 可以调用父类中的所有成员方法（属性和方法）（需遵循访问权限，私有的成员不能访问）
+    // 但是不能调用子类中特有的成员（即子类有父类没有的成员）
+    animal.catchMouse();  // 报错catchMouse()是Cat类特有的方法
+    
+    // 最终运行的效果看子类的具体实现，调用方法时，按照从子类开始进行查找，子类没有才往父类进行查找
+    animal.eat();    // 根据运行类型，调用Cat类中的eat()方法（如果子类中有这个方法的情况下）    
+    animal.run();  // 如果子类中没有run()这个方法，才会去父类中进行找
+    ```
+
+    > 在编译阶段，能调用哪些成员（属性和方法），是由编译类型决定的
+    >
+    > 但是在最终运行的时候，还是要看子类实现具体的效果
+
+- 多态的向下转型：
+
+  - 语法：`子类类型 引用名 = (子类类型) 父类引用;`（将一个父类的引用强制转换为一个子类的引用，使其可以调用子类中的特有方法）
+  - 只能强转父类的引用，不能强转父类的对象
+  - 要求父类的引用必须指向的是当前目标类型的对象
+  - 当向下转型后，就可以调用子类类型中的所有成员
+
+  ```java
+  Animal animal = new Cat();     // 父类的引用指向了子类的对象
+  animal.catchMouse();  // 报错catchMouse()是Cat类特有的方法（我们使用向下转型来解决）
+  // 向下转型，强转，将父类的引用重写转换为子类的引用
+  Cat cat = (Cat) animal;    // 这个时候cat的编译类型和运行类型都是Cat
+  // 要求父类的引用必须指向的是当前目标类型的对象，也就是说animal原先的指向类型就是Cat类
+  // 转换完后，就可以调用子类的特有方法
+  cat.catchMouse();
+  ```
+
+  ```java
+  Animal animal = new Cat();     // 父类的引用指向了子类的对象
+  // 要求父类的引用必须指向的是当前目标类型的对象，也就是说animal原先的指向类型就是Cat类
+  Cat cat = (Cat) animal;  
+  
+  Dog dag = (Dog) animal;  // 报错，没有满足父类的引用必须指向的是当前目标类型的对象
+  ```
+
+  
+
