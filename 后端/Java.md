@@ -1719,13 +1719,13 @@ class Cat {
 >   public double f1() {
 >       return 1.1;
 >   }
->                 
+>                   
 >   // 兼容（可以自动转换），编译通过
 >   public double f1() {
 >       int n = 1;
 >       return n;
 >   }
->                 
+>                   
 >   // 类型不一致，且不能自动转换，编译不通过
 >   public int f1() {
 >       return 1.1;
@@ -3142,6 +3142,8 @@ class A extends B {
 
 #### 对象的多态
 
+对象多态的前提是两个对象（类）存在继承关系
+
 对象的多态是多态的核心：
 
 - 一个对象的编译类型和运行类型可以不一致（可以使用父类的引用指向子类的对象）
@@ -3171,64 +3173,179 @@ animal.cry();   // 运行类型为Cat，执行的是Cat类中的cry方法
 
 > 运行类型可以理解为真实的当前类型
 
-多态的注意事项：
+##### 多态的向上转型
 
-- 多态的前提是两个对象（类）存在继承关系
+- 本质：父类的引用指向了子类的对象
 
-- 多态的向上转型：
+- 语法：`父类类型 引用名 = new 子类类型();`
 
-  - 本质：父类的引用指向了子类的对象
+- 特点：编译类型看左边，运行类型看右边
 
-  - 语法：`父类类型 引用名 = new 子类类型();`
+  可以调用父类中的所有成员（需遵循访问权限）
 
-  - 特点：编译类型看左边，运行类型看右边
+  不能调用子类中特有成员
 
-    可以调用父类中的所有成员（需遵循访问权限）
-
-    不能调用子类中特有成员
-
-    最终运行的效果看子类的具体实现
-
-    ```java
-    Animal animal = new Cat();     // 父类的引用指向了子类的对象
-    // 实例出的animal的类型完全是由编译器决定的，遵循的是引用类型Animal
-    animal.*;     // 可以调用父类中的所有成员方法（属性和方法）（需遵循访问权限，私有的成员不能访问）
-    // 但是不能调用子类中特有的成员（即子类有父类没有的成员）
-    animal.catchMouse();  // 报错catchMouse()是Cat类特有的方法
-    
-    // 最终运行的效果看子类的具体实现，调用方法时，按照从子类开始进行查找，子类没有才往父类进行查找
-    animal.eat();    // 根据运行类型，调用Cat类中的eat()方法（如果子类中有这个方法的情况下）    
-    animal.run();  // 如果子类中没有run()这个方法，才会去父类中进行找
-    ```
-
-    > 在编译阶段，能调用哪些成员（属性和方法），是由编译类型决定的
-    >
-    > 但是在最终运行的时候，还是要看子类实现具体的效果
-
-- 多态的向下转型：
-
-  - 语法：`子类类型 引用名 = (子类类型) 父类引用;`（将一个父类的引用强制转换为一个子类的引用，使其可以调用子类中的特有方法）
-  - 只能强转父类的引用，不能强转父类的对象
-  - 要求父类的引用必须指向的是当前目标类型的对象
-  - 当向下转型后，就可以调用子类类型中的所有成员
+  最终运行的效果看子类的具体实现
 
   ```java
   Animal animal = new Cat();     // 父类的引用指向了子类的对象
-  animal.catchMouse();  // 报错catchMouse()是Cat类特有的方法（我们使用向下转型来解决）
-  // 向下转型，强转，将父类的引用重写转换为子类的引用
-  Cat cat = (Cat) animal;    // 这个时候cat的编译类型和运行类型都是Cat
-  // 要求父类的引用必须指向的是当前目标类型的对象，也就是说animal原先的指向类型就是Cat类
-  // 转换完后，就可以调用子类的特有方法
-  cat.catchMouse();
+  // 实例出的animal的类型完全是由编译器决定的，遵循的是引用类型Animal
+  animal.*;     // 可以调用父类中的所有成员方法（属性和方法）（需遵循访问权限，私有的成员不能访问）
+  // 但是不能调用子类中特有的成员（即子类有父类没有的成员）
+  animal.catchMouse();  // 报错catchMouse()是Cat类特有的方法
+  
+  // 最终运行的效果看子类的具体实现，调用方法时，按照从子类开始进行查找，子类没有才往父类进行查找
+  animal.eat();    // 根据运行类型，调用Cat类中的eat()方法（如果子类中有这个方法的情况下）    
+  animal.run();  // 如果子类中没有run()这个方法，才会去父类中进行找
   ```
 
-  ```java
-  Animal animal = new Cat();     // 父类的引用指向了子类的对象
-  // 要求父类的引用必须指向的是当前目标类型的对象，也就是说animal原先的指向类型就是Cat类
-  Cat cat = (Cat) animal;  
-  
-  Dog dag = (Dog) animal;  // 报错，没有满足父类的引用必须指向的是当前目标类型的对象
-  ```
+  > 在编译阶段，能调用哪些成员（属性和方法），是由编译类型决定的
+  >
+  > 但是在最终运行的时候，还是要看子类实现具体的效果
 
-  
+##### 多态的向下转型
+
+- 语法：`子类类型 引用名 = (子类类型) 父类引用;`（将一个父类的引用强制转换为一个子类的引用，使其可以调用子类中的特有方法）
+- 只能强转父类的引用，不能强转父类的对象
+- 要求父类的引用必须指向的是当前目标类型的对象
+- 当向下转型后，就可以调用子类类型中的所有成员
+
+```java
+Animal animal = new Cat();     // 父类的引用指向了子类的对象
+animal.catchMouse();  // 报错catchMouse()是Cat类特有的方法（我们使用向下转型来解决）
+// 向下转型，强转，将父类的引用重写转换为子类的引用
+Cat cat = (Cat) animal;    // 这个时候cat的编译类型和运行类型都是Cat
+// 要求父类的引用必须指向的是当前目标类型的对象，也就是说animal原先的指向类型就是Cat类
+// 转换完后，就可以调用子类的特有方法
+cat.catchMouse();
+```
+
+```java
+Animal animal = new Cat();     // 父类的引用指向了子类的对象
+// 要求父类的引用必须指向的是当前目标类型的对象，也就是说animal原先的指向类型就是Cat类
+Cat cat = (Cat) animal;  
+
+Dog dag = (Dog) animal;  // 报错，没有满足父类的引用必须指向的是当前目标类型的对象
+```
+
+##### 属性没有重写
+
+属性没有重写，属性的值看其编译类型
+
+```java
+package com.jlctest.poly;
+
+public class PloyDetail {
+    public static void main(String[] args) {
+        Base base = new Sub();   // 向上转型
+        System.out.println(base.count);  // 10   看编译类型，编译类型为Base
+        
+        Sub sub = new Sub();
+        System.out.println(base.count);  // 20   看编译类型，编译类型为Sub
+    }
+}
+
+// 父类
+class Base {
+    int count = 10;   // 父类的count属性设置为10
+}
+// 子类
+class Sub extends Base {
+    int count = 20;   // 子类的count属性设置为20
+}
+```
+
+##### `instanceOf`比较操作符
+
+`instanceOf`比较操作符，用于判断对象的运行类型是否为`XX`类型或者`XX`类型的子类型
+
+```java
+package com.jlctest.poly;
+
+public class PloyDetail {
+    public static void main(String[] args) {
+        // 运行类型和编译类型都为BB
+        BB bb = new BB();
+        System.out.println(bb instanceOf BB);   // true
+        System.out.println(bb instanceOf AA);   // true
+        
+        // 运行类型为BB   编译类型为AA
+        AA aa = new BB();
+        System.out.println(aa instanceOf AA);   // true
+        System.out.println(aa instanceOf BB);   // true
+        
+        Object obj = new Object();
+        System.out.println(obj instanceOf AA);   // false
+    }
+}
+
+// 父类
+class AA {}
+// 子类
+class BB extends AA {}
+```
+
+***
+
+#### 动态绑定机制
+
+`Java`的动态绑定机制是非常重要的
+
+1. 当调用对象方法的时候，该方法会和该对象的内存地址/运行类型绑定
+2. 当调用对象属性时，没有动态绑定机制，哪里声明，哪里调用（在当前的类中查找）
+
+```java
+package com.jlctest.dynamicBinding;
+
+public class DynamicBinding {
+    public static void main(String[] args) {
+        A a = new B();  // 向上转型
+        // 调用的对象方法看运行类型
+        System.out.println(a.sum());  // 40
+        System.out.println(a.sum1());  // 30
+        
+        // 如果将子类B中的sum方法注释掉
+        // 当调用对象方法的时候，该方法会和该对象的内存地址/运行类型绑定，getI()还是从运行类型开始查找
+        System.out.println(a.sum());  // 20 + 10 = 30
+        // 如果将子类B中的sum1方法注释掉
+        // 当调用对象属性时，没有动态绑定机制，哪里声明，哪里调用（在当前的类中查找）
+        System.out.println(a.sum1());  // 10 + 10 = 20
+    }
+}
+
+// 父类
+class A {
+    pubilc int i = 10;
+    public int sum() {
+        return getI() + 10;
+    }
+    public int sum1() {
+        return i + 10;
+    }
+    public int getI() {
+        return i;
+    }
+}
+// 子类
+class B extends A {
+    public int i = 20;
+    public int sum() {
+        return i + 20;
+    }
+    public int getI() {
+        return i;
+    }
+    public int sum1() {
+        return i + 10;
+    }
+}
+```
+
+#### 多态的应用
+
+##### 多态数组
+
+多态数组：数组的定义类型为父类类型，里面保存的实际元素类型为子类类型
+
+创建一个`Person`对象，两个`Student`对象和两个`Teacher`对象，统一放在数组中，并调用每个对象的`say`方法
 
