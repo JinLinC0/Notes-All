@@ -1719,13 +1719,13 @@ class Cat {
 >   public double f1() {
 >       return 1.1;
 >   }
->                   
+>                     
 >   // 兼容（可以自动转换），编译通过
 >   public double f1() {
 >       int n = 1;
 >       return n;
 >   }
->                   
+>                     
 >   // 类型不一致，且不能自动转换，编译不通过
 >   public int f1() {
 >       return 1.1;
@@ -3347,5 +3347,400 @@ class B extends A {
 
 多态数组：数组的定义类型为父类类型，里面保存的实际元素类型为子类类型
 
-创建一个`Person`对象，两个`Student`对象和两个`Teacher`对象，统一放在数组中，并调用每个对象的`say`方法
+创建一个`Person`对象，两个`Student`对象和两个`Teacher`对象，统一放在多态数组中，并调用每个对象的`say`方法
+
+![image-20250404194901877](..\images\image-20250404194901877.png)
+
+创建`Person`父类：
+
+```java
+package com.jlctest.ploy;
+
+public class Person {
+    private String name;
+    private int age;
+    
+    // 定义构造器
+    public Person(String name, int age) {
+        this.name = name;
+        this.age = age;
+    }
+    // 属性的设置和获取方法
+    public void setName(String name) {
+        this.name = name;
+    }
+    public String getName() {
+        return name;
+    }
+    public void setAge(int age) {
+        this.age = age;
+    }
+    public int getAge() {
+        return age;
+    }
+    
+    // 自定义say方法，返回名字和年龄
+    public String say() {
+        return name + "\t" + age;
+    }
+}
+```
+
+创建`Student`子类：
+
+```java
+package com.jlctest.ploy;
+
+public class Student extends Person {
+    private double score;
+    
+    // 定义构造器
+    public Person(String name, int age, double score) {
+        super(name, age);
+        this.score = score;
+    }
+    // 属性的设置和获取方法
+    public void setScore(double score) {
+        this.score = score;
+    }
+    public String getScore() {
+        return score;
+    }
+    
+    // 重写父类的say方法，返回名字和年龄还有分数
+    public String say() {
+        return super.say() + "score" + score;
+    }
+    
+    // 学生类中特有的方法
+    public void study() {
+        System.out.println("学生" + getName() + "正在听课");
+    }
+}
+```
+
+创建`Teacher`子类：
+
+```java
+package com.jlctest.ploy;
+
+public class Teacher extends Person {
+    private double salary;
+    
+    // 定义构造器
+    public Person(String name, int age, double salary) {
+        super(name, age);
+        this.salary = salary;
+    }
+    // 属性的设置和获取方法
+    public void setSalary(double salary) {
+        this.salary = salary;
+    }
+    public String getSalary() {
+        return salary;
+    }
+    
+    // 重写父类的say方法，返回名字和年龄还有分数
+    public String say() {
+        return super.say() + "salary" + salary;
+    }
+    
+    // 老师类中特有的方法
+    public void teach() {
+        System.out.println("老师" + getName() + "正在授课");
+    }
+}
+```
+
+使用多态数组进行声明和方法的调用：
+
+```java
+package com.jlctest.ploy;
+
+public static void main(String[] args) {
+    // 创建一个Person对象，两个Student对象和两个Teacher对象，统一放在多态数组中
+    // Person[]类型的多态数组，其元素子要是Person类和其子类都可以进行存放
+    Person[] persons = new Person[5];
+    persons[0] = new Person("jack", 20);
+    persons[1] = new Student("mary", 18, 80);
+    persons[2] = new Student("frank", 19, 100);
+    persons[3] = new Teacher("scoot", 35, 18000);
+    persons[4] = new Teacher("king", 55, 22000);
+    
+    // 循环遍历多态数组，调用say方法
+    for (int i = 0; i < persons.length; i++) {
+        // 使用了动态绑定机制，编译类型是Person，运行类型会根据实际变化
+        System.out.println(person[i].say());  
+        
+        // 这里的persons[] 元素的编译类型是Person，是没有办法调用老师类或者学生类中的特有方法的
+        // persons[i].teach();   // 报错
+        // 我们要使用向下转型，将编译类型转成具体的子类，再去调用具体的方法
+        if (persons[i] instanceof Student) {   // 先判断运行类型是不是Student类型
+            Student student = (Student)persons[i];
+            student.study();
+            // 上述两条语句可以合二为一：  (Student)persons[i].study();
+        } else if(persons[i] instanceof Teacher) {
+            Teacher teacher = (Teacher)persons[i];
+            teacher.teach();
+        } else if(persons[i] instanceof Person) {
+            // 不做任何处理
+        } else {
+            System.out.println("类型有误");
+        }
+    }
+}
+```
+
+##### 多态参数
+
+多态参数是指方法定义的形参类型为父类类型，实参类型允许为子类类型
+
+定义员工类`Employee`，包含姓名和月工资`[private]`，以及计算年工资`getAnnual`的方法。普通员工和经理继承了员工，经理类多了奖金`bonus`属性和管理`manage`方法，普通员工类多了`work`方法，普通员工类和经理类要求分别重写`getAnnual`方法：
+
+创建`Employee`父类：
+
+```java
+package com.jlctest.ploy;
+
+public class Employee {
+    private String name;
+    private double salary;
+    
+    // 定义构造器
+    public Person(String name, double salary) {
+        this.name = name;
+        this.salary = salary;
+    }
+    // 属性的设置和获取方法
+    public void setName(String name) {
+        this.name = name;
+    }
+    public String getName() {
+        return name;
+    }
+    public void setSalary(double salary) {
+        this.salary = salary;
+    }
+    public double getSalary() {
+        return salary;
+    }
+    
+    // 自定义年工资方法
+    public double getAnnual() {
+        return 12 * salary;
+    }
+}
+```
+
+创建一个普通员工`Worker`子类：
+
+```java
+package com.jlctest.ploy;
+
+public class Worker extends Employee {
+    // 定义构造器
+    public Person(String name, double salary) {
+        super(name, salary);
+    }
+    // 普通员工类中特有的work方法
+    public void work() {
+        System.out.println("普通员工" + getName() + "正在工作");
+    }
+    
+    // 重写getAnnual方法
+    public double getAnnual() {
+        // 因为普通员工没有其他收入，直接调用父类的方法即可
+        return super.getAnnual();
+    }
+}
+```
+
+创建一个经理`Manager`子类：
+
+```java
+package com.jlctest.ploy;
+
+public class Manager extends Employee {
+    private double bonus;
+    
+    // 定义构造器
+    public Person(String name, double salary, double bonus) {
+        super(name, salary);
+        this.bonus = bonus;
+    }
+    
+    public String getBonus() {
+        return bonus;
+    }
+    public void setBonus(double bonus) {
+        this.bonus = bonus;
+    }
+    
+    // 经理类中特有的manage方法
+    public void manage() {
+        System.out.println("经理" + getName() + "正在管理");
+    }
+    
+    // 重写getAnnual方法
+    public double getAnnual() {
+        return super.getAnnual() + bonus;
+    }
+}
+```
+
+在测试类中添加一个方法`showEmpAnnual(Employee e)`，实现获取任何员工对象的年工资，并在`main`方法中调用该方法`[e.getAnnual]`
+
+在测试类中添加一个方法`testWork`，如果是普通员工，则调用`work`方法，如果是经理，则调用`manage`方法
+
+```java
+package com.jlctest.ploy;
+
+public class PloyParameter {
+    public static void main(String[] args) {
+        Worker tom = new Worker("tom", 2000);
+        Manager milan = new Manager("milan", 5000, 10000);
+        PloyParameter ployParameter = new PloyParameter();
+        ployParameter.showEmpAnnual(tom);   // 30000
+        ployParameter.showEmpAnnual(milan);   // 70000
+        
+        ployParameter.testWork(tom);  // 普通员工tom正在工作
+        ployParameter.testWork(milan);  // 经理milan正在管理
+    }
+    
+    // 获取任何员工对象的年工资的方法
+    public void showEmpAnnual(Employee e) {
+        System.out.println(e.getAnnual());  // 使用了动态绑定机制
+    }
+    
+    // 添加一个方法testWork，如果是普通员工，则调用work方法，如果是经理，则调用manage方法
+    public void testWork(Employee e) {
+        if (e instanceof Worker) {
+            ((Worker) e).work();    // 向下转型
+        } else if (e instanceof Manager) {
+            ((Manager) e).manage();
+        }
+    }
+}
+```
+
+***
+
+### `Object`根类
+
+`Object`是类层次结构的根类，每个类都使用`Object`类作为超类，所有对象（包括数组）都可以使用`Object`类的方法，`Object`类中常用的方法有：
+
+|     方法     |                             描述                             |
+| :----------: | :----------------------------------------------------------: |
+|  `clone()`   |                  创建并返回此对象的一个副本                  |
+|  `equals()`  |              指示其他某个对象是否与此对象"相等"              |
+| `finalize()` | 当垃圾回收器确定不存在对该对象的更多引用时，由对象的垃圾回收器调用此方法 |
+| `getClass()` |                   返回此`Object`的运行时类                   |
+| `hashCode()` |                     返回该对象的哈希码值                     |
+| `toString()` |                    返回该对象的字符串表示                    |
+
+#### `equals`方法
+
+常见面试题：
+
+`==`（比较运算符）和`equals`的对比：
+
+- `==`既可以判断基本类型，又可以判断引用类型
+
+  - `==`如果判断基本类型，判断的是值是否相等（是判断值相等，而不深入到类型）
+
+    ```java
+    int num1 = 10;
+    double num2 = 10.0;
+    System.out.println(num1 == num2);   // ture
+    ```
+
+  - `==`如果判断引用类型，判断的是地址是否相等，即判断是不是同一个对象
+
+    ```java
+    A a = new A();
+    A b = a;
+    A c = b;
+    System.out.println(a == c); // true
+    ```
+
+- `equals`方法是`Object`类中的方法，只能判断引用类型
+
+  默认判断的是地址是否相等，子类中往往重写该方法，用于判断内容是否相等，比如`Integer`、`String`中都会将`equals`方法进行重写（加入了比较具体的值是否相等）
+
+  ```java
+  // Object中的equals方法，默认就是比较对象地址是否相同，即也就是判断两个对象是不是同一个对象
+  public boolean equals(Object obj) {
+      // 如果是同一个对象，就返回true
+      return (this == obj);
+  }
+  
+  // Integer中的equals方法
+  public boolean equals(Object obj) {
+      if (obj instanceof Integer) {
+          return value == ((Integer)obj).intValue();
+      }
+      return false;
+  }
+  ```
+
+  ```java
+  Integer integer1 = new Integer(1000);
+  Integer integer2 = new Integer(1000);
+  System.out.println(integer1 == integer2);  // false   开辟了不同的地址空间
+  System.out.println(integer1.equals(integer2));  // true   判断具体的值是否相等 
+  ```
+
+  如何查看`jdk`原码：
+
+  - 一般来说`IDEA`配置好`JDK`以后，`jdk`的源码也就自动配置好了，如果没有，可以点击菜单`File`-->`Project Structure`-->`SDKs`-->`Sourcepath`，然后点击右侧绿色的加号，选中我们下载的`jdk`子目录下的`javafx-src.zip`文件和`src.zip`文件
+  - 在查看某个方法的源码时，将光标放在该方法上，输入`ctrl+b`或者在该方法上点击右键-->`go to`-->`Declaration or Usages`即可跳转到该方法的源码
+
+##### 如何重写`equals`方法
+
+案例：判断两个`Person`对象的内容是否相等，如果两个`Person`对象的各个属性值都一样，则返回`true`，反之，返回`false`
+
+```java
+package com.jlctest.object;
+
+public class EqualsExercise {
+    public static void main(String[] args) {
+        Person person1 = new Person("jack", 10, '男');
+        Person person2 = new Person("jack", 10, '男');
+        
+        System.out.println(person1.equals(person2));  // false   继承的是Object中的equals
+        // 有了自定义的equals方法
+        System.out.println(person1.equals(person2));  // ture
+    }
+}
+
+class Person {
+    private String name;
+    private int age;
+    private char gender;
+    
+    // 创建构造器
+    public Person(String name, int age, char gender) {
+        this.name = name;
+        this,age = age;
+        this.gender = gender;
+    }
+    
+    // 重写Object的equals方法
+    public boolean equals(Object obj) {
+        // 判断如果比较的两个对象是同一个对象，则直接返回true
+        if (this == obj) {
+            return true;
+        }
+        // 类型判断，是Person，再进行比较
+        if (obj instanceof Person) {
+            // 进行向下转型，获取具体的属性
+            Person p = (Person)obj;
+            // 判断全部属性是否相等
+            return this.name.equals(p.name) && this.age==p.age && this.gender==p.gender;
+        }
+        // 如果不是Person对象，则直接返回false
+        return false;
+    }
+}
+```
 
