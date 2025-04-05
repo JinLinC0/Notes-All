@@ -1719,13 +1719,13 @@ class Cat {
 >   public double f1() {
 >       return 1.1;
 >   }
->                     
+>                       
 >   // 兼容（可以自动转换），编译通过
 >   public double f1() {
 >       int n = 1;
 >       return n;
 >   }
->                     
+>                       
 >   // 类型不一致，且不能自动转换，编译不通过
 >   public int f1() {
 >       return 1.1;
@@ -3744,3 +3744,86 @@ class Person {
 }
 ```
 
+#### `hashCode`方法
+
+`hashCode`方法用于返回该对象的哈希码值（哈希码值是为了提高哈希表的性能）
+
+该方法主要有以下几个方面：
+
+- 提高具有哈希结构的容器的效率
+- 两个引用，如果指向的是同一个对象，则哈希值是一样的
+- 两个引用，如果指向的是不同的对象，则哈希值是不一样的
+- 哈希值主要根据地址号来计算的，但是不能完全将哈希值等价于地址
+- 在后续的集合中，一般会将`hashCode`方法进行重写
+
+```java
+package com.jlctest.object;
+
+public class HashCode {
+    public static void main(String[] args) {
+        AA aa1 = new AA();
+        AA aa2 = new AA();
+        AA aa3 = aa1;
+        // 此时  aa1.hashCode和aa2.hashCode的值是不一样的，但是与aa3.hashCode的值是一样的
+    }
+}
+
+class AA {}
+```
+
+#### `toString`方法
+
+返回该对象的字符串表示，具体而言，就是返回一个以文本方式表示的此对象字符串
+
+默认返回：全类名（包名+类名）+@+哈希值的十六进制
+
+方法的源码：
+
+```java
+public String toString() {
+    return getClass().getName() + "@" + Integer.toHexString(hashCode());
+}
+```
+
+在子类中往往重写`toString`方法，用于返回对象的属性信息
+
+当直接输出一个对象时，`toString`方法会被默认的调用，如`System.out.print(monster);`等价于`System.out.print(monster.toString());`
+
+#### `finalize`方法
+
+- 当对象被回收时（在堆中的空间被释放出来了），系统自动调用该对象的`finalize`方法，子类可以重写该方法，做一些释放资源的操作
+- 什么时候被回收：当某个对象没有任何引用时，则`jvm`就认为这个对象使一个垃圾对象，就会使用垃圾回收机制来销毁该对象，在销毁对象之前，会先调用`finalize`方法
+- 垃圾回收机制的调用，是由系统来决定的（即有自己的`GC`算法），也可以通过`System.gc()`主动触发垃圾回收机制
+
+```java
+package com.jlctest.object;
+
+public class Finalize {
+    public static void main(String[] args) {
+        Car bmw = new Car("宝马");
+        // 将对象的指向连线断掉，即对象没有任何引用了，这个Car对象就变成了垃圾，被回收
+        // 在回收前（销毁前），会调用该对象的finalize方法
+        // 这时程序员就可以在finalize方法中写一些自己业务逻辑的方法（如释放资源：数据库连接或者打开文件）
+        // 如果程序员不重写finalize，那么就会调用Object类的finalize，即默认调用
+        bwm = null;
+        System.gc();  // 主动触发垃圾回收
+        System.out.println("程序退出了")
+    }
+}
+
+class Car {
+    private String name;
+    publuc Car(String name) {
+        this.name = name;
+    }
+    // 重写finalize方法
+    @Override
+    protected void finalize() throws Throwable {
+        System.out.println("我们销毁了汽车" + name);
+    }
+}
+```
+
+> 最后结果显示：程序退出了     我们销毁了汽车宝马
+
+`finalize`方法在实际的开发中使用的比较少，但是在面试中问的比较多
