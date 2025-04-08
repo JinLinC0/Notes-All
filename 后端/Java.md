@@ -1741,13 +1741,13 @@ class Cat {
 >   public double f1() {
 >       return 1.1;
 >   }
->                           
+>                             
 >   // 兼容（可以自动转换），编译通过
 >   public double f1() {
 >       int n = 1;
 >       return n;
 >   }
->                           
+>                             
 >   // 类型不一致，且不能自动转换，编译不通过
 >   public int f1() {
 >       return 1.1;
@@ -4181,4 +4181,108 @@ class Movie {
   1和2，是类加载时必须会执行的；后面4步是与对象相关的内容（入口是对应子类的构造器，遵守构造顺序）
 
 - 静态代码块只能直接调用静态成员（静态属性和静态方法），普通代码块可以调用任意成员
+
+
+
+## 设计模式
+
+设计模式是在大量的实践中总结和理论化之后的代码结构、编程风格、以及解决问题的思考方式。设计模式就像经典的棋谱，不同的棋局，我们使用不同的棋谱，免去我们自己再思考和摸索
+
+***
+
+### 单例模式
+
+单例（单个实例）设计模式，就是采取一定的方法保证在整个的软件系统中，对某个类只能存在一个对象实例，并且该类只提供一个取得其对象实例的方法（在软件运行的时候，我们要保证某一个类只能有一个实例化对象）
+
+单例模式有两种方式：饿汉式和懒汉式
+
+- 两者最主要的区别在于创建对象的时机不同，饿汉式是在类加载就创建了对象实例，而懒汉式是在使用时才创建对象
+- 饿汉式不存在线程安全问题，而懒汉式存在线程安全问题
+- 饿汉式存在浪费资源的可能，因为如果程序员一个对象实例都没有使用，那么饿汉式创建的对象就浪费了
+
+#### 饿汉式
+
+饿汉式的单例模式，只要类一加载，就会在其内部创建对象（饿汉式方式可能创建了对象但是没有使用）
+
+饿汉式单例设计模式具体步骤如下：
+
+1. 构造器私有化，防止在类的外部直接通过`new`方法实例化对象
+2. 类的内部创建对象（该对象是静态的）
+3. 向外暴露一个静态的公共方法，`getInstance()`
+
+```java
+package com.jlctest.single;
+
+public class SingleTon {
+    public static void main(String[] args) {
+        // 通过公共的静态方法可以获取对象（且只能是一个）
+        GirlFriend instance = GirlFriend.getInstance();
+        // GirlFriend.getInstance()重复执行，还是返回在类中创建的那个对象
+    }
+}
+
+// 有一个类，GirlFriend   使用饿汉式的单例设计模式  软件运行过程中只能实例化一个对象
+class GirlFriend {
+    private String name;
+    
+    // 2.在类的内部创建对象，设置为静态属性，我们后续的静态方法可以访问到
+    // 同时静态的方法，只会在类创建的时候初始化一次，后续不会重复初始化
+    private static GirlFriend gf = new GirlFriend("小红");
+    
+    // 1.将构造器私有化
+    private GirlFriend(String name) {
+        this.name = name;
+    }
+    
+    // 3.提供一个公共的static方法，返回gf对象
+    public static GirlFriend getInstance() {
+        return gf;
+    }
+}
+```
+
+#### 懒汉式
+
+与饿汉式的单例模式不同，懒汉式的单例模式，只有在调用暴露的静态公共方法时，才会在类的内部创建实例（防止了饿汉式的情况：可能出现创建了对象但是没有使用），在后面再次调用时，会返回上次创建的对象（因为是静态属性），从而保证单例
+
+懒汉式单例设计模式具体步骤如下：
+
+1. 构造器私有化，防止在类的外部直接通过`new`方法实例化对象
+2. 类的内部创建对象（该对象是静态的）
+3. 向外暴露一个静态的公共方法，`getInstance()`
+
+```java
+package com.jlctest.single;
+
+public class SingleTon {
+    public static void main(String[] args) {
+        // 通过公共的静态方法可以获取对象（且只能是一个）
+        GirlFriend instance = GirlFriend.getInstance();
+        // GirlFriend.getInstance()重复执行，还是返回在类中创建的那个对象
+    }
+}
+
+// 有一个类，GirlFriend   使用懒汉式的单例设计模式  软件运行过程中只能实例化一个对象
+class GirlFriend {
+    private String name;
+    
+    // 2.在类的内部创建对象，设置为静态属性，我们后续的静态方法可以访问到
+    // 同时静态的方法，只会在类创建的时候初始化一次，后续不会重复初始化
+    private static GirlFriend gf;
+    
+    // 1.将构造器私有化
+    private GirlFriend(String name) {
+        this.name = name;
+    }
+    
+    // 3.提供一个公共的static方法，返回gf对象
+    public static GirlFriend getInstance() {
+        // 如果对象还没有创建，就创建一个对象
+        if(gf == null) {
+            gf = new GirlFriend("小红");
+        }
+        return gf;
+    }
+}
+```
 
