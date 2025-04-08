@@ -1741,13 +1741,13 @@ class Cat {
 >   public double f1() {
 >       return 1.1;
 >   }
->                         
+>                           
 >   // 兼容（可以自动转换），编译通过
 >   public double f1() {
 >       int n = 1;
 >       return n;
 >   }
->                         
+>                           
 >   // 类型不一致，且不能自动转换，编译不通过
 >   public int f1() {
 >       return 1.1;
@@ -3928,3 +3928,70 @@ class A {
 
 类方法的调用：`类名.类方法名`或者`对象名.类方法名`   调用的前提是满足访问修饰符的访问权限和范围
 
+```java
+package com.jlctest.static;
+
+public class StaticMethod {
+    public static void main(Stringp[] args) {
+        // 创建两个学生对象，交学费
+        Stu tom = new Stu("tom");
+        tom.payFee(1000);    // 通过对象来调用静态方法，也可以使用类名进行调用
+        
+        Stu mary = new Stu("mary");
+        mary.payFee(2000);    // 通过对象来调用静态方法，也可以使用类名进行调用
+        
+        // 输出当前收到的总学费，通过类进行调用静态方法
+        Stu.showFee();    // 总学费为：3000.0
+    }
+}
+
+class Stu {
+    private String name;  // 普通私有成员
+    // 定义一个静态变量，来累积学生的学费
+    private static double fee = 0;
+    
+    public Stu(String name) {
+        this.name = name;
+    }
+    
+    // 创建静态方法    静态方法可以访问静态属性/变量
+    public static void payFee(double fee) {
+        Stu.fee += fee;   // 学费累积
+    }
+    public static void showFee() {
+        System.out.println("总学费为：" + Stu.fee);
+    }
+}
+```
+
+类方法的使用场景：当方法中不涉及到任何和对象相关的成员，则可以将方法设计成静态方法，提高开发效率，如工具类中的方法`utils`、`Math`类、`Arrays`类等，如`Math.sqrt()`，其中的`sqrt()`就是一个静态方法，我们可以直接通过类进行调用（如果我们希望不创建实例，也可以调用某个方法，即当作工具来使用，这时将方法做成静态方法是非常合适的）
+
+在程序员实际开发中，往往会将一些通用的方法，设计成静态方法，这样我们就可以不需要创建对象就直接使用
+
+类方法使用的注意事项：
+
+- 类方法和普通方法都是随着类的加载而加载，将结构信息存储在方法区：类方法中无`this`参数，普通方法隐含着`this`参数
+
+- 类方法可以通过类名调用，也可以通过对象名调用
+
+- 普通方法和对象有关，需要通过对象名调用，不能通过类名调用
+
+- 类方法中不允许使用和对象有关的关键字，比如`this`和`super`，普通方法（成员方法）可以
+
+- 类方法中只能访问静态成员；普通成员方法既可以访问普通成员，也可以访问静态成员（构造器方法也属于普通方法，可以方法普通成员和静态成员）（但是两种方法访问都必须遵守访问权限）
+
+  ```java
+  class D {
+      private int n1 = 100;   // 普通变量
+      private static int n2 = 200;  // 静态变量
+      
+      public static void hello() {
+          System.out.println(n2);  // 合法
+          System.out.println(D.n2);  // 合法
+          System.out.println(this.n2);  // 不合法，类方法中不允许使用和对象有关的关键字
+          System.out.println(n1);  // 不合法，不能访问普通变量（方法）
+      }
+  }
+  ```
+
+  
