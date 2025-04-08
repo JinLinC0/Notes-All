@@ -3994,4 +3994,49 @@ class Stu {
   }
   ```
 
-  
+***
+
+### `main`方法
+
+`main`方法的语法形式：`public static void main(String[] args) {}`
+
+- `main()`方法是`Java`虚拟机在调用
+
+- `Java`虚拟机需要调用类的`main()`方法，所以该方法的访问权限必须是`public`
+
+- `Java`虚拟机在执行`main()`方法时不必创建对象，所以该方法必须是`static`
+
+- 该方法接收`String`类型的数组参数，该数组中保存执行`Java`命令时传递给所运行的类的参数
+
+- `Java`执行的程序 参数1 参数2 参数3
+
+  ![image-20250408105300053](..\images\image-20250408105300053.png)
+
+  ```java
+  public class Hello {
+      public static void main(String[] args) {
+          // 遍历args接收传入的参数
+          for(int i = 0; i < args.length; i++) {
+              System.out.println("第" + (i + 1) + "个参数为" + args[i]);
+          }
+      }
+  }
+  ```
+
+  编译代码：`javac Hello.java`
+
+  运行代码并传入参数：`java Hello jlc abc qwer`    （如果不传入参数，就什么也不会输出）
+
+  结果显示：
+
+  第1个参数为`jlc`
+
+  第2个参数为`abc`
+
+  第3个参数为`qwer`
+
+  参数在执行程序的时候进行传入，在传入参数后，会将`jlc abc qwer`这三个参数当作一个字符串数组`String[]`传给我们的方法
+
+注意事项：
+
+- 在`main()`方法中，我们可以直接调用`main`方法所在类的静态方法或静态属性，但是不能直接访问该类中的非静态成员，必须创建该类的一个实例对象后，才能通过这个对象去访问类中的非静态方法
