@@ -4315,6 +4315,45 @@ class Movie {
 
 - 对于包装类（`Integer`、`Double`、`Float`、`Boolean`等都是通过`final`修饰的），`String`也是`final`类，这些类都是不能被继承的
 
+***
+
+### 抽象类
+
+当父类中的某些方法需要声明时，但是又不确定如何具体的实现，可以将其声明为抽象方法，那么这个类为抽象类
+
+```java
+abstract class Animal {
+    private String name;
+    
+    public Animal(String name) {
+        this.name = name;
+    }
+    // 这里实现了eat方法，但是实际上没有什么意义，后续在子类中都是要重写的（父类方法不确定性的问题）
+    // 即将该方法设置为抽象方法
+    //public void eat() {
+    //    System.out.println("这是一个吃的方法，但是不知道具体吃什么");
+    //}
+    public abstract void eat();
+}
+```
+
+抽象方法就是没有实现的方法，具体而言，就是没有方法体，这个具体的方法会让子类进行实现（一般来说，抽象类会被继承，由其子类来实现抽象方法）
+
+将方法设置为抽象方法后，必须要将该类设置为抽象类，否则会报错
+
+注意事项：
+
+- 用`abstract`关键字来修饰一个类时，这个类就是一个抽象类
+- 抽象类是不能被实例化的
+- 抽象类不一定要包含`abstract`方法，也就是说，抽象类可以没有`abstract`方法
+- 一旦类包含了`abstract`方法，则这个类必须声明为`abstract`类
+- 抽象类可以有任意成员（因为抽象类的本质还是类），比如：非抽象方法、构造器、静态属性等
+- 用`abstract`关键字来修饰一个方法时，这个方法就是一个抽象方法，该方法是没有方法体的，即没有`{}`
+- `abstract`只能修饰类和方法，不能修饰属性和其他的内容
+- 如果一个类继承了抽象类，则它必须实现抽象类的所有抽象方法（对父类的抽象方法增加一个方法体`{}`，就表示实现了父类的方法），除非它自己也声明为抽象类
+- 抽象类的价值更多的作用是在于设计，是设计者设计好后，让子类继承并实现抽象类
+- 抽象方法不能使用`private`、`final`和`static`来修饰，因为这些关键字都是和重写相违背的
+
 
 
 ## 设计模式
@@ -4415,6 +4454,74 @@ class GirlFriend {
             gf = new GirlFriend("小红");
         }
         return gf;
+    }
+}
+```
+
+***
+
+### 模板模式
+
+#### 抽象模板模式
+
+抽象类体现的就是一种模板模式的设计，抽象类作为多个子类的通用模板，子类在抽象类的基础上进行扩展、改造，但是子类总体上会保留抽象类的行为方式
+
+模板设计模式能解决的问题：
+
+- 当功能内部一部分实现是确定的，一部分实现是不确定的。这时可以把不确定的部分暴露出去，让子类去实现
+- 编写一个抽象父类，父类提供了多个子类的通用方法，并把一个或多个方法留给其子类实现，这就是一种模板模式
+
+设计一个抽象类（`Template`），完成如下功能：
+
+1. 编写方法`calculateTime()`，用于计算某段代码的消耗时间
+2. 编写抽象方法`job()`
+3. 编写一个子类`Sub`，继承抽象类`Template`，并实现`job()`方法
+4. 编写一个测试类，看看是否好用
+
+```java
+package com.jlctest.abstract;
+
+// 抽象父类
+abstract class Template {
+    public abstract void job();  // 抽象方法
+    
+    // 统计耗时时间，具体的实现方法，调用了job()抽象方法
+    public void calculateTime() {
+        // 统计当前时间距离 1970-1-1 0:0:0的时间差，单位为ms
+        long start = System.currentTimeMillis();
+        job();   // 体现了动态绑定机制
+        long end = System.currentTimeMillis();
+        System.out.println("耗时：" + (end - start));
+    }
+}
+```
+
+子类去继承父类，实现父类中的抽象方法：
+
+```java
+package com.jlctest.abstract;
+
+public class AA extends Template {
+    // 实现了父类中的抽象方法
+    @Override
+    public void job() {
+        long num = 0;
+        for(long i = 1; i <= 800000; i++) {
+            num += i;
+        }
+    }
+}
+```
+
+在测试文件中执行：
+
+```java
+package com.jlctest.abstract;
+
+public class Test {
+    public static void main(String[] args) {
+        AA a = new AA();
+        a.calculateTime();
     }
 }
 ```
