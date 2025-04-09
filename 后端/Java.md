@@ -1741,13 +1741,13 @@ class Cat {
 >   public double f1() {
 >       return 1.1;
 >   }
->                             
+>                               
 >   // 兼容（可以自动转换），编译通过
 >   public double f1() {
 >       int n = 1;
 >       return n;
 >   }
->                             
+>                               
 >   // 类型不一致，且不能自动转换，编译不通过
 >   public int f1() {
 >       return 1.1;
@@ -4181,6 +4181,139 @@ class Movie {
   1和2，是类加载时必须会执行的；后面4步是与对象相关的内容（入口是对应子类的构造器，遵守构造顺序）
 
 - 静态代码块只能直接调用静态成员（静态属性和静态方法），普通代码块可以调用任意成员
+
+***
+
+### `final`关键字
+
+`final`关键字可以修饰类、属性、方法和局部变量
+
+有以下的四个情况会使用到`final`关键字：
+
+- 当不希望类被继承时，可以用`final`修饰（希望这个类是最后的类，不希望被其他类继承扩展）
+
+  ```java
+  // 如果我们要求A类不能被其他类继承，使用final关键字修饰即可
+  final class A {}
+  
+  // 这样其他类继承就会直接报错
+  class B extends A {}  // 报错
+  ```
+
+- 当不希望父类的某个方法被子类覆盖/重写时，可以使用`final`关键字修饰
+
+  ```java
+  // 如果我们不希望父类的某个方法被子类覆盖/重写时，使用final关键字修饰即可
+  // A作为父类
+  class A {
+      // 不希望hi()方法被子类覆盖/重写，使用final关键字修饰即可
+      public final void hi() {}
+  }
+  ```
+
+- 当不希望类的某个属性值被修改，可以用`final`关键字修饰
+
+  ```java
+  class A {
+      // 不希望某个属性值被修改，使用final关键字修饰即可
+      public final double TAX_RATE = 0.08;
+  }
+  ```
+
+- 当不希望某个局部变量被修改，可以使用`final`关键字修饰
+
+  ```java
+  class A {
+      public void hi() {
+          // 不希望某个局部变量被修改，使用final关键字修饰即可
+          final double NUM = 0.01;   // 这时NUM也被称为局部常量
+          NUM = 0.2; // 报错
+      }
+  }
+  ```
+
+注意事项：
+
+- `final`修饰的属性又叫常量，一般用`XX_XX_XX`来命名
+
+- `final`修饰的属性在定义时，必须赋初值，并且以后不能再修改，赋值可以在下面几个位置：
+
+  - 定义时：如：`public final double TAX_RATE = 0.08;`
+
+  - 在构造器中
+
+    ```java
+    class A {
+        // 在构造器中赋初值
+        public final double TAX_RATE;
+        
+        public A() {
+            TAX_RATE = 0.08;
+        }
+    }
+    ```
+
+  - 在代码块中
+
+    ```java
+    class A {
+        // 在代码块中赋初值
+        public final double TAX_RATE;
+        
+        {
+            TAX_RATE = 0.08;
+        }
+    }
+    ```
+
+- 如果`final`修饰的属性是静态的，则初始化的位置只能是在定义时和在静态代码块中，不能在构造器中赋值
+
+  ```java
+  class A {
+      public static final double TAX_RATE1 = 0.02;
+      
+      public static final double TAX_RATE2;
+      static {
+          TAX_RATE2 = 0.08;
+      }
+  }
+  ```
+
+- `final`类不能继承，但是可以实例化出具体的对象
+
+- 如果类不是`final`类，但是含有`final`方法，则该方法虽然不能重写，但是可以被继承下来供子类进行使用
+
+- 一般来说，如果一个类已经是`final`类了，就没有必要再将方法修饰成`final`方法了（因为这个类已经是不能被继承了，就没有子类会去重写这个方法了）
+
+- `final`不能修饰构造方法（即构造器）
+
+- `final`和`static`往往搭配使用（两者的前后顺序可以改变），效率更高，底层编译器做了优化处理，不会导致类加载
+
+  ```java
+  class B {
+      public static int num = 1000;
+      public static int num2 = 2000;
+      static {
+          System.out.println("B类的静态代码块被执行");
+      }
+  }
+  
+  // 在主函数调用B类中的属性时，会加载类，先执行代码块中的内容
+  System.out.println(B.num);   // B类的静态代码块被执行   1000
+  
+  // 当final和static一起使用时，不会加载类，不会执行代码块中的内容
+  System.out.println(B.num2);  // 2000
+  ```
+
+- 对于类中的方法，其形参是可以用`final`修饰的，但是这样的形参是不能修改的
+
+  ```java
+  public int add(final int x) {
+      // x的值不能修改
+  }
+  ```
+
+- 对于包装类（`Integer`、`Double`、`Float`、`Boolean`等都是通过`final`修饰的），`String`也是`final`类，这些类都是不能被继承的
 
 
 
