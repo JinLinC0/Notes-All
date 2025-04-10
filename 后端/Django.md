@@ -200,7 +200,7 @@ def index(request):
 
 
 
-## 前端`url`传参
+## `url`传参
 
 ### `url`中的参数设置
 
@@ -492,7 +492,7 @@ urlpatterns = [
 
 内置标签：用`{% %}`大括号，左右各一个百分号包裹，常见的内置标签有：
 
-```
+```txt
 {% for %}  {% endfor %} 遍历输出的内容，前面部分表示开始循环，后面部分表示结束循环
 {% if %}  {% elif %}  {% endif %}  对变量进行条件判断
 {% url name args %}   引用路由配置名
@@ -506,7 +506,7 @@ urlpatterns = [
 
 #### `for`标签模板
 
-```
+```txt
 forloop.counter     从1开始计算获取当前索引
 forloop.counter0    从0开始计算获取当前索引
 forloop.revcounter  索引从最大数递减到1
@@ -582,7 +582,7 @@ urlpatterns = [
 
 在浏览器中的结果显示为：
 
-```
+```txt
 0 -- 1 -- 0 -- 3 -- 2
 this is first
 1 -- 2 -- 1 -- 2 -- 1
@@ -598,7 +598,7 @@ this is last
 
 同时在`settings.py`文件中进行相关的配置（需要在`settings.py`文件下另起一个配置项），其内容为：
 
-```
+```txt
 STATICFILES_DIRS = [
 	os.path.join(BASE_DIR, 'static')
 ]
@@ -634,31 +634,31 @@ STATICFILES_DIRS = [
 
 ##### 常用的内置过滤器
 
-|       过滤器       |                使用                |                             说明                             |
-| :----------------: | :--------------------------------: | :----------------------------------------------------------: |
-|       `add`        |         `{{value|add:10}}`         |                      给`value`的值加10                       |
-|       `date`       |   `{{value|date:"Y-m-d H:i:s"}}`   |               把日期格式按照规定的格式进行显示               |
-|       `cut`        |        `{{value|cut:'-'}}`         |                     将`value`中的`-`删除                     |
-|     `catfirst`     |        `{{value|catfirst}}`        |                    将`value`的首字母大写                     |
-|     `default`      |      `{{value|default:'xx'}}`      |                 值为`False`时使用默认值`xx`                  |
-| `default_if_none`  |  `{{value|default_if_none:'xx'}}`  |                  值为`None`时使用默认值`xx`                  |
-|     `dictsort`     |     `{{value|dictsort:'key'}}`     |                值值为字典列表，按照`key`排序                 |
-| `dictsortreversed` | `{{value|dictsortreversed:'key'}}` |               值为字典列表，按照`key`反向排序                |
-|      `first`       |         `{{value|first}}`          |                   返回列表中的第一个索引值                   |
-|       `last`       |          `{{value|last}}`          |                  返回列表中的最后一个索引值                  |
-|   `floatformat`    |     `{{value|floatformat:2}}`      |                     保留小数点后2位小数                      |
-|       `join`       |        `{{value|join:"-"}}`        |                       使用`-`进行连接                        |
-|      `length`      |         `{{value|length}}`         |                         返回值的长度                         |
-|    `divisbleby`    |     `{{value|divisibleby:2}}`      |                如果值可以被2整除即返回`true`                 |
-|    `length_is`     |     `{{value|length_is:'2'}}`      |                  如果长度值为2即返回`true`                   |
-|       `safe`       |          `{{value|safe}}`          | 将字符串中的`html`标签在前端安全展示，不添加这个过滤器时只会显示前端代码这行字符串 |
-|      `random`      |         `{{value|random}}`         |                    随机返回列表中的一个值                    |
-|      `slice`       |       `{{value|silce:'2'}}`        |                        截取前两个字符                        |
-|     `slugify`      |        `{[value|slugify}]}`        |                    值小写，单词用`-`分隔                     |
-|      `upper`       |         `{{value|upper}}`          |                          字符串大写                          |
-|      `urlize`      |         `{{value|urlize}}`         |                     字符串中的链接可点击                     |
-|    `wordcount`     |       `{{value|wordcount}}`        |                       字符串中的单词数                       |
-|    `timeuntil`     |       `{{value|timeuntil}}`        |            距离当前日期的天数和小时数（未来时间）            |
+|       过滤器       |   使用（用两个大括号包裹）    |                             说明                             |
+| :----------------: | :---------------------------: | :----------------------------------------------------------: |
+|       `add`        |         value\|add:10         |                      给`value`的值加10                       |
+|       `date`       |   value\|date:"Y-m-d H:i:s"   |               把日期格式按照规定的格式进行显示               |
+|       `cut`        |        value\|cut:'-'         |                     将`value`中的`-`删除                     |
+|     `catfirst`     |        value\|catfirst        |                    将`value`的首字母大写                     |
+|     `default`      |      value\|default:'xx'      |                 值为`False`时使用默认值`xx`                  |
+| `default_if_none`  |  value\|default_if_none:'xx'  |                  值为`None`时使用默认值`xx`                  |
+|     `dictsort`     |     value\|dictsort:'key'     |                值值为字典列表，按照`key`排序                 |
+| `dictsortreversed` | value\|dictsortreversed:'key' |               值为字典列表，按照`key`反向排序                |
+|      `first`       |         value\|first          |                   返回列表中的第一个索引值                   |
+|       `last`       |          value\|last          |                  返回列表中的最后一个索引值                  |
+|   `floatformat`    |     value\|floatformat:2      |                     保留小数点后2位小数                      |
+|       `join`       |        value\|join:"-"        |                       使用`-`进行连接                        |
+|      `length`      |         value\|length         |                         返回值的长度                         |
+|    `divisbleby`    |     value\|divisibleby:2      |                如果值可以被2整除即返回`true`                 |
+|    `length_is`     |     value\|length_is:'2'      |                  如果长度值为2即返回`true`                   |
+|       `safe`       |          value\|safe          | 将字符串中的`html`标签在前端安全展示，不添加这个过滤器时只会显示前端代码这行字符串 |
+|      `random`      |         value\|random         |                    随机返回列表中的一个值                    |
+|      `slice`       |       value\|silce:'2'        |                        截取前两个字符                        |
+|     `slugify`      |        value\|slugify         |                    值小写，单词用`-`分隔                     |
+|      `upper`       |         value\|upper          |                          字符串大写                          |
+|      `urlize`      |         value\|urlize         |                     字符串中的链接可点击                     |
+|    `wordcount`     |       value\|wordcount        |                       字符串中的单词数                       |
+|    `timeuntil`     |       value\|timeuntil        |            距离当前日期的天数和小时数（未来时间）            |
 
 简单使用：
 
@@ -744,7 +744,7 @@ STATICFILES_DIRS = [
 
 - 网页中的结果显示为：
 
-  ```
+  ```txt
   add: 30
   time: 2024-09-04 11:09:20
   cut: helloboy
@@ -2114,23 +2114,23 @@ class Regiser(View):
 
 > 表单在前端自动展示的方法：
 >
-> |         方法          |                描述                |
-> | :-------------------: | :--------------------------------: |
-> |     `{{ form }}`      |              直接使用              |
-> | `{{ form.as_table }}` |        在`table`标签中展示         |
-> |   `{{ form.as_p }}`   |          生成在`p`标签内           |
-> |  `{{ form.as_ul }}`   | 在`ul`标签中通过`li`标签的形式展示 |
+> | 方法（用两个大括号包裹） |                描述                |
+> | :----------------------: | :--------------------------------: |
+> |          `form`          |              直接使用              |
+> |     `form.as_table`      |        在`table`标签中展示         |
+> |       `form.as_p`        |          生成在`p`标签内           |
+> |       `form.as_ul`       | 在`ul`标签中通过`li`标签的形式展示 |
 >
 > 表单在前端手动展示的方法：
 >
-> |               方法               |                          描述                          |
-> | :------------------------------: | :----------------------------------------------------: |
-> |   `{{ form.subject.errors }}`    |        展示项目验证失败时返回的错误，可迭代循环        |
-> | `{{ form.subject.id_for_label}}` | 展示项目`label`的名称（该标签需要手动书写`label`标签） |
-> |  `{{ form.subject.label_tag }}`  |    该字段的`label`封装在响应式的`html<label>`标签中    |
-> |       `{{ form.subject}}`        |                正式展示输入该字段的位置                |
-> |    `{{ form.subject.value}}`     |                    展示默认的初始值                    |
-> |  `{{ form.subject.is_hidden }}`  |           是否隐藏字段（`True`或者`False`）            |
+> |  方法（用两个大括号包裹）   |                          描述                          |
+> | :-------------------------: | :----------------------------------------------------: |
+> |    `form.subject.errors`    |        展示项目验证失败时返回的错误，可迭代循环        |
+> | `form.subject.id_for_label` | 展示项目`label`的名称（该标签需要手动书写`label`标签） |
+> |  `form.subject.label_tag`   |    该字段的`label`封装在响应式的`html<label>`标签中    |
+> |       `form.subject`        |                正式展示输入该字段的位置                |
+> |    `form.subject.value`     |                    展示默认的初始值                    |
+> |  `form.subject.is_hidden`   |           是否隐藏字段（`True`或者`False`）            |
 >
 > `For`循环展示错误：
 >
