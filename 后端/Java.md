@@ -4354,6 +4354,160 @@ abstract class Animal {
 - 抽象类的价值更多的作用是在于设计，是设计者设计好后，让子类继承并实现抽象类
 - 抽象方法不能使用`private`、`final`和`static`来修饰，因为这些关键字都是和重写相违背的
 
+***
+
+### 接口
+
+接口就是给出一些没有实现的方法，封装到一起，到某个类要使用的时候，在根据具体情况把这些方法写出来
+
+基本语法：
+
+```java
+// 声明接口
+interface 接口名 {
+    // 可以写属性
+    public int n1 = 10;
+    
+    // 可以写抽象方法，注意：在接口中，写抽象方法时，可以省略abstract关键字
+    public void hi();
+    
+    // jdk8.0后，接口可以使用静态方法
+    public static void cry() {
+        System.out.println("cry");
+    }
+    
+    // jdk8.0后，接口可以使用默认方法，但是要使用default关键字进行修饰
+    default public void ok() {
+        System.out.println("ok");
+    }
+}
+
+// 类去使用接口
+class 类名 implements 接口 {
+    自己属性;
+    自己方法;
+    必须实现的接口的抽象方法;   // 如果一个类implements接口，需要将该接口的所有抽象方法都实现
+}
+```
+
+> - 在`jdk7.0`前，接口里的所有方法都没有方法体，即都是抽象方法
+> - `jdk8.0`后，接口可以有静态方法，默认方法，也就是说接口中可以有方法的具体实现，但是默认方法要使用`default`关键字进行修饰
+
+注意事项：
+
+- 接口不能被实例化
+
+- 接口中所有的方法都是`public`方法（`public`修饰符可以忽略），接口中抽象方法，可以不用`abstract`修饰
+
+- 一个普通类实现接口，就必须将该接口的所有方法都实现（重写），可以使用`alt+enter`快捷键来快速实现
+
+- 抽象类实现接口，可以不用实现接口的方法
+
+- 一个类同时可以实现多个接口，但是也要完成这些接口中的所有抽象方法
+
+- 接口中的属性，只能是`final`的，而且是`public static final`修饰符，比如：
+
+  `int a = 1;`实际上为`public static final int a = 1;`（必须初始化）
+
+  - 因为接口中的属性都是静态的，所以接口中属性的访问形式：接口名.属性名
+  - 因为接口中的属性是`final`，所以后续我们不可以在外界修改接口中的属性值
+
+- 接口不能继承其它的类，但是可以继承多个别的接口：`interface A extends B,C {}`
+
+- 声明接口的修饰符只能是`public`和默认，这点和类的修饰符一样
+
+```java
+interface A {
+    int a = 23;   // 等价于 public static final int a = 23;
+}
+
+class B implements A {}
+
+// 在main方法中
+B b = new B();
+System.out.println(b.a);  // 23   对象实例去访问公共属性
+System.out.println(A.a);  // 23   接口去访问内部的属性
+System.out.println(B.a);  // 23   B类实现了A接口，可以使用A接口中的属性
+```
+
+#### 接口的使用场景
+
+我们在具体什么时候需要使用接口，通常有以下的几个场景：
+
+- 以制造飞机为例：对于各种种类的飞机，专家只需要把飞机需要的功能/规格定下来即可，具体的部分让别人实现即可
+- 对于一个项目经理来说，管理三个程序员，要开发一个软件，为了控制和管理软件，项目经理可以定义一些接口，然后由程序员具体实现，这样可以更好的管理使用和统一命名规范
+
+#### 实现接口和继承类
+
+实现接口和继承类的区别：`Java`提供的实现接口机制，可以理解为对单继承机制的补充
+
+- 继承的价值主要在于：解决代码的复用性和可维护性
+- 接口的价值主要在于：设计好各种规范（方法），让其它类去实现这些方法，即更加灵活
+- 接口比继承更加灵活，继承是满足`is-a`（是什么）的关系，而接口只需满足`like-a`（像什么）的关系
+- 接口在一定程度上实现代码的解耦
+
+```java
+package com.jlctest.interface;
+
+public class ExtendsVsInterface {
+    public static void main(String[] args) {
+        LittleMonkey wukong = new LittleMonkey("climbing");
+        wukong.climbing();   // wukong猴子会爬树
+        wukong.swimming();   // wukong通过学习，猴子会游泳
+        wukong.flying();     // wukong通过学习，猴子会飞翔
+    }
+}
+
+// 鱼类接口
+interface Fishable {
+    void swimming();
+}
+
+// 小鸟接口
+interface Birdable {
+    void flying();
+}
+
+// 猴子类
+class Monkey {
+    private String name;
+    public Monkey(String name) {
+        this.name = name;
+    }
+    public void climbing() {
+        System.out.println(name + "猴子会爬树");
+    }
+    public String getName() {
+        return name;
+    }
+}
+
+// 小猴子类去继承猴子类
+class LittleMonkey extends Monkey implements Fishable, Birdable {
+    public LittleMonkey(String name) {
+        this.name = name;
+    }
+    
+    @Override
+    public void swimming() {
+        System.out.println(getName() + "通过学习，猴子会游泳");
+    }
+    
+    @Override
+    public void flying() {
+        System.out.println(getName() + "通过学习，猴子会飞翔");
+    }
+}
+```
+
+> 对于继承，只要是继承了这个父类，其子类就可以自动的使用父类中的能力（公共方法）；同时继承是单继承的，只能继承一个父类，不同同时继承多个父类
+>
+> 通过实现接口，可以无形的将子类的功能进行加强（如果子类需要拓展功能，可以通过实现接口的方式扩展），`Java`提供的实现接口机制，可以理解为对单继承机制的补充
+
+#### 接口的多态特性
+
+接口可以体现多态参数
+
 
 
 ## 设计模式
