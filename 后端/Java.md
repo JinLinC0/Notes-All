@@ -1741,13 +1741,13 @@ class Cat {
 >   public double f1() {
 >       return 1.1;
 >   }
->                               
+>                                 
 >   // 兼容（可以自动转换），编译通过
 >   public double f1() {
 >       int n = 1;
 >       return n;
 >   }
->                               
+>                                 
 >   // 类型不一致，且不能自动转换，编译不通过
 >   public int f1() {
 >       return 1.1;
@@ -2451,6 +2451,8 @@ demo.ab12.oa   // 正确
 ## 面向对象编程
 
 面向对象编程有三大特征：封装、继承和多态
+
+类的五大成员：(1) 属性 (2) 方法 (3) 构造器 (4) 代码块 (5) 内部类
 
 ### 访问修饰符
 
@@ -4504,9 +4506,158 @@ class LittleMonkey extends Monkey implements Fishable, Birdable {
 >
 > 通过实现接口，可以无形的将子类的功能进行加强（如果子类需要拓展功能，可以通过实现接口的方式扩展），`Java`提供的实现接口机制，可以理解为对单继承机制的补充
 
+综合小练习：
+
+```java
+interface A {
+    int x = 0;    // 等价于public static final int x = 0;
+}
+
+class B {
+    int x = 1;   // 普通属性
+}
+
+class C extends B implements A {
+    public void pX() {
+        // System.out.println(x);  // 错误，原因不明确x到底是接口中的还是类中的
+        // 访问接口中的x就使用A.x   访问父类的x就使用super.x
+        System.out.println(A.x);
+        System.out.println(super.x);
+    }
+}
+```
+
 #### 接口的多态特性
 
+##### 多态参数
+
 接口可以体现多态参数
+
+```java
+package com.jlctest.interface;
+
+public class Computer {
+    // 形参是接口类型 UsbInterface
+    public void work(UsbInterface usbInterface) {
+        // 通过接口，来调用方法
+        usbInterface.start();
+    }
+}
+```
+
+在测试文件中使用`work`方法：
+
+```java
+package com.jlctest.interface;
+
+public class interfaceTest {
+    public static void main(String[] args) {
+        // 创建手机对象，Phone类实现了UsbInterface接口
+        Phone phone = new Phone();
+        // 创建计算机对象
+        Computer computer = new Computer();
+        
+        // 将手机接入到计算机中，通过多条参数，UsbInterface接口的对象实例是可以传递给work方法的
+        computer.work(phone);    // 只要是实现了UsbInterface接口的对象实例，都可以进行传递
+    }
+}
+```
+
+接口引用可以指向实现了接口的类的对象
+
+```java
+package com.jlctest.interface;
+
+public class InterfacePolyParameter {
+    public static void main(String[] args) {
+        // 接口的多态体现（与继承体现的多态类似）
+        // 接口类型的变量 if01 可以指向 实现了IF接口类的对象实例
+        IF if01 = new Monster();
+        if01 = new Car();
+    }
+}
+
+// 声明接口
+interface IF {}
+// 声明两个类去使用接口
+class Monster implements IF {}
+class Car implements IF {}
+```
+
+##### 多态数组
+
+多态数组指的是接口类型的数组，可以存放实现了这个接口的类的实例
+
+```java
+package com.jlctest.interface;
+
+public class InterfacePolyArr {
+    public static void main(String[] args) {
+        // 多态数组 -> 接口类型数组
+        // Usb多态数组，存放Phone和Camera对象
+        Use[] usbs = new Usb[2];   // 声明多态数组空间
+        usbs[0] = new Phone();
+        usbs[1] = new Camera();
+        
+        // 遍历Usb多态数组，如果是Phone对象，除了调用Usb接口定义的方法体外，还要调用特有的call方法
+        for(int i = 0; i < usbs.length; i++) {
+            usbs[i].work();  // 体现了动态绑定机制
+            // 通过类型的向下转型，进行运行类型的判断，判断运行类型是否为Phone
+            if(usbs[i] instanceof Phone) {
+                ((Phone) usbs[i]).call();
+            }
+        }
+    }
+}
+
+// 声明接口
+interface Usb {
+    void work();
+}
+// 声明两个类去使用接口
+class Phone implements Usb {
+    @Override
+    public void work() {
+        System.out.println("手机工作中...");
+    }
+    
+    public void call() {
+        System.out.println("手机可以打电话...");
+    }
+}
+class Camera implements Usb {
+    @Override
+    public void work() {
+        System.out.println("相机工作中...");
+    }
+}
+```
+
+##### 多态传递
+
+```java
+package com.jlctest.interface;
+
+public class InterfacePolyPass {
+    public static void main(String[] args) {
+        // 接口类型的变量 ig 可以指向 实现了该接口类的对象实例
+        IG ig = new Teacher();   
+        // 但是 IH ih = new Teacher();会报错，Teacher类没有实现IH接口  interface IG {}
+        // 但是如果让IG接口去继承IH接口，进行多态传递  interface IG extends IH{}
+        IH ih = new Teacher();  // 不报错
+    }
+}
+
+// 声明接口
+interface IH {}
+// interface IG {}
+interface IG extends IH{}
+
+// 声明类去使用接口
+class Teacher implements IG {}
+```
+
+具体来说：如果`IG`继承了`IH`接口，而`Teacher`类实现了`IG`接口，那么，实际上就相当于`Teacher`类也实现了`IH`接口
 
 
 
