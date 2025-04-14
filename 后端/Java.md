@@ -4659,6 +4659,426 @@ class Teacher implements IG {}
 
 具体来说：如果`IG`继承了`IH`接口，而`Teacher`类实现了`IG`接口，那么，实际上就相当于`Teacher`类也实现了`IH`接口
 
+***
+
+### 内部类
+
+内部类是指，一个类的内部又完整的嵌套了另一个类结构。被嵌套的类被称为内部类（`inner class`），嵌套其他类的类称为外部类（`outer class`）
+
+基本语法：
+
+```java
+class Outer {  // 外部类
+    class Inner {  // 内部类
+        ...
+    }
+}
+
+class Other {  // 外部其他类
+    ...
+}
+```
+
+内部类是类的第五大成员，内部类最大的特点就是可以直接访问私有属性，并且可以体现类与类之间的包含关系，内部类是重点也是难点，底层源码使用了大量的内部类
+
+```java
+class Outer {  // 外部类
+    // 属性
+    private int n1 = 100;  
+    // 方法
+    public void m1() {   
+        System.out.println("m1()");
+    }
+    // 构造器
+    public Outer(int n1) {
+        this.n1 = n1;
+    }
+    // 代码块
+    {
+        System.out.println("代码块");
+    }
+    // 内部类
+    class Inner {  
+        ...
+    }
+}
+```
+
+内部类有四种，内部类的分类有两种：
+
+- 定义在外部类局部位置上（如方法体内）：
+  - 局部内部类（有类名）
+  - 匿名内部类（没有类名，是一个重点）
+- 定义在外部类的成员位置上（属性和方法位置上）：
+  - 成员内部类（没有`static`修饰）
+  - 静态内部类（使用`static`修饰）
+
+#### 局部内部类
+
+局部内部类是定义在外部类的局部位置，通常在方法中，并且有类名
+
+基本语法：
+
+```java
+class Outer {  // 外部类
+    // 属性
+    private int n1 = 100;
+    // 方法
+    public void m1() {   
+        // 定义局部内部类
+        class Inner {
+            // 可以直接访问外部类的所有成员，包含私有的（私有属性只能在本类进行访问）
+            public void f1() {
+                // 局部内部类访问外部类的成员方式是直接访问
+                System.out.println(n1);    // 100
+            }
+        }
+        // 同一作用域中，在外部类方法中，访问局部内部类的成员
+        // 先创建局部内部类对象，再通过对象进行访问
+        Inner inner = new Inner();
+        inner.f1();
+    }
+}
+```
+
+注意事项：
+
+- 局部内部类，其本质还是一个类，类的要素都有
+
+- 局部内部类可以直接访问外部类的所有成员，包含私有的
+
+- 不能给局部内部类添加访问修饰符，因为它的地位就是一个局部变量，局部变量是不能使用修饰符的，但是可以使用`final`修饰，因为局部变量也可以使用`final`
+
+- 局部内部类的作用域：仅仅在定义它的方法体或代码块中
+
+- 局部内部类访问外部类的成员方式：直接访问（局部内部类-->访问-->外部类的成员）
+
+- 外部类访问局部内部类的成员方式：先创建对象再访问，同时必须要在作用域内
+
+- 外部其他类是不能访问局部内部类的（因为局部内部类的地位是一个局部变量）
+
+- 如果外部类和局部内部类的成员重名时，默认遵循就近原则，如果想访问外部类的成员，则可以使用（`外部类名.this.成员`）去访问
+
+  ```java
+  class Outer {
+      private int n1 = 100;
+      public void m1() {   
+          // 定义局部内部类
+          class Inner {
+              private int n1 = 200;
+              public void f1() {
+                  System.out.println(n1);    // 200   重名时，就近访问
+                  // 如果一定要访问外部类，可以使用外部类名.this.成员的方式
+                  // Outer.this本质为外部类的一个实例对象，即外界主函数中哪个对象调用了m1()方法，Outer.this就指向哪个对象
+                  System.out.println(Outer.this.n1);  // 100
+              }
+          }
+      }
+  }
+  ```
+
+#### 匿名内部类
+
+匿名内部类在底层的框架和项目的开发中使用的非常多
+
+匿名内部类是定义在外部类的局部位置，比如方法中，并且没有类名
+
+基本语法：
+
+```java
+new 类或接口(参数列表) {
+    类体;
+};
+```
+
+##### 基于接口的匿名内部类
+
+```java
+public class AnonymousInnerClass {
+    public static void main(String[] args) {
+        Outer outer = new Outer();
+        outer.method();
+    }
+}
+
+class Outer {  // 外部类
+    private int n1 = 10;
+    public void method() {
+        // 传统方式是写一个类，实现该接口，再创建这个对象，并指向这个接口
+        // 如果需求是这个类只使用一次，那么定义的Tiger其他外部类就会浪费
+        IA tiger = new Tiger();
+        tiger.cry();    // 老虎叫...
+        
+        // 针对上述的情况，我们可以使用接口的匿名内部类进行简化，将外界的Tiger其他外部类去掉
+        // tiger的编译类型是IA   运行类型是匿名内部类，底层为class XXX implements IA { ... }
+        // 匿名内部类在底层中系统会分配一个类名的，XXX在底层为Outer$1 （外部类+$+数字）
+        // jdk底层在创建匿名内部类Outer$1，立即就创建了Outer$1的实例，并且将地址返回给tiger
+        // 匿名内部类使用一次，就不能再使用了，不是tiger对象，tiger对象可以一直使用
+        IA tiger = new IA() {
+            @Override
+            public void cry() {
+                System.out.println("老虎叫...")：
+            }
+        };
+        tiger.cry();    // 老虎叫...
+    }
+}
+
+interface IA {   // 接口
+    public void cry();
+}
+
+class Tiger implements IA {
+    @Override
+    public void cry() {
+        System.out.println("老虎叫...")：
+    }
+}
+```
+
+##### 基于类的匿名内部类
+
+```java
+public class AnonymousInnerClass {
+    public static void main(String[] args) {
+        Outer outer = new Outer();
+        outer.method();
+    }
+}
+
+class Outer {  // 外部类
+    private int n1 = 10;
+    public void method() {
+        // 创建一个Father的实例  编译类型和运行类似都是Father
+        Father father = new Father("jack");
+        
+        // 基于类的匿名内部类
+        // father的编译类型是Father  运行类型是匿名内部类（外部类+$+数字）
+        // 运行类型是匿名内部类，底层为class XXX extends Father { ... }  有个继承的关系
+        // 使用匿名内部类，同时也会返回匿名内部类的对象，将对象地址返回给father
+        // 这里的参数列表，会传递给Father类写好的构造器
+        Father father = new Father("jack") {
+            @Override
+            public void test() {
+                System.out.println("匿名内部类重写了test方法");
+                // 可以直接访问外部类的所有成员，包含私有的
+                System.out.println(n1);   // 10
+            }
+        }
+        fatehe.test();   // 匿名内部类重写了test方法
+        
+        // 基于抽象类的匿名内部类
+        Animal animal = new Animal() {
+            // 抽象类中下面内容是必须要写的
+            @Override
+            void eat() {
+                System.out.println("小狗吃骨头");
+            }
+        }
+        animal.eat();   // 小狗吃骨头
+    }
+}
+
+class Father {
+    // 构造器
+    public Father(String name) {}
+    public void test() {}
+}
+
+abstract class Animal {  // 抽象类
+    abstract void eat();
+}
+```
+
+注意事项：
+
+- 匿名内部类的本质也是一个类，是一个内部类（即定义在外部类的局部位置，比如方法中），且是没有类名的，同时匿名内部类还是一个对象
+
+- 匿名内部类既是一个类的定义，同时它本身也是一个对象，从语法上看，它既有定义类的特征，也有创建对象的特征
+
+  ```java
+  // 可以直接调用匿名内部类的方法    本质上就是对象.方法   匿名内部类本身也是返回对象
+  new Father("jack") {
+      @Override
+      public void test() {
+          System.out.println("匿名内部类重写了test方法");
+      }
+  }.test();    // 匿名内部类重写了test方法
+  ```
+
+- 匿名内部类可以直接访问外部类的所有成员，包含私有的
+
+- 匿名内部类不能添加访问修饰符，因为它的地位就是一个局部变量
+
+- 匿名内部类的作用域：仅仅在定义它的方法或代码块中
+
+- 外部其他类不能访问匿名内部类（因为匿名内部类的地位是一个局部变量）
+
+- 如果外部类和匿名内部类的成员重名时，默认遵循就近原则，如果想访问外部类的成员，则可以使用（`外部类名.this.成员`）去访问
+
+##### 匿名内部类的最佳实践
+
+当做实参直接传递，简洁高效
+
+```java
+public class AnonymousInnerClass {
+    public static void main(String[] args) {
+        // 使用匿名内部类当做实参直接传递，简洁高效
+        f1(new IL() {
+            @Override
+            public void show() {
+                System.out.println("这是一幅名画");
+            }
+        });
+    }
+    
+    // 定义静态方法，形参是接口类型
+    public static void f1(IL il) {
+        il.show();
+    }
+}
+
+interface IL {   // 接口
+    void show();
+}
+```
+
+如果不使用匿名内部类，我们就需要写出这个类去实现这个接口，通过硬编码的方式去实现
+
+在匿名内部类中修改内容，只是影响这一个实参传入，如果使用硬编码的方式，修改了类中的内容，就会修改所有基于这个类实例出的对象
+
+#### 成员内部类
+
+成员内部类是定义在外部类的成员位置，并且没有`static`修饰
+
+```java
+class Outer {   // 外部类
+    private int n1 = 10;
+    
+    // 定义成员内部类
+    class Inner {
+        public void say() {
+            // 成员内部类中可以直接访问外部类中的所有成员
+            System.out.println(n1);   // 10
+        }
+    }
+    
+    // 访问成员内部类中的方法，通过成员内部类实例化出一个对象，再使用这个对象进行调用
+    public void t1() {
+        Inner inner = new Inner();
+        inner.say();
+    }
+}
+```
+
+注意事项：
+
+- 成员内部类可以直接访问外部类的所有成员，包括私有的
+
+- 成员内部类可以添加任意访问修饰符（`public`、`protected`、默认、`private`），因为成员内部类的地位就是一个成员
+
+- 成员内部类的作用域和外部类的其他成员一样，为整个类体（成员内部类的类名可以在整个外部类中使用）
+
+- 外界类去访问成员内部类中的属性和方法，需要创建对象再调用
+
+- 外部其他类也可以访问成员内部类，有两种常见的方式：
+
+  ```java
+  public class AnonymousInnerClass {
+      public static void main(String[] args) {
+          Outer outer = new Outer();
+          
+          // 第一种方式
+          // 相当于将new Inner()当作outer对象的一个成员
+          Outer.Inner inner01 = outer.new Inner();
+          inner01.say();
+          
+          // 第二种方式
+          // 在外部类中，编写一个方法，可以返回Inner对象
+          Outer.Inner inner02 = outer.getInnerInstance();
+          inner02.say();
+      }
+  }
+  
+  class Outer {   // 外部类
+      private int n1 = 10;
+      // 定义成员内部类
+      class Inner {
+          public void say() {
+              // 成员内部类中可以直接访问外部类中的所有成员
+              System.out.println(n1);   // 10
+          }
+      }
+      
+      // 为外界返回一个Inner对象实例，供方法二调用
+      public Inner getInnerInstance() {
+          return new Inner();
+      }
+  }
+  ```
+
+- 如果外部类和成员内部类的成员重名时，默认遵循就近原则，如果想访问外部类的成员，则可以使用（`外部类名.this.成员`）去访问
+
+#### 静态内部类
+
+静态内部类是定义在外部类的成员位置，并且有`static`修饰
+
+```java
+public class AnonymousInnerClass {
+    public static void main(String[] args) {
+        Outer outer = new Outer();
+        // 外部其他类访问静态内部类
+        // 第一种方式
+        // 静态内部类是可以通过类名直接访问的（前提是满足访问权限，私有的是不能访问的）
+        Outer.Inner inner01 = new Outer.Inner();
+        inner01.say();
+        // 第二种方式
+        // 在外部类中，编写一个方法，可以返回Inner对象实例
+        Outer.Inner inner02 = outer.getInnerInstance();
+        inner02.say();
+        // 通过静态方法返回   静态方法是可以直接通过类去调用的
+        Outer.Inner inner03 = Outer.getInner();
+        inner03.say();
+    }
+}
+
+class Outer {   // 外部类
+    private int n1 = 10;
+    private static String name = "jlc";
+    // 定义静态内部类
+    static class Inner {
+        public void say() {
+            // 静态内部类可以直接访问外部类的所有静态成员，包含私有的，但不能直接访问非静态成员
+            System.out.println(n1);   // 报错
+            System.out.println(name);  // jlc
+        }
+    }
+    
+    // 静态内部类的作用域：同其他的成员，为整个类体
+    public void m1() {
+        Inner inner = new Inner();
+        inner.say();
+    }
+    
+    // 为外界返回一个Inner对象实例，供方法二调用，通过非静态的方法
+    public Inner getInnerInstance() {
+        return new Inner();
+    }
+    // 也可以通过静态的方法，返回Inner对象实例
+    public static Inner getInner() {
+        return new Inner();
+    }
+}
+```
+
+注意事项：
+
+- 静态内部类可以直接访问外部类的所有静态成员，包含私有的，但不能直接访问非静态成员
+- 可以添加任意访问修饰符（`public`、`protected`、默认、`private`），因为静态内部类的地位就是一个成员
+- 静态内部类的作用域：同其他的成员，为整个类体
+- 外部类访问静态内部类的成员，需要先创建对象，在调用访问
+- 如果外部类和静态内部类的成员重名时，默认遵循就近原则，如果想访问外部类的成员，则可以使用（`外部类名.this.成员`）去访问
+
 
 
 ## 设计模式
