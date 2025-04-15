@@ -5283,7 +5283,177 @@ enum Music implements IPlaying {
 Music.CLASSICMUISC.playing();   // 播放音乐
 ```
 
+***
 
+### 注解
+
+注解也被称为元数据（`Metadata`），用于修饰解释包、类、方法、属性、构造器、局部变量等数据信息。和注释一样，注解不影响程序逻辑，但注解可以被编译或运行，相当于嵌入在代码中的补充信息
+
+在`JavaSE`中，注解的使用目的比较简单，如标记过时的功能，忽略警告等。在`JavaEE`中注解占据了更重要的角色，如用来配置应用程序的任何切面，代替`JavaEE`旧版中遗留的冗余代码和`XML`配置等
+
+使用注解时，需要在其前面加上`@`符号，并把该注解当成一个修饰符使用，用于修饰它支持的程序元素
+
+#### `@Override`
+
+`@Override`注解用于限定某个方法，是重写父类方法，该注解只能用于方法（不能修饰其他类、包、属性等）
+
+```java
+class Father {  // 父类
+    public void fly() {
+        System.out.println("Father fly...");
+    }
+}
+
+class Son extends Father {   // 子类
+    @Override
+    // @Override注解放在fly方法上，表示子类的fly重写了父类的fly方法
+    // 但是这里如果没有写@Override，还是对父类的fly方法进行重写
+    // @Override注解的价值是做了语法的校验：如果写了@Override注解，编译器就会去检查该方法是否真的重写了父类的方法，如果的确重写了，则编译通过，如果没有重写，则编译错误
+    public void fly() {
+        System.out.println("Son fly...");
+    }
+    
+    @Override    // 报错，父类没有say方法，不构成重写
+    public void say() {
+        System.out.println("Son fly...");
+    }
+}
+```
+
+对于`@Override`的源码定义：
+
+```java
+@Target(ElementType.METHOD)    // @Target表示注解可以放在哪些元素上，ElementType.METHOD修饰方法
+@Retention(RetentionPolicy.SOURCE)
+public @interface Override {   
+}
+```
+
+> `@interface`表示的是`Override`是一个注解，`@interface`在`jdk5.0`之后加入
+>
+> `@Target`是修饰注解的注解，称之为元注解
+
+#### `@Deprecated`
+
+`@Deprecated`注解用于表示某个程序元素（类、方法、字段、包和参数等）已过时（过时不能代表不能使用，被修饰已过时的元素，还是可以使用的）
+
+`@Deprecated`可以做版本升级过渡使用
+
+```java
+@Deprecated
+// @Deprecated修饰某个元素，表示该元素已经过时
+// 对于过时的元素，即不在推荐使用，但是仍然可以使用，使用过时元素，其元素中间会出现一条划线
+class A {
+    public int n1 = 10;
+    @Deprecated
+    public void hi() {}
+}
+```
+
+对于`@Deprecated`的源码定义：
+
+```java
+@Documented
+@Retention(RetentionPolicy.RUNTIME)
+@Target(value={CONSTRUCTOR, FIELD, LOCAL_VARIABLE, METHOD, PACKAGE, PARAMETER, TYPE})
+public @interface Deprecated {   
+}
+```
+
+> `@Target`中的内容依次是：构造器、属性字段、局部变量、方法、包、参数和类（类型）
+
+#### `@SuppressWarnings`
+
+`@SuppressWarnings`注解用于抑制编译器警告
+
+代码编译器中，有时会出现奇怪的警告，如果我们不想让其出现编译器警告，我们可以使用`@SuppressWarnings`注解进行注释，让警告信息不显示
+
+`@SuppressWarnings`中的属性介绍以及类型说明
+
+|            命令            |                           描述                            |
+| :------------------------: | :-------------------------------------------------------: |
+|           `all`            |                       抑制所有警告                        |
+|          `boxing`          |               抑制与封装/拆装作业相关的警告               |
+|           `cast`           |               抑制与强制转型作业相关的警告                |
+|         `dep-ann`          |                 抑制与淘汰注释相关的警告                  |
+|       `deprecation`        |                   抑制与淘汰的相关警告                    |
+|       `fallthrough`        |        抑制与`switch`陈述式中遗漏`break`相关的警告        |
+|         `finally`          |            抑制与未传回`finally`区块相关的警告            |
+|          `hiding`          |            抑制与隐藏变数的区域变数相关的警告             |
+|    `incomplete-switch`     | 抑制与`switch`陈述式（`enum` `case`）中遗漏项目相关的警告 |
+|         `javadoc`          |                 抑制与`javadoc`相关的警告                 |
+|           `nls`            |              抑制与非`nls`字串文字相关的警告              |
+|           `null`           |                 抑制与空值分析相关的警告                  |
+|         `rawtypes`         |               抑制与使用`raw`类型相关的警告               |
+|         `resource`         |         抑制与使用`Closeable`类型的资源相关的警告         |
+|       `restriction`        |           抑制与使用不建议或禁止参照相关的警告            |
+|          `serial`          | 抑制与可序列化的类别遗漏`serialVersionUID`栏位相关的警告  |
+|      `static-access`       |              抑制与静态存取不正确相关的警告               |
+|      `static-method`       |         抑制与可能宣告为`static`的方法相关的警告          |
+|          `super`           |         抑制与置换方法相关但不含`super`呼叫的警告         |
+|     `synthetic-access`     |          抑制与内部类别的存取未最佳化相关的警告           |
+|      `sync-override`       |          抑制因为置换同步方法而遗漏同步化的警告           |
+|        `unchecked`         |               抑制与未检查的作业相关的警告                |
+| `unqualified-field-access` |              抑制与栏位存取不合格相关的警告               |
+|          `unused`          |        抑制与未用的程式码及停用的程式码相关的警告         |
+
+```java
+public class SuppressWarnings {
+    // @SuppressWarnings({"all"})   // 使用all一劳永逸
+    @SuppressWarnings({"rawtypes", "unchecked", "unused"})   // 精准抑制
+    public static void main(String[] args) {
+        List list = new ArrayList();  // 可以使用rawtypes抑制
+        list.add("a");   // 可以使用unchecked抑制
+        list.add("b");   // 可以使用unchecked抑制
+        list.add("c");   // 可以使用unchecked抑制
+        int i;   // 可以使用unused抑制
+        System.out.println(list.get(1));
+    }
+}
+```
+
+> 我们可以在编辑器右边滚动条中，通过鼠标悬停查看具体的警告类型，再精准注释即可
+>
+> 关于`SuppressWarnings`作用范围，是和放置的位置相关，上述注解放置在`main`方法上，那么抑制警告的范围就是`main`方法，只管理当前的代码块，其他方法就不受抑制注解的影响，通常我们将抑制注解语句放置在语句，方法或者类上
+
+对于`@SuppressWarnings`的源码定义：
+
+```java
+@Target({TYPE, FIELD, METHOD, PACKAGE, CONSTRUCTOR, LOCAL_VARIABLE})
+@Retention(RetentionPolicy.SOURCE)
+
+public @interface SuppressWarnings {  
+    string[] value();
+}
+```
+
+> 该注解类有一个数组，数组可以接收传入的内容
+
+#### 元注解
+
+修饰注解的注解叫做元注解，在源码中会出现，常见的元注解有：
+
+- `Retention`：指定注解的作用范围，值有三种：`SOURCE`、 `CLASS` 、`RUNTIME`  （源码级别，类，运行时）
+
+  只能用于修饰一个注解定义，用于指定该注解可以保留多长时间
+
+  有三种策略值：保留策略从上到下越来越长
+
+  - `RetentionPolicy.SOURCE`：编译器使用后，直接丢弃这种策略的注释
+  - `RetentionPolicy.RUNTIME`：编译器将把注解记录在`class`文件中，当运行`Java`程序时，`JVM`不会保留注解，这个策略值是默认值
+  - `RetentionPolicy.SOURCE`：编译器将把注解记录在`class`文件中，当运行`Java`程序时，`JVM`会保留注解，程序可以通过反射获取该注释
+
+- `Target`：指定注解可以在哪些地方使用
+
+  具体的值为：`CONSTRUCTOR, FIELD, LOCAL_VARIABLE, METHOD, PACKAGE, PARAMETER, TYPE`
+
+  构造器、属性字段、局部变量、方法、包、参数和类（类型）
+
+- `Documented`：指定该注解是否在`javadoc`体现，即在生成文档时，可以看到该注解
+
+- `Inherited`：子类会继承父类注解
+
+  被`Inherited`修饰的注解将具有继承性，如果某个类使用了该元注解进行修饰，则其子类将自动具有该注解
 
 
 
