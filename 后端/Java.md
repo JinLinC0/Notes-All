@@ -1741,13 +1741,13 @@ class Cat {
 >   public double f1() {
 >       return 1.1;
 >   }
->                                 
+>                                   
 >   // 兼容（可以自动转换），编译通过
 >   public double f1() {
 >       int n = 1;
 >       return n;
 >   }
->                                 
+>                                   
 >   // 类型不一致，且不能自动转换，编译不通过
 >   public int f1() {
 >       return 1.1;
@@ -5078,6 +5078,212 @@ class Outer {   // 外部类
 - 静态内部类的作用域：同其他的成员，为整个类体
 - 外部类访问静态内部类的成员，需要先创建对象，在调用访问
 - 如果外部类和静态内部类的成员重名时，默认遵循就近原则，如果想访问外部类的成员，则可以使用（`外部类名.this.成员`）去访问
+
+
+
+## 枚举和注解
+
+对于特有的季节对象，季节的值只有四个（春夏秋冬），这些值一般都是只读，且不需要修改的
+
+枚举是一组常量的集合，属于一种特殊的类，里面只包含一组有限的特点对象
+
+### 自定义枚举类
+
+- 不需要提供`setXxx`方法，因为枚举对象值通常为只读，不能在外界增加或者减小，并不提供修改
+- 自定义枚举类的构造器是私有化的
+- 对枚举对象/属性使用`final+static`共同修饰，实现底层优化
+- 枚举对象名通常使用全部大写，即常量命名的规范
+- 枚举对象根据需要，也可以有多个属性
+
+```java
+public class Enumeration {
+    public static void main(String[] args) {
+        System.out.println(Season.AUTUMN);    // 直接使用类
+    }
+}
+
+// 自定义枚举类
+class Season {
+    private String name;
+    private String desc;
+    
+    // 在Season内部，直接创建所有的固定对象
+    public static final Season SPRING = new Season("春天", "温暖");
+    public static final Season SUMMER = new Season("夏天", "炎热");
+    public static final Season AUTUMN = new Season("秋天", "凉爽");
+    public static final Season WINTER = new Season("冬天", "寒冷");
+    
+    // 构造器私有化，在外界就不可以new一个对象了，在类的内部还是可以使用的
+    private Season(String name, String desc) {
+        this.name = name;
+        this.desc = desc;
+    }
+    // 只留下get相关的方法，去掉set相关的方法，防止属性被修改
+    public String getName() {
+        return name;
+    }
+    public String getDesc() {
+        return desc;
+    }
+    
+    // 打印对象的信息
+    @Override
+    public String toString() {
+        return "Season{" + "name='" + name + '\'' +
+                ", desc='" + desc + '\'' + '}';
+    }
+}
+```
+
+***
+
+### 关键字实现枚举类
+
+使用`enum`关键字实现枚举类
+
+```java
+public class Enumeration {
+    public static void main(String[] args) {
+        System.out.println(Season.AUTUMN);    // 直接使用类
+    }
+}
+
+// 使用关键字实现枚举类，使用enum关键字替代class
+enum Season {
+    // 在Season内部，直接创建所有的固定对象，通过常量名(实参列表)  进行简化  实参列表和构造器关联
+    // 使用枚举的时候，要求将定义的常量对象写在类的最前面，否则会报错
+    SPRING("春天", "温暖"), SUMMER("夏天", "炎热"), AUTUMN("秋天", "凉爽"), WINTER("冬天", "寒冷");     // 多个常量对象，中间使用逗号间隔
+    
+    private String name;
+    private String desc;
+    
+    // 构造器私有化，在外界就不可以new一个对象了，在类的内部还是可以使用的
+    private Season(String name, String desc) {
+        this.name = name;
+        this.desc = desc;
+    }
+    // 只留下get相关的方法，去掉set相关的方法，防止属性被修改
+    public String getName() {
+        return name;
+    }
+    public String getDesc() {
+        return desc;
+    }
+    
+    // 打印对象的信息
+    @Override
+    public String toString() {
+        return "Season{" + "name='" + name + '\'' +
+                ", desc='" + desc + '\'' + '}';
+    }
+}
+```
+
+注意事项：
+
+- 当我们使用`enum`关键字开发一个枚举类时，默认会继承`Enum`类，而且是一个`final`类
+- 传统的`public static final Season SPRING = new Season("春天", "温暖"); `对象创建简化为`SPRING("春天", "温暖");`，这里需要知道，其调用哪个构造器
+- 如果使用无参构造器创建枚举对象，则实参列表和小括号都可以省略
+- 当有多个枚举对象时，使用逗号间隔，最后一个用分号结尾
+- 枚举对象必须放在枚举类的首行
+
+#### 枚举常用的方法
+
+使用`enum`关键字时，会隐式的继承`Enum`类，我们可以使用`Enum`类的相关方法，常用的方法有：
+
+|   方法名    |                             描述                             |
+| :---------: | :----------------------------------------------------------: |
+|  `valueOf`  | 传递枚举类型的`Class`对象和枚举常量名称给静态方法`valusOf`，会得到与参数匹配的枚举常量 |
+| `toString`  | 得到当前枚举常量的名称。可以通过重写这个方法，来使得到的结果更易读 |
+|  `equals`   | 在枚举类型中可以直接使用`==`来比较两个枚举类常量是否相等。`Enum`提供的这个`equals()`方法，也是可以直接使用`==`实现的。它的存在是为了在`Set`、`List`、`Map`中使用。注意，`equals()`是不可变的 |
+| `hashCode`  | `Enum`实现了`hashCode()`来和`equals()`保持一致，它也是不可变的 |
+|   `name`    |     得到当前枚举常量的名称，但是更建议使用`toString`方法     |
+|  `ordinal`  |                    得到当前枚举常量的次序                    |
+| `compareTo` | 枚举类型实现了`Comparaable`接口，这样可以比较两个枚举常量的大小/编号（按照声明的顺序排列） |
+|   `clone`   | 枚举类型不能被`Clone`，为了防止子类实现克隆方法，`Enum`实现了一个仅抛出`CloneNotSupportedException`异常的不变`Clone()` |
+
+各种方法的使用演示：
+
+```java
+    public static void main(String[] args) {
+        Season autumn = Season.AUTUMN;
+        // 演示name方法
+        System.out.println(autumn.name());    // AUTUMN   输出枚举对象的名称
+        
+        // 演示ordinal方法
+        System.out.println(autumn.ordinal());    // 2   输出枚举对象的次序/编号，从0开始编号
+        
+        // values方法，返回Season数组，包含定义的所有枚举对象，可以从反编译找到values方法
+        Season[] values = Season.values();
+        for(Season season: values) {  // 增强for循环，依次从values数组中取出数据，赋值给season
+            System.out.println(season);   // 输出四个枚举对象
+        }
+        
+        // 演示valueOf方法：将字符串转换成枚举对象，要求字符串必须为已有的常量，否则报错
+        // 执行流程：1.根据给定的字符串到Season的枚举类对象中去查找
+        // 2.如果找到了，就返回，如果没有找到，就报错
+        Season autumn1 = Season.valueOf("AUTUMN");
+        System.out.println(autumn1);   // 这里的autumn1和之前的autumn指向的是同一个对象
+        
+        // 演示compareTo方法
+        // 将前后两个对象的枚举编号进行比较
+        // 结果返回前面的编号减去后面的编号  Season.AUTUMN的编号 - Season.SUMMER的编号
+        System.out.println(Season.AUTUMN.compareTo(Season.SUMMER));   // 1
+    }
+}
+
+// 使用关键字实现枚举类，使用enum关键字替代class
+enum Season {
+    SPRING("春天", "温暖"), SUMMER("夏天", "炎热"), AUTUMN("秋天", "凉爽"), WINTER("冬天", "寒冷");
+    
+    private String name;
+    private String desc;
+    
+    private Season(String name, String desc) {
+        this.name = name;
+        this.desc = desc;
+    }
+    
+    public String getName() {
+        return name;
+    }
+    public String getDesc() {
+        return desc;
+    }
+    
+    // 打印对象的信息，直接输出对象，就会通过这个重写方法输出如下的自定义信息
+    @Override
+    public String toString() {
+        return "Season{" + "name='" + name + '\'' +
+                ", desc='" + desc + '\'' + '}';
+    }
+}
+```
+
+#### `enum`实现接口
+
+使用`enum`关键字后，就不能再继承其他类了，因为`enum`会隐式的继承`Enum`类，而`Java`是但继承机制的
+
+枚举类和普通类一样，可以实现接口：`enum 类名 implements 接口1, 接口2 {}`
+
+```java
+interface IPlaying {
+    public void playing();
+}
+
+enum Music implements IPlaying {
+    CLASSICMUISC;
+    @Override
+    public void playing() {
+        System.out.println("播放音乐");
+    }
+}
+
+// 主函数调用
+Music.CLASSICMUISC.playing();   // 播放音乐
+```
+
+
 
 
 
