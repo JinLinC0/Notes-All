@@ -120,8 +120,6 @@ div {
 
 > `#default="{ field, errorMessage }"`：在插槽中接收到数据（表单数据和错误消息数据），将`field`数据绑定到原生的表单`<input>`中
 
-
-
 我们可以使用系统提供的验证规则进行规则验证，`vee-validate/rules`包提供了大量系统编写好的验证规则，如是否唯一，最小数量和最大数量等等，用的时候需要进行导入：
 
 `import { required, min, max, confirmed, email } from '@vee-validate/rules';`
@@ -441,3 +439,170 @@ div {
 
 ## 封装验证规则
 
+我们通常会将`VeeValidate`封装成一个插件，需要进行规则验证的时候，直接调用这个插件使用即可
+
+在`plugins`插件文件夹中，创建一个文件夹`validate`，新建两个文件：`index.ts`和`yup.ts`
+
+```ts
+// index.ts插件入口文件
+import * as veeValidate from 'vee-validate';
+import { all } from '@vee-validate/rules';
+import { localize } from '@vee-validate/i18n';
+import zh_CN from '@vee-validate/i18n/dist/locale/zh_CN.json';
+import yup from './yup'
+
+// 中文语言配置
+veeValidate.configure({
+    generateMessage: localize('zh_CN', zh_CN)
+})
+
+// 批量定义规则
+Object.entries(all).forEach(([name, rule]) => {
+    // 批量注册验证规则
+    veeValidate.defineRule(name, rule)
+})
+
+const modules = { yup, ...veeValidate }
+
+export default modules
+```
+
+```ts
+// yue.ts 语言包配置文件
+import * as yup from 'yup';
+
+// 给yup设置中文提示
+yup.setLocale({
+    // 通用类型
+    mixed: {
+        required: '${label}不能为空',    // label是具体调用的时候传递进来的
+    },
+    // 字符串类型
+    string: {
+        email: '邮箱格式错误',
+        min: '最少${min}个字符',
+        max: '最多${max}个字符',
+        length: '必须为${length}个字符',
+    },
+    // 数字类型
+    number: {
+        min: '最小${min}',
+        max: '最大${max}',
+    }
+})
+
+export default yup;
+```
+
+对于封装完后的验证插件，我们在使用的时候，直接调用这个插件的入口文件即可：
+
+对于使用`VeeValidate`原生组件使用封装的验证规则，如下所示：
+
+```vue
+<template>
+    <Form @submiVeeValidate="onSubmit">
+        <Field name="account" label="账号" v-model="account" 
+            :rules="{ email: true, required: true}" :validate-on-input="true"
+            #default="{ field, errorMessage }">
+            <input v-bind="field" v-model="account" />
+            <hr />
+            <p>{{ errorMessage }}</p>
+        </Field>
+        <hr />
+        <button>提交表单</button>
+    </Form>
+</template>
+
+<script setup lang="ts">
+import { ref } from 'vue';
+import v from '@/plugins/validate'
+
+// 提取组件
+const { Form, Field } = v
+
+const account = ref('');
+
+// 表单提交
+const onSubmit = (values: any) => {
+    // values是表单项数据
+    console.log(values);
+    alert('验证通过')
+}
+</script>
+
+<style lang="scss">
+div {
+    @apply flex w-screen h-screen justify-center items-center;
+
+    input {
+        @apply border-2 p-2 rounded-md border-violet-950 outline-none;
+    }
+}
+</style>
+```
+
+> 进行我们封装后的插件引入，并提取组件，即可替换大量的代码，使代码结构更加简单
+
+基于`Api`操作验证表单，经过封装后，我们的代码可以简化为：
+
+```vue
+<template>
+    <form @submit="onSubmit">
+        <section>
+            <input type="text" v-model="usernameValue" />
+            <p class="error" v-if="errors.username">{{ errors.username }}</p>
+        </section>
+        <section>
+            <input type="text" v-model="passwordValue" />
+            <p class="error" v-if="errors.password">{{ errors.password }}</p>
+        </section>
+        <button>表单提交</button>
+    </form>
+</template>
+
+<script setup lang="ts">
+import v from '@/plugins/validate'
+
+// 定义验证函数中间件拦截，处理验证操作，防止表单为空点击提交可以进行内容的提交操作
+const { handleSubmit, errors } = v.useForm({
+    // 在这里进行统一的初始值和验证数据结构的定义
+    // 定义字段的初始值
+    initialValues: {
+        username: 'jlc',
+        password: ''
+    },
+    // 定义验证数据结构
+    validationSchema: {
+        // 使用yup对用户名进行验证，验证内容为字符串，且必须输入，且格式为邮箱，同时可以自定义错误信息
+        username: v.yup.string().required().email().label('用户名'),  // 传递了具体的label
+        password: { required: true }
+    }
+});
+// 定义验证，得到数据
+const { value: usernameValue } = v.useField('username', {}, { label: '用户名' });
+const { value: passwordValue } = v.useField('password', {}, { label: '密码' });
+
+// 表单提交
+const onSubmit = handleSubmit((values: any) => {
+    // values是表单项数据
+    console.log(values);
+    alert('验证通过')
+})
+</script>
+
+<style lang="scss" scoped>
+div {
+    @apply flex w-screen h-screen justify-center items-center;
+
+    input {
+        @apply border-2 p-2 rounded-md border-violet-950 outline-none;
+    };
+
+    .error {
+        @apply bg-red-600 border border-gray-800 text-white;
+    }
+}
+</style>
+```
+
+> 通过`v.`来获取具体的内容
