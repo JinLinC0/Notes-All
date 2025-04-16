@@ -5806,6 +5806,157 @@ class AgeException extends RuntimeException {
 
 
 
+## 常用类
+
+常用类是比较重要的，在面试的时候也是问的比较多的
+
+### 包装类
+
+针对八种基本的数据类型，定义了相应的引用类型，这些基本数据的引用类型叫做包装类
+
+这些基本的数据类型，有了类的特点，就可以调用类中的方法
+
+| 基本数据类型 |   包装类    |
+| :----------: | :---------: |
+|  `boolean`   |  `Boolean`  |
+|    `char`    | `Character` |
+|    `byte`    |   `Byte`    |
+|   `short`    |   `Short`   |
+|    `int`     |  `Integer`  |
+|    `long`    |   `Long`    |
+|   `float`    |   `Float`   |
+|   `double`   |  `Double`   |
+
+其中，前面两个包装类的父类是`Object`类型；后面六个包装类的父类是`Number`，`Numer`在继承`Object`基类
+
+#### 包装类和基本数据类型的转换
+
+- 在`jdk5`之前的手动装箱和拆箱方式，装箱：基本数据类型转换为包装类型，反之拆箱为包装类型转换为基本数据类型
+- `jdk5`以后（含`jdk5`）的自动装箱和拆箱方式，自动装箱的底层调用的是`valueOf`方法，如：`Interger.valueOf()`
+
+```java
+public class Wrapper {
+    public static void main(String[] args) {
+        // 演示int <---> Integer 的装箱和拆箱
+        // jdk5之前是手动装箱和拆箱
+        int n1 = 100;
+        // 手动装箱 int ---> Integer
+        Integer integer1 = new Integer(n1);//或者使用 Integer integer1=Integer.valueOf(n1);
+        // 手动拆箱 int <--- Integer
+        int n = integer1.intValue();
+        
+        // 在jdk5以后（包括5），就可以自动装箱和自动拆箱
+        int n2 = 200;
+        // 自动装箱 int ---> Integer
+        Integer integer2 = n2;   // 底层调用的是Integer.valueOf方法
+        // 自动拆箱 int <--- Integer
+        int n = integer2;   // 底层还是调用integer2.intValue()方法
+    }
+}
+```
+
+> 上述代码以`int`来举例，其他的包装类的装箱和拆箱方式类似
+
+经典面试题：
+
+```java
+// 下面输出的内容是什么：
+Object obj1 = ture ? new Integer(1) : new Double(2.0);
+System.out.println(obj1);   // 1.0
+// ture ? new Integer(1) : new Double(2.0)这一块是一个整体，其精度最高的是Double，因此会提升优先级
+// 即三元运算符是一个整体
+```
+
+`Integer`类的经典面试题：
+
+```java
+// 下面代码输出什么
+public void method() {
+    Integer i = new Integer(1);
+    Integer j = new Integer(1);
+    System.out.println(i == j);   // false  两个不同的对象，只要是new，出来的就是不同对象
+    
+    // 主要是看范围，如果传入的值为-128到127之间，是直接返回的，没有创建对象
+    Integer m = 1;   // 底层是Integer.valueOf(1);  我们需要看源码
+    Integer n = 1;   // 底层是Integer.valueOf(1);
+    System.out.println(m == n);   // true
+    
+    Integer x = 128;
+    Integer y = 128;
+    System.out.println(x == y);   // false  创建了对象，所有不相等
+    
+    Integer a = 127;
+    Integer b = new Integer(127);  
+    System.out.println(a == b);   // false  b是对象
+    
+    // 只要有基本数据类型的，就只要判断值是否相等
+    Integer c = 127;
+    int d = 127;
+    System.out.println(c == d);   // true  
+    Integer h = 128;
+    int j = 128;
+    System.out.println(h == j);   // true  
+}
+```
+
+对于`Integer.valueOf()`的源码：
+
+```java
+public static Integer valueOf(int i) {
+    // 如果传入的i在以下的范围内，就直接从数组返回（这个数组是在类加载的时候就创建好了的，类似于将缓存中的值直接给你），没有真正的创建对象，这个范围是-128 到 127，如果不在这个范围内，就new一个对象
+    if (i >= IntegerCache.low && i <= IntegerCache.high)
+        return IntegerCache.cache[i + (-IntegerCache.low)];
+    return new Integer(i);
+}
+```
+
+
+
+#### 包装类与`String`类型的相互转换
+
+演示案例以`Integer`包装类和`String`类转换为例：
+
+```java
+public class WrapperVSString {
+    public static void main(String[] args) {
+        // 包装类 ---> String类型
+        Integer i = 100;  // 自动装箱
+        // 方式一：
+        String str1 = i + "";   // 这种情况对原先的i的数据类型没有影响
+        // 方式二：
+        String str2 = i.toString();
+        // 方式三：
+       	String str3 = String.valueOf(i);
+        
+        // 包装类 <--- String类型
+        String str = "123";
+        // 方式一
+        Integer i2 = Integer.parseInt(str);   // 自动装箱
+        // 方式二：通过包装类中的构造器方法
+        Integer i3 = new Integer(str);
+    }
+}
+```
+
+#### 包装类的常用方法
+
+`Integer`包装类的常用方法：
+
+- `Integer.MIN_VALUE`：返回最小值
+- `Integer.MAX_VALUE`：返回最大值
+
+`Character`包装类的常用方法：
+
+- `Character.isDigit()`：判断是不是数字
+- `Character.isLetter()`：判断是不是字母
+- `Character.isUpperCase()`：判断是不是大写字母
+- `Character.isLowerCase()`：判断是不是小写字母
+- `Character.isWhitespace()`：判断是不是空格
+- `Character.toUpperCase()`：转成大写
+- `Character.toLowerCase()`：转成小写
+
+
+
 ## 设计模式
 
 设计模式是在大量的实践中总结和理论化之后的代码结构、编程风格、以及解决问题的思考方式。设计模式就像经典的棋谱，不同的棋局，我们使用不同的棋谱，免去我们自己再思考和摸索
