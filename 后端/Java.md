@@ -1741,13 +1741,13 @@ class Cat {
 >   public double f1() {
 >       return 1.1;
 >   }
->                                     
+>                                       
 >   // 兼容（可以自动转换），编译通过
 >   public double f1() {
 >       int n = 1;
 >       return n;
 >   }
->                                     
+>                                       
 >   // 类型不一致，且不能自动转换，编译不通过
 >   public int f1() {
 >       return 1.1;
@@ -5954,6 +5954,435 @@ public class WrapperVSString {
 - `Character.isWhitespace()`：判断是不是空格
 - `Character.toUpperCase()`：转成大写
 - `Character.toLowerCase()`：转成小写
+
+***
+
+### `String`类
+
+`String`对象是用于保存字符串的，也就是一组字符序列
+
+字符串常量对象是用双引号括起来的，如：`"你好"`
+
+```java
+String name = "jlc";
+// name为字符串变量
+// "jlc"为字符串常量，是一个具体的值
+```
+
+字符串的字符是使用`Unicode`字符编码，一个字符（不区分字母还是汉字）都是占两个字节
+
+`String`类常见的构造器：（字符串类有很多的构造器）
+
+- `String s1 = new String();`
+- `String s2 = new String(String original);`
+- `String s3 = new String(char[] a);`
+- `String s4 = new String(char[] a, int startIndex, int count);`
+- `String s5 = new String(byte[] b);`
+
+`String`类的继承关系：
+
+![image-20250417074657877](..\images\image-20250417074657877.png)
+
+> `String`类继承于`Object`基类，同时实现了三个接口：
+>
+> - `Serializable`：实现了这个接口，表示对象可以串行化，意味着`String`对象可以在网络中传输
+> - `Comparable`：实现了这个接口，说明了`String`对象可以进行比较
+> - `CharSequence`：字符序列接口
+
+`String`类是`finaly`类，即不能被其他类继承
+
+`String`类中有属性：`private final char value[];`  用于存放字符串内容，`value`是一个`final`类型，一旦被赋值了，就不可以进行改变（是指地址不可修改，指向了一个空间后，就不可以修改指向另一个空间）（同一个空间中的字符串内容是可以进行修改的）
+
+`String`对象的两种创建方式：两种创建对象方式的机制是不一样的
+
+- 直接赋值：`String s = "jlc";`
+
+  创建机制：先从常量池查看是否有`"jlc"`s数据空间，如果有，直接指向；如果没有则重新创建，然后指向。`s`最终指向的是常量池的空间地址
+
+- 调用构造器：`String s = new String("jlc");`
+
+  先在堆中创建空间，里面维护了`value`属性，指向常量池的`"jlc"`空间。如果常量池没有`"jlc"`，重新创建，如果有，直接通过`value`指向，最终指向的是堆中的空间地址
+
+具体内存图：
+
+![image-20250417081011582](..\images\image-20250417081011582.png)
+
+```java
+String a = "abc";
+String b = "abc";
+System.out.println(a.equals(b));   // true   比较字符内容是否一样
+System.out.println(a == b);     // true   指向的地址是一样的，指向的是同一个对象
+
+String a = new String("abc");
+String b = new String("abc");
+System.out.println(a.equals(b));   // true   比较字符内容是否一样
+System.out.println(a == b);     // false   指向的地址是不一样，指向堆中的不同对象
+
+String a = "abc";
+String b = new String("abc");
+System.out.println(a.equals(b));   // true   比较字符内容是否一样
+System.out.println(a == b); // false  指向的地址是不一样，指向堆中的不同对象，一个指向的常量池中的对象
+System.out.println(a == b.intern());  // true  b.intern()返回的是常量池中的地址
+System.out.println(b == b.intern());  // false  b是指向堆的，b.intern()返回的是常量池中的地址
+// 知识点：当调用intern方法时，如果池已经包含一个等于此String对象的字符串（用equals(Object)方法确定），则返回常量池中的字符串。否则，将此String对象添加到常量池中，并返回此String对象的引用
+// 总结：b.intern()方法最终返回的是常量池的地址（对象）
+```
+
+```java
+Person p1 = new Person();
+p1.name = "jlc";
+Person p2 = new Person();
+p2.name = "jlc";
+
+System.out.println(p1.name.equals(p2.name));   // True  字符串内容一样
+System.out.println(p1.name == p2.name);   // True  p1.name 和 p2.name 都是指向常量池中的"jlc"
+System.out.println(p1.name == "jlc");   // True  "jlc"的地址就是池中的具体值的地址 p1.name也指向池中的具体值的地址
+```
+
+#### 对象特性
+
+- `String`是一个`final`类，代表不可变的字符序列
+- 字符串是不可变的，一个字符串对象一旦被分配，其内容是不可变的
+
+经典面试题：
+
+```java
+String s1 = "hello";
+s1 = "haha";
+```
+
+创建了两个对象（字符串常量对象），先指向了`"hello"`，后指向了`"haha"`
+
+内存分布图：
+
+![image-20250417084431031](..\images\image-20250417084431031.png)
+
+```java
+String a = "hello" + "abc";
+// 底层编译器会进行优化（判断创建的常量池对象，是否有引用指向），优化后等价于：String a = "helloabc";
+// 所以创建了一个字符串常量对象
+```
+
+```java
+String a = "hello";
+String b = "abc";
+// 1. 先创建一个 StringBuilder  sb = StringBuilder()
+// 2. 执行 sb.append("hello");  sb.append("abc");
+// 3. 执行 String c = sb.toString();  将字符串返回给c
+// 最后其实是c指向堆中的对象（String）value[] --> 指向池中的"helloabc"
+String c = a + b;
+```
+
+> 底层是`StringBuilder sb = new StringBuilder();`   `sb.append(a);`  `sb.append(b);`
+>
+> `sb`是在堆中，并且`append`是在原来字符串的基础上进行追加的
+>
+> 一个创建了三个对象，内存分布图：
+>
+> ![image-20250417090145061](..\images\image-20250417090145061.png)
+
+重要规则：
+
+- `String c1 = "ab" + "cd";`  常量相加，看的是池
+- `String c1 = a + b;`  变量相加，是在堆中
+
+```java
+public class Test1 {
+    String str = new String("jlc");
+    final char[] ch = {'j', 'a', 'v', 'a'};
+    public void change(String str, char ch[]) {
+        str = "java";
+        ch[0] = 'h';
+    }
+}
+
+public static void main(String[] args) {
+    Test1 ex = new Test1();
+    ex.change(ex.str, ex.ch);
+    System.out.print(ex.str + "and");   // jlcand
+    System.out.println(ex.ch);   // hava
+}
+```
+
+内存分析：
+
+![image-20250417104823638](..\images\image-20250417104823638.png)
+
+> - 堆中有一个对象为`str`，字符串对象指向堆中的一个`value`空间，这个地址指向池中的具体数据
+> - 字符串数组，是放在堆中的，`ch`属性指向堆中的空间
+> - 生成的`ex`对象指向堆中的空间
+> - 在调用方法的时候，会在栈中开辟新栈`change`，将实参`ex.str`赋值给了形参`str`；将实参`ex.ch`赋值给了形参`ch`，刚开始传递过来时，`str`也指向原先的地址空间
+> - `str = "java";`执行后，断掉原先的指向，重新指向到常量池中的`java`地址中
+> - `ch`一开始也是指向`ex.ch`指向的地址空间（堆中的数组）
+> - `ch[0] = 'h';`执行后，将第一个元素进行修改（修改字符数组的某个元素是合理的）
+> - 当方法执行完后，`change`栈就销毁了，就回到了主栈
+> - `ex.str`没有发生任何的变化，其值还是`jlc`；但是`ex.ch`的属性值第一个被修改了
+
+#### 常用方法
+
+`String`类的方法是非常多大，我们需要掌握常用方法：
+
+- `equals`：判断内容是否相等（区分大小写）
+
+  ```java
+  String str1 = "hello";
+  String str2 = "Hello";
+  System.out.println(str1.equals(str2));   // false
+  ```
+
+- `equalsIgnoreCase`：判断内容是否相等（不区分大小写）
+
+- `length`：获取字符串长度（获取字符的个数）
+
+  ```java
+  String str = "Hello";
+  System.out.println(str.length());  // 5
+  ```
+
+- `indexOf`：获取某个字符在字符串中第一次出现的索引，索引从0开始，如果找不到，返回-1
+
+  ```java
+  String str = "jlc@sdfds@efs";
+  int index = str.indexOf('@');
+  System.out.println(index);   // 3
+  // 该方法除了是单个字符，还可以是字符串
+  System.out.println(str.indexOf("lc"));   // 1
+  ```
+
+- `lastIndexOf`：获取某个字符在字符串中最后一次出现的索引，索引从0开始，如果找不到，返回-1
+
+- `substring`：截取指定范围的子串
+
+  ```java
+  String name = "hello,jlc";
+  System.out.println(name.substring(6));   // jlc  从索引为6的位置开始截取，到最后的字符
+  System.out.println(name.substring(0, 5));   // hello  截取指定开始索引和结束索引的字符（开始索引包括，结束索引不包括）
+  ```
+
+- `trim`：去掉前后空格
+
+- `charAt`：获取某索引处的字符，注意不能使用`Str[index]`这个方式（不能将字符串当数组使用）
+
+- `toUpperCase`：将字符串全部转换成大写
+
+- `toLowerCase`：将字符串全部转换成小写
+
+- `concat`：拼接字符串（拼接字符串也可以使用加号来替代）
+
+  ```java
+  String str = "jlc";
+  str = str.concat("年龄25");
+  System.out.println(str);   // jlc年龄25
+  ```
+
+- `replace`：替换字符串中的字符
+
+  ```java
+  String str = "jlc年龄25";
+  // 将字符串中所有的jlc字符串替换为jinLinC字符串
+  System.out.println(str.replace("jlc", "jinLinC"));   // jinLinC年龄25
+  // str.replace() 返回的是执行完替换过的结果，本身的str字符串是没有任何影响的（即str字符串不改变）
+  ```
+
+- `split`：通过指定的字符来分割字符串，对于某些分割字符，我们需要使用转义字符
+
+  ```java
+  String poem = "abc ABC def DEF";
+  String[] split = poem.split(" ");   // 以空格进行分割字符串，返回的是一个数组
+  for(int i = 0; i < split.length; i++) {
+      System.out.println(split[i]);
+  }
+  
+  // 分割时，有特殊字符，需要加入转义字符
+  String load = "D:\\aaa\\bbb";
+  String[] load1 = poem.split("\\\\");  // 根据\\进行分割，要使用到转义字符两个斜杠表示一个斜杠
+  ```
+
+- `compareTo`：比较两个字符串的大小（该方法继承于接口`Comparable`）
+
+  ```java
+  String a = "jchn";
+  String b = "jack";
+  // 先比较长度，如果长度一样（长度不一样返回长度相减后的值），在比较第一个字符，依次类推
+  System.out.println(a.compareTo(b));  // 2  'c' - 'a' = 2  正数表示前面的字符大，反之，后面大
+  // 如果比较的两个字符串完全相等，则返回0
+  ```
+
+- `toCharArry`：将字符串转化为字符数组
+
+  ```java
+  String str = "hello";
+  char[] ch = str.toCharArry();
+  for(int i = 0; i < ch; i++) {
+      System.out.println(ch[i]);
+  }
+  ```
+
+- `format`：格式字符串
+
+  ```java
+  String str = String.format("我的姓名是%s 年龄是%d 成绩是%.2f", name, age, score);
+  ```
+
+  > 其中`%d`等称为占位符，用后续的变量进行填充
+  >
+  > - `%s`表示后面由字符串进行替换
+  > - `%d`表示后面由整数进行替换
+  > - `%.2f`表示使用小数进行替换，替换后保留小数点后两位（进行了四舍五入的操作）
+  > - `%c`表示使用`char`字符类型进行替换
+
+#### `StringBuffer`类
+
+`String`类是保存字符串常量的，每次更新都需要重新开辟空间，效率较低，因此`java`设计者还提供了`StringBuilder`和`StringBuffer`来增强`String`的功能，提高了效率
+
+`java.lang.StringBuffer`表示可变的字符序列，可以对字符串内容进行增删，其许多方法与`String`类中的方法相同，但`StringBuffer`是可变长度的，简而言之，`StringBuffer`是一个容器
+
+`StringBuffer`类的继承关系：
+
+![image-20250417134142579](..\images\image-20250417134142579.png)
+
+> `StringBuffer`的直接父类是`AbstractStringBuilder`，在父类`AbstractStringBuilder`中，有属性`char[] value`，该`value`数组来存放字符串内容，但是这个数组不是`final`类型，该数组存放在堆中，而不是像字符串的`value`存放在常量池中
+>
+> 同时`StringBuffer`实现了`Serializable`，即`StringBuffer`的对象可以串行化（对象可以网络传输和保存到文件）
+>
+> `StringBuffer`类是一个`final`类，不能被继承
+
+`String`类与`StringBuffer`类的区别：
+
+- `String`保存的是字符串常量，里面的值不能更改，每次`String`类的更新实际上就是更改地址，效率低（值放在常量池中）
+- `StringBuffer`保存的是字符串变量，里面的值可以更改，每次`StringBuffer`的更新可以更新内容，一般不会更新地址，即创建新对象（只有当原先的地址空间不够了，会统一的扩充一次，将原先的内容拷贝过来），效率高（值放在堆中）
+
+##### 构造器
+
+- `StringBuffer()`：构造一个其中不带字符的字符串缓冲区，其初始容量为16个字符，用于存放字符内容
+- `StringBuffer(CharSequence seq)`：构造一个字符串缓冲区，它包含与指定的`CharSequence`相同的字符
+- `StringBuffer(int capacity)`：构造一个不带字符，但具有指定初始容量的字符串缓冲区，即对`char[]`的的大小进行指定
+- `StringBuffer(String str)`：构造一个字符串缓冲区，并将内容初始化为指定的字符串内容，容量为当前字符串的长度再加上16个字符
+
+##### `String`和`StringBuffer`的互相转换
+
+在开发中，我们经常将`String`和`StringBuffer`进行转换
+
+- `String`转`StringBuffer`
+
+  ```java
+  String s = "hello";
+  // 方式一
+  StringBuffer b1 = new StringBuffer(s);  // 返回的b1是StringBuffer对象，s还是String对象
+  // 方式二  先开辟空间，再进行内容的追加
+  StringBuffer b2 = new StringBuffer();
+  b2.append(s);
+  ```
+
+- `StringBuffer`转`String`
+
+  ```java
+  // 方式一
+  String s1 = b1.toString();
+  // 方式二
+  String s2 = new String(b1);
+  ```
+
+##### 常用方法
+
+`StringBuffer`类的常用方法有：
+
+- `append`：增
+
+  ```java
+  StringBuffer s = new StringBuffer("hello");
+  System.out.println(s.append('.'));   // hello.   结果返回的还是StringBuffer类型
+  ```
+
+- `delect(start, end)`：删，删除索引大于等于`start`，小于`end`处的字符
+
+- `replace(start, end, string)`：将`start`到`end`间的内容用`string`替换掉，不含`end`
+
+- `indexOf`：查找子串在字符第一次出现的索引，如果找不到返回-1
+
+- `insert`：插入，在指定的位置直接插入字符串
+
+  ```java
+  StringBuffer s = new StringBuffer("hello");
+  s.insert(2, "abc");    // 在索引为2的位置插入abc字符串，原来索引为2的内容往后移动
+  System.out.println(s);   // heabcllo
+  ```
+
+- `length`：获取长度
+
+经典案例：
+
+```java
+String str = null;
+StringBuffer sb = new StringBuffer();
+sb.append(str);   // 根据源码，底层调用的是AbstractStringBuffer的appendNull方法，将null转换为null字符串
+System.out.println(sb.length());   // 4
+System.out.println(sb);   // null
+
+StringBuffer sb1 = new StringBuffer(str);  // 查看底层源码，该构造器 super(str.length() + 16)
+// 因此这里会出现空指针异常
+```
+
+格式化输出小案例：
+
+```java
+// 商品的价格，要求输出的形式为：23,123,456.59  要求价格的小数点前面每三位用逗号隔开，在输出
+
+// 思路分析：
+// 2. 将String转成StringBuffer，使用StringBuffer的insert方法插入逗号
+// 3. 使用相关方法进行字符串的处理
+String price = "23123456.59";
+StringBuffer sb = new StringBuffer(price);
+// 找到小数点的索引，然后在该位置的前三位插入逗号即可
+for(int i = sb.lastIndexOf(".") - 3; i > 0; i -= 3) {
+    sb = sb.insert(i, ",");   // 插入逗号
+}
+System.out.println(sb);   // 23,123,456.59
+```
+
+#### `StringBuilder`类
+
+`StringBuilder`类是一个可变的字符序列，此类提供一个与`StringBuffer`兼容的`API`（大多数的方法是一样的，可以参考`StringBuffer`类），但不保证同步（`StringBuilder`不是线程安全的）。该类被设计用作`StringBuffer`的一个简易替换，用在字符串缓冲区被单个线程使用的时候。如果可能，单线程的时候建议优先采用该类，因为在大多数实现中，它比`StringBuffer`要快
+
+`StringBuilder`上的主要操作是`append`和`insert`方法，可以重载这些方法，以接收任意类型的数据
+
+继承关系：
+
+![image-20250417153305904](..\images\image-20250417153305904.png)
+
+> `StringBuilder`类是`final`类，不能被继承
+>
+> `StringBuilder`对象的字符序列仍然存放在其父类`AbstractStringBuilder`的`char[] value;`中，因此，字符序列是存放在堆中的
+>
+> `StringBuilder`的方法，没有做互斥的处理，即没有`synchronized`关键字，因此，只推荐在单线程的情况下使用
+
+#### 三大类的比较
+
+- `StringBuilder`和`StringBuffer`类非常相似，均代表可变字符序列，而且方法也一样
+
+- `String`：不可变字符序列，效率低，但是复用率高（可以有很多对象指向常量池中的同一个常量）
+
+- `StringBuffer`：可变字符序列，效率较高（增删），线程安全（有`synchronized`关键字，当一个线程在操作的时候，其他线程就不能操作了）
+
+- `StringBuilder`：可变字符序列，效率最高，线程不安全
+
+- `String`使用的注意事项说明：
+
+  ```java
+  String s = "a";   // 创建了一个字符串
+  s += "b";   // 实际上原来的"a"字符串对象已经丢弃了，现在又产生了一个字符串"ab"，如果多次执行这些改变字符串内容的操作，会导致大量副本字符串对象存留在内存中，降低效率。如果这样的操作放到循环中，会极大影响程序的性能，因此，如果我们对String做大量修改，不要使用String类型
+  ```
+
+  结论：如果我们对`String`做大量修改，不要使用`String`类型，应该使用`StringBuffer`类
+
+#### 三大类的使用原则
+
+三大类的使用原则非常重要，一定要记下来
+
+- 如果字符串存在大量的修改操作，一般使用`StringBuilder`或`StringBuffer`类
+- 如果字符串存在大量的修改操作，并且在单线程的情况，使用`StringBuilder`类
+- 如果字符串存在大量的修改操作，并且在多线程的情况，使用`StringBuffer`类
+- 如果我们的字符串很少修改，被多个对象引用，使用`String`类，如配置信息等
 
 
 
