@@ -81,10 +81,20 @@ npm_mirror: https://npmmirror.com/mirrors/npm/
 `vue`的强大是依托于插件的
 
 - `Vue - Official：vue`官方推荐的插件，在设置中点击`vue`，其中里面有一个拆分编辑器功能`Split Ediotos`，将其勾选上，之后`VSCode`的右上角就有一个类似于`Vue`的图标，在我们写`Vue`代码的时候，点击这个图标，就可以将我们单文件中的三个部分：`<template>`、`<script>`和`<style>`进行分离，分到同个屏幕的三个位置，将逻辑，模板和样式进行分离，方便我们进行开发，不在需要进行鼠标的上下滚动，自定义热键`ctrl+q`进行快速的打开和关闭
+
 - `Vue VSCode Snippets`：比较方便的`vue`代码片段（一点代码可以带出完整的代码）
+
 - `Vue 3 Snippets`：也是一个好用的代码片段
+
 - `Vetur`：帮助更有效地开发`Vue.js`应用程序（语法高亮，自动补全等等）
+
 - `Live Server`：保存代码后。对应的浏览器界面会自动刷新
+
+- `Font Awesome Gallery`和`Icon Fonts`字体插件和图标插件库，可以在需要图标的时候，直接在`VSCode`中调出来使用，安装后通过`ctrl+shift+p`，搜索关键词：`font`，选则`Font Awesome Gallery`（或者在左侧栏目中点击软件库的图标进行打开）打开库中的图标资源，左键点击图标就将其复制过来了，在代码中使用：
+
+  ```html
+  <i class="fas fa-robot"></i>
+  ```
 
 ***
 
