@@ -1741,13 +1741,13 @@ class Cat {
 >   public double f1() {
 >       return 1.1;
 >   }
->                                       
+>                                             
 >   // 兼容（可以自动转换），编译通过
 >   public double f1() {
 >       int n = 1;
 >       return n;
 >   }
->                                       
+>                                             
 >   // 类型不一致，且不能自动转换，编译不通过
 >   public int f1() {
 >       return 1.1;
@@ -5810,6 +5810,8 @@ class AgeException extends RuntimeException {
 
 常用类是比较重要的，在面试的时候也是问的比较多的
 
+***
+
 ### 包装类
 
 针对八种基本的数据类型，定义了相应的引用类型，这些基本数据的引用类型叫做包装类
@@ -5909,8 +5911,6 @@ public static Integer valueOf(int i) {
     return new Integer(i);
 }
 ```
-
-
 
 #### 包装类与`String`类型的相互转换
 
@@ -6383,6 +6383,382 @@ System.out.println(sb);   // 23,123,456.59
 - 如果字符串存在大量的修改操作，并且在单线程的情况，使用`StringBuilder`类
 - 如果字符串存在大量的修改操作，并且在多线程的情况，使用`StringBuffer`类
 - 如果我们的字符串很少修改，被多个对象引用，使用`String`类，如配置信息等
+
+***
+
+### `Math`类
+
+`Math`类包含用于执行基本数学运算的方法，如初等指数、对数、平方根和三角函数，这些方法在`Math`类中一般都是静态`static`方法，常用的方法有：
+
+- `abs`：取绝对值
+
+  ```java
+  int abs = Math.abs(-9);
+  System.out.println(abs);   // 9
+  ```
+
+- `pow`：求幂
+
+  ```java
+  int pow = Math.pow(2, 4);  // 2的4次方
+  System.out.println(abs);   // 16
+  ```
+
+- `ceil`：向上取整（返回大于等于该参数的最小整数）
+
+  ```java
+  double ceil = Math.ceil(3.9);
+  System.out.println(ceil);   // 4.0
+  ```
+
+- `floor`：向下取整（返回小于等于该参数的最大整数）
+
+  ```java
+  double floor = Math.floor(4.001);
+  System.out.println(floor);   // 4.0
+  ```
+
+- `round`：四舍五入
+
+  ```java
+  long round = Math.round(-5.001);
+  System.out.println(round);   // -5
+  ```
+
+- `sqrt`：开方（根号2），如果被开方的数是负数，则结果返回`NaN`
+
+- `random`：取随机数（返回的是0到1之间的随机小数，0可以取到，1取不到）
+
+  ```java
+  // 编写一个[a, b]之间的随机整数
+  System.out.println((int)(a + Math.random() * (b - a + 1)));
+  ```
+
+- `max`：求两个数的最大值
+
+  ```java
+  System.out.println(Math.max(1, 9));  // 9
+  ```
+
+- `min`：求两个数的最小值
+
+***
+
+### `Arrays`类
+
+`Arrays`类里面包含了一系列的静态方法，用于管理或操作数组（比如排序和搜索）
+
+常见的方法有：
+
+- `toString`：返回数组的字符串形式（用中括号`[]`包裹）将数组中的内容拼接到一个字符串中
+
+  ```java
+  Integer[] integers = {1, 20, 90};
+  // 之前的输出方式是通过for循环进行输出，现在可以使用Arrays类中的toString方法，以字符串的方式进行输出
+  System.out.println(Arrays.toString(integers));  // [1, 20, 90]
+  ```
+
+  > `toString`底层的方法也是进行一个`for`循环，只是在前后都追加一个中括号
+
+- `sort`：排序（自然排序和定制排序）排序可以使用冒泡排序，也可以使用`Arrays`提供的排序方法（这样更加简单）
+
+  ```java
+  Integer arr[] = {1, -1, 7, 0, 89};
+  // 因为数组是引用类型，所有通过sort排序后，会直接影响到实参arr
+  
+  // 自然排序
+  Arrays.sort(arr);   // 默认是从小到大进行排序的
+  
+  // 定制排序
+  // 可以重载sort，可以通过传入一个接口Comparator实现定制排序（比较器，是从大到小排序还是从小到大排序）
+  // 调用定制排序时，第一个参数是排序的数组；第二个参数是实现了Comparator接口的匿名内部类，要求实现compare()方法，这里体现了接口编程的方式
+  Arrays.sort(arr, new Comparator() {  // 使用了匿名内部类的概念
+      @Override
+      public int compare(Object o1, Object o2) {
+          // 将传入的参数进行向下转型
+          Integer i1 = (Integer) o1;
+          Integer i2 = (Integer) o2;
+          // i2 - i1 实现了从大到小的排序；  如果改为i1 - i2就是默认排序，即从小到大的排序
+          return i2 - i1;
+      }
+  });
+  // 体现了接口编码+动态绑定机制+匿名内部类的综合使用
+  ```
+
+  > 在`binarySort`方法底层，会通过匿名内部类的`compare`方法来决定排序的顺序
+  >
+  > ```java
+  > while (left < right) {
+  >     int mid = (left + right) >>> 1;
+  >     if (c.compare(pivot, a[mid]) < 0)
+  >         right = mid;     // 小于0，从小到大排序
+  >     else
+  >         left = mid + 1;  // 大于0，从大到小排序
+  > }
+  > assert left == right;
+  > ```
+  
+- `binarySearch`：通过二分搜索法进行查找，要求必须是排序好的
+
+  ```java
+  Integer[] arr = {1, 2, 90, 123, 300};   // 已经排序好的数组
+  // 查找数组中是否有2这个元素值，返回的是对应元素的索引
+  int index = Arrays.binarySearch(arr, 2);   
+  // 如果查找的元素不存在，则返回-(low + 1)应该存在的位置加1，前面再加一个负号
+  // 总之，如果返回的是负值，就表示没有找到
+  ```
+
+- `copyOf`：数组元素的复制
+
+  ```java
+  // 从数组中arr拷贝arr.length个元素到新数组newArr中
+  Integer[] newArr = Arrays.copyOf(arr, arr.length);
+  // 这个拷贝的数组长度是可以进行变化的
+  // arr.length - 1，就是少拷贝一个元素到新数组中，将原数组的最后一个不进行拷贝
+  // arr.length + 1，多拷贝一个元素到新数组中，但是原数组又没有多余的元素了，就给新数组加null
+  // 如果拷贝的长度小于0，就会抛出异常
+  ```
+
+- `fill`：数组元素的填充
+
+  ```java
+  Integer[] num = new Integer[]{9, 3, 2};
+  // 用99去填充num数组中的所有数，即用99将数组中的元素值全部进行替换
+  Arrays.fill(num, 99);   // 填充后数组的元素值全部变成了99   {99, 99, 99}
+  ```
+
+- `equals`：比较两个数组元素内容是否完全一致
+
+  ```java
+  Integer[] arr1 = {1, 2, 90, 123, 300};  
+  Integer[] arr2 = {1, 2, 90, 123, 300};  
+  boolean equals = Arrays.equals(arr1, arr2);   // true
+  ```
+
+- `asList`：将一组值，转换成`list`
+
+  ```java
+  // 将(2, 3, 4)数据转成一个List集合
+  List asList = Arrays.asList(2, 3, 4);
+  // asList的编译类型是List(接口) 运行类型是java.util.Arrays#ArrayList(Arrays类中的静态内部类)
+  ```
+
+***
+
+### `System`类
+
+`System`类常见的方法：
+
+- `exit`：退出当前程序
+
+  ```java
+  System.out.println("ok1");
+  System.exit(0);  // 退出程序  0表示正常退出
+  System.out.println("ok2");  // 不会执行
+  ```
+
+- `arraycopy`：复制数组元素，使用`Arrays.copyOf`完成复制数组的底层就是`System.arraycopy()`
+
+  ```java
+  int[] src = {1, 2, 3};
+  int[] dest = new int[3];  // dest数组当前为 {0, 0, 0}
+  System.arraycopy(src, 0, dest, 0, 3);  // {1, 2, 3}
+  // 其中src表示源数组（待拷贝的数组，提供数据），0表示从源数组中的哪个索引位置开始拷贝
+  // dest表示目标数组（数组拷贝到哪个数组中），0表示拷贝到目标数组的哪个索引（哪个索引开始拷贝），3表示从源数组拷贝多少个数据到目标数组（一般写成src.length）
+  
+  System.arraycopy(src, 0, dest, 1, 2);  // {0， 1, 2}
+  ```
+
+- `currentTimeMillens`：返回当前时间距离`1970-1-1`的毫秒数
+
+  ```java
+  System.out.println(System.currentTimeMillens());
+  ```
+
+- `gc`：运行垃圾回收机制
+
+***
+
+### 大数据类
+
+#### `BigInteger`类和`BigDecimal`类
+
+`BigInteger`和`BigDecimal`两个类通常用于大数据的处理方案，应用场景：
+
+- `BigInteger`适合保存比较大的整型
+
+  当我们编程中，需要处理很大的整数，这个时候可能`long`就不够用了，我们可以使用`BigInteger`类来处理
+
+  ```java
+  BigInteger bigInteger = new BigInteger("2322432645467845654654646535654656");
+  System.out.println(bigInteger);  // 2322432645467845654654646535654656
+  BigInteger bigInteger2 = new BigInteger("23");
+  // 在对BigInteger进行加减乘除的时候，需要使用对应的方法，不能使用传统的+-*/
+  // 加add()
+  System.out.println(bigInteger.add(bigInteger2));
+  // 减subtract()
+  System.out.println(bigInteger.subtract(bigInteger2));
+  // 乘multiply()
+  System.out.println(bigInteger.multiply(bigInteger2));
+  // 除divide()  这里的除是指整除
+  System.out.println(bigInteger.divide(bigInteger2));
+  ```
+
+- `BigDecimal`适合保存精度更高的浮点型（小数）
+
+  在编程中，对于小数，如果位数特别大，`double`往往不够用，系统会进行精度的缩减，如果我们不希望精度的缩减，我们可以使用`BigDecimal`类保存精度更高的小数
+
+  ```java
+  BigDecimal bigDecimal = new BigDecimal("232243.2645467845654654646535654656");
+  ```
+
+  > 其加减乘除的运算和`BigInteger`类似，但是使用除法时，可能会出现除不尽的问题（会出现无限循环，从而抛出异常）如果我们不想让其抛出异常，我们只需要给定精度即可
+  >
+  > ```java
+  > // 如果有无限循环的小数，指定了BigDecimal.ROUND_CEILING精度，就会保留到分子的精度，不会再抛异常
+  > System.out.println(bigDecimal.divide(bigDecimal2, BigDecimal.ROUND_CEILING));
+  > ```
+
+***
+
+### 日期类
+
+在编程过程中一般会涉及到日期，`Java`中有三种日期类，分别称为第一代、第二代和第三代
+
+#### 第一代日期类`Date`
+
+第一代日期类`Date`是最早出现的日期类，可以精确到毫秒，代表特定的瞬间
+
+与`Date`类配套使用的有`SimpleDateFormat`：用于格式和解析日期的具体类，允许进行格式化（日期-->文本）、解析（文件-->日期）和规范化
+
+`Date`类的继承关系：
+
+![image-20250418095930249](..\images\image-20250418095930249.png)
+
+第一代日期类`Date`目前有些方法已经过时了，使用的时候需要注意
+
+在`IDEA`代码编译器的类图中，是可以展示类的属性，展示的属性不单单局限于我们声明的具体属性，对于`getXxx`和`setXxx`方法中的`xxx`内容，查看属性时，也会被放到类图中的属性中，当作该类的属性
+
+##### 基本使用
+
+使用之前需要引入时间相关的包：`import java.util.Date;`
+
+```java
+import java.util.Date;
+
+public class Date01 {
+    public static void main(String[] args) throws ParseException {
+        // 获取当前的系统时间
+		Date d1 = new Date();   // Thu Mar 04 17:19:30 CST 2025
+        
+        // 我们需要对日期的格式进行转换，可以指定我们需要的时间形式，注意，这里使用的字母是规定好的
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy年MM月dd日 hh:mm:ss E");
+        String format = sdf.format(d1);   // 2025年03月04日 05:19:30 星期二
+        
+        // 通过指定的毫秒数来获取时间
+        Date d2 = new Date(9234567);  // Thu Jan 01 10:33:54 CST 1970
+        
+        // 将一个格式化的字符串转换成对应的Date
+        String s = "2025年03月04日 05:19:30 星期二";
+        // 这里需要抛出异常，防止报错，这里使用的sdf格式需要和给定的字符串格式一样，否会抛出转换异常
+        Date parse = sdf.parse(s);  // Thu Mar 04 17:19:30 CST 2025
+    }
+}
+```
+
+> 格式化时间的内容的特定字母常用的有：
+>
+> `y`：年；`M`：月；`w`：年中的周数；`W`：月份中的周数；`D`：年中的天数；`d`：月份中的天数；`F`：月份中的星期；`E`：星期中的天数；`a`：`am/pm`标记；`H`：一天中的小时数（0-23）；`k`：一天中的小时数（1-24）；`K`：`am/pm`中的小时数（0-11）；`h`：`am/pm`中的小时数（0-12）；`m`：小时中的分钟数；`s`：分钟中的秒数；`S`：毫秒数；
+
+#### 第二代日期类`Calendar`
+
+第二代日期类`Calendar`类（日历），`Calendar`类是一个抽象类，它为特定瞬间与一组如`YEAR`、`MONTH`、`DAY_OF_MONTH`和`HOUR`等日历字段之间的转换提供了一些方法，并为操作日历字段（例如获得下星期的日期）提供了一些方法
+
+`Calendar`类的继承关系：
+
+![image-20250418170914820](..\images\image-20250418170914820.png)
+
+`Calendar`类是一个抽象类，其构造器是私有的，我们要获取`Calendar`类的实例，需要使用该类提供的`getInstance()`方法
+
+##### 基本使用
+
+使用之前需要引入时间相关的包：`import java.util.Calendar;`
+
+```java
+import java.util.Calendar;
+
+public class Calendar01 {
+    public static void main(String[] args) {
+        // 获取一个容日历类的对象，不能使用new方法，因为构造器是私有的
+        Calendar c = Calendar.getInstance();  // c输出的内容，将时间信息藏在了相应的字段中
+        // 获取日历对象的某个日历字段
+        c.get(Calendar.YEAR);   // 获取当前时间的年
+        c.get(Calendar.MONTH) + 1;   // 获取当前时间的月，注意要加一，因为是按照0开始编号的
+        c.get(Calendar.DAY_OF_MONTH);  // 获取当前时间的日
+        // 如果要通过24小时的进制来获取时间，使用HOUR_OF_DAY
+        c.get(Calendar.HOUR);  // 获取当前时间的小时
+        c.get(Calendar.MINUTE);  // 获取当前时间的分钟
+        c.get(Calendar.SECOND);  // 获取当前时间的秒
+        // Calendar类没有提供对应的格式化的类，需要自己进行拼接组合，可以更加灵活化
+        System.out.println(c.get(Calendar.YEAR)+"年" + (c.get(Calendar.MONTH) + 1)+"月");
+    }
+}
+```
+
+#### 第三代日期类
+
+对于第一代日期类，在`jdk1.0`就有了，但是它的大多数方法已经在`jdk1.1`时引入了`Calender`类之后就被弃用了，然而，`Calender`也存在一些问题：
+
+- 可变性问题：像日期和时间这样的类应该是不可变的，但是`Calender`类型是可变的
+- 偏移性：`Date`中的年份是从1900年开始的，而月份都是从0月开始的
+- 格式化：格式化只对`Date`有用，`Calendar`不能使用格式化
+- 此外，第一代和第二代时间类的线程都不是安全的，不能处理闰秒等（每隔两天，多出1秒）
+
+针对于上述的情况，`Java`设计者在`jdk8.0`之后，引入了三个日期类：
+
+- `LocalDate`：日期类，返回年月日
+- `LocalTime`：时间类，返回时分秒
+- `LocalDateTime`：日期时间类。返回年月日和时分秒，用这个即可
+
+第三代日期的格式日期类`DateTimeFormatter`，类似于第一代日期类中的格式日期类`SimpleDateFormat`
+
+```java
+DateTimeFormatter dtf = DateTimeFormatter.ofPattern(格式);
+String str = dtf.format(日期对象);
+```
+
+时间戳`Instant`：类似于`Date`，提供了一系列和`Date`类转换的方式：
+
+- `Instant`--->`Date`：`Date date = Date.`
+
+##### 基本使用
+
+```java
+import java.util.Calendar;
+
+public class DateTime {
+    public static void main(String[] args) {
+        // 第三代日期
+        // 使用now返回当前日期时间的对象
+        LocalDateTime ldt = LocalDateTime.new();   // 2025-04-18T18:56:12.082
+        ldt.getYear();  // 获取年
+        ldt.getMonthValue();  // 获取月。返回的是数字，如3
+        ldt.getMonth();   // 获取月，返回的是英文的月份，如MARCH
+        ldt.getDayOfMonth();  // 获取日
+        ldt.getHour();   // 获取时
+        ldt.getMinute();    // 获取分
+        ldt.getSecond();   // 获取秒
+        
+        // 使用DateTimeFormatter对象来进行格式化
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy年MM月dd日 HH时mm分ss秒");
+        String str = dtf.format(ldt);   // 2025年04月18日 18时56分12秒
+    }
+}
+```
+
+
+
+
 
 
 

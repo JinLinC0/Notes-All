@@ -362,7 +362,7 @@ div {
 
 `yup`包提供了更加丰富的验证规则，可以进行链式的操作，更加的灵活：
 
-```ts
+```vue
 <template>
     <form @submit="onSubmit">
         <section>
