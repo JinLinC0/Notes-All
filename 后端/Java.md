@@ -6418,8 +6418,6 @@ System.out.println(sb);   // 23,123,456.59
   }
   ```
 
-  
-
 ***
 
 ### `Math`类
@@ -6814,9 +6812,59 @@ public class DateTime {
   LocalDateTime localDateTime2 = ldt.minusMinutes(300);
   ```
 
-  
 
 
+## 集合
+
+之前，我们保存多个数据使用的是数组，使用数组进行数据的保存存在明显的不足性
+
+- 数组的长度在开始时必须指定，而且一旦指定，后续就不能修改了（灵活性较差）
+- 数组保存的必须是同一类型的元素
+- 使用数组进行增加/删除元素的代码实现比较麻烦
+
+因此，引出了集合（多种数据存放在一起的数据结构）的概念来解决数组在保存数据时存在的缺陷：
+
+- 集合可以动态保存任意多个对象，使用比较方便
+- 集合提供了一系列方便操作对象的方法，如：`add`、`remove`、`set`、`get`等
+- 使用集合进行添加和删除元素实现方式比较简洁
+
+我们需要理解集合的底层机制和了解集合的源代码
+
+***
+
+### 集合的框架体系图
+
+集合主要分为两组，单列集合和双列集合
+
+- 单列集合：`Collection`接口有两个重要的子接口：`List`和`Set`，它们在集合中放的是单个单个的元素
+
+  ```java
+  ArrayList arrayList = new ArrayList();
+  arrayList.add("jlc");
+  arrayList.add("jack");
+  ```
+
+  继承体系图：
+
+  ![image-20250419215739141](..\images\image-20250419215739141.png)
+
+  > `Collection`接口继承了`Iterable`接口，其下面有两个重要的子接口：`List`和`Set`
+  >
+  > `Set`接口下面常用的子类主要为`TreeSet`类和`HashSet`类
+  >
+  > `List`接口下面常用的子类为：`Vector`类、`ArrayList`类和`LinkedList`类
+
+- 双列集合：`Map`接口实现的子类都是双列集合，存放的是键值对类型的数据
+
+  ```java
+  HashMap hashMap = new HashMap();
+  hashMap.put("No1", "北京");   // 以键值对的形式存放
+  hashMap.put("No2", "上海");
+  ```
+
+  继承体系图：
+
+  ![image-20250419220216885](..\images\image-20250419220216885.png)
 
 
 
