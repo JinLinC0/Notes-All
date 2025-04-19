@@ -1741,13 +1741,13 @@ class Cat {
 >   public double f1() {
 >       return 1.1;
 >   }
->                                             
+>                                               
 >   // 兼容（可以自动转换），编译通过
 >   public double f1() {
 >       int n = 1;
 >       return n;
 >   }
->                                             
+>                                               
 >   // 类型不一致，且不能自动转换，编译不通过
 >   public int f1() {
 >       return 1.1;
@@ -6161,7 +6161,7 @@ public static void main(String[] args) {
 
 - `trim`：去掉前后空格
 
-- `charAt`：获取某索引处的字符，注意不能使用`Str[index]`这个方式（不能将字符串当数组使用）
+- `charAt`：获取某索引处的字符，注意不能使用`Str[index]`这个方式（不能将字符串当数组使用）`cahrAt(0)`表示获取字符串的第一个字符
 
 - `toUpperCase`：将字符串全部转换成大写
 
@@ -6383,6 +6383,42 @@ System.out.println(sb);   // 23,123,456.59
 - 如果字符串存在大量的修改操作，并且在单线程的情况，使用`StringBuilder`类
 - 如果字符串存在大量的修改操作，并且在多线程的情况，使用`StringBuffer`类
 - 如果我们的字符串很少修改，被多个对象引用，使用`String`类，如配置信息等
+
+#### 字符串练习题
+
+- 将字符串中指定部分进行翻转：如将`abcdef`中的`bcde`翻转为`aedcbf`
+
+  ```java
+  public class StringHomeWork {
+      public static void main(String[] args) {
+          String str = "abcdef";
+          try {
+              str = reverse(str, 1, 4);
+          } catch (Exception e) {
+              System.out.println(e.getMessage());
+          }
+      }
+      
+      public static String reverse(String str, int start, int end) {
+          // 对输入的参数做一个验证，思路：写出正确的情况，然后取反
+          if(!(str != null && start >= 0 && and > start && end < str.length())) {
+              throw new RuntimeException("参数不正确");
+          }
+          // 思路：先将String转成char[]，因为char[]的元素是可以交换的
+          char[] chars = str.toCharArray();
+          char temp = ' ';
+          for(int i = start, j = end; i < j; i++, j--) {
+              temp = chars[i];
+              chars[i] = chars[j];
+              chars[j] = temp;
+          }
+          // 使用chars重新构建一个字符串返回
+          return new String(chars);
+      }
+  }
+  ```
+
+  
 
 ***
 
@@ -6729,7 +6765,17 @@ String str = dtf.format(日期对象);
 
 时间戳`Instant`：类似于`Date`，提供了一系列和`Date`类转换的方式：
 
-- `Instant`--->`Date`：`Date date = Date.`
+- `Instant`--->`Date`：`Date date = Date.from(instant);`
+- `Date`--->`Instant`：`Instant instant = date.toInstant();`
+
+```java
+// 通过静态方法now()  获取表示当前时间戳的对象
+Instant instant = Instant.now();   // 2021-03-04T10:37:19.564Z
+// 通过from可以把Instant对象转成Date对象
+Date date = Date.from(instant);   
+// 通过Date的toInstant() 又可以将Date对象重新转换成Instant对象
+Instant instant = date.toInstant();
+```
 
 ##### 基本使用
 
@@ -6756,7 +6802,19 @@ public class DateTime {
 }
 ```
 
+第三代日期类还有许多的方法：（其他方法查看`API`手册）
 
+- 提供了`plus`和`minus`方法，可以对当前时间进行加或减
+
+  ```java
+  LocalDateTime ldt = LocalDateTime.new();  // 获取当前时刻的年月日时分秒
+  // 900天之后的年月日时分秒
+  LocalDateTime localDateTime = ldt.plusDays(900);   // plusDays表示加天，也可以加年等
+  // 300分钟前的年月日时分秒
+  LocalDateTime localDateTime2 = ldt.minusMinutes(300);
+  ```
+
+  
 
 
 
