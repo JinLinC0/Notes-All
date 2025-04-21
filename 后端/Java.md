@@ -1741,13 +1741,13 @@ class Cat {
 >   public double f1() {
 >       return 1.1;
 >   }
->                                               
+>                                                 
 >   // 兼容（可以自动转换），编译通过
 >   public double f1() {
 >       int n = 1;
 >       return n;
 >   }
->                                               
+>                                                 
 >   // 类型不一致，且不能自动转换，编译不通过
 >   public int f1() {
 >       return 1.1;
@@ -6865,6 +6865,667 @@ public class DateTime {
   继承体系图：
 
   ![image-20250419220216885](..\images\image-20250419220216885.png)
+
+***
+
+### `Collection`接口
+
+`Collection`接口继承了`Iterable`接口：
+
+`public interface Collection<E> extends Iterable<E>`
+
+#### 接口特点
+
+`Collection`接口实现类的特点：
+
+- `collection`实现子类可以存放多个元素，每个元素可以是`Object`
+- 有些`collection`的实现类，可以存放重复的元素，有些不可以
+- 有些`collection`的实现类，有的的有序的`(List)`，有的不是有序的`(Set)`（存放进去的元素和取出的元素顺序并不是完全一样的）
+- `collection`接口没有直接的实现子类，是通过它的子接口`Set`和`List`来实现的
+
+#### 常用方法
+
+`collection`接口的常用方法：以`ArrayList`来演示下面的方法：`List list = new ArrayList();`
+
+- `add`：添加单个元素
+
+  ```java
+  // 可以传入任何的Object对象
+  list.add("jlc");
+  list.add(25);   // 本质为 list.add(new Integer(10))
+  list.add(true);
+  System.out.println(list);   // [jlc, 25, true]
+  ```
+
+- `addAll`：添加多个元素
+
+  ```java
+  // 可以直接传入集合进行元素的添加
+  ArrayList list2 = new ArrayList();
+  list2.add("tom");
+  lsit2.add(18);
+  System.out.println(list.addAll(list2));  // [jlc, 25, true, tom, 18]
+  ```
+
+- `remove`：删除指定元素（可以通过索引进行删除，也可以通过具体内容进行删除）
+
+  ```java
+  // 根据索引进行删除，返回的是一个布尔类型，说明删除是否成功了
+  list.remove(0);   // 删除第一个元素
+  System.out.println(list);   // [25, true]
+  
+  // 指定删除某个元素，返回的是一个对象，即被删除的这个对象
+  list.remove(25);  // 删除内容为25的这个元素
+  System.out.println(list);   // [true]
+  ```
+
+- `removeAll`：删除多个元素
+
+  ```java
+  // 可以直接传入集合进行元素的删除
+  System.out.println(list.removeAll(list2));  // [jlc, 25, true]
+  ```
+
+- `contains`：查找元素是否存在
+
+  ```java
+  // 查找元素是否存在，返回的是一个布尔值，说明查找的元素是否存在
+  System.out.println(list.contains("jlc"));   // true
+  ```
+
+- `containsAll`：查找多个元素是否都存在
+
+  ```java
+  // 可以直接传入集合判断该集合中的所有元素是否存在
+  System.out.println(list.containsAll(list2));   // true
+  ```
+
+- `size`：获取元素个数
+
+  ```java
+  System.out.println(list.size());   // 3
+  ```
+
+- `isEmpty`：判断是否为空
+
+  ```java
+  System.out.println(list.sEmpty());   // false
+  ```
+
+- `clear`：清空，将集合中的元素全部清除：`list.clear();`
+
+这些`Collection`方法，后续的`List`和`Set`子接口都可以使用
+
+#### 遍历
+
+`collection`接口有两种常用的遍历元素方式
+
+##### 使用`Iterator`迭代器
+
+`Iterator`是`Iterable`中迭代对象的方法，也就是说实现了`collection`接口的子接口，都可以使用`Iterator`迭代器进行集合元素的迭代遍历
+
+- `Iterator`对象称为迭代器，主要用于遍历`Collection`集合中的元素
+- 所有实现了`Collection`接口的集合类都有一个`iterator()`方法，用于返回一个实现了`iterator`接口的对象，即可以返回一个迭代器
+- `iterator`仅用于遍历集合，`Iterator`本身并不存放对象
+
+迭代器的执行原理：
+
+通过`Iterator iterator = coll.iterator();`（`coll`是一个集合）得到一个集合的迭代器，每次调用`iterator.next()`方法，就会将指针往下移动一次，并且将数据取出来，移动的时候还需要判断是否还有下一个元素，通过`hasNext()`方式进行判断，如果下面还有元素则返回`true`
+
+![image-20250421095027759](..\images\image-20250421095027759.png)
+
+迭代器基本使用语法：
+
+```java
+while(iterator.hasNext()) {
+    // 使用next()方法 1.指针下移 2.将下移以后集合位置上的元素返回
+    System.out.println(iterator.next());
+}
+```
+
+> 在调用`iterator.next()`方法之前必须要先调用`iterator.hasNext()`进行检测，如果不调用且下一条记录无效，直接使用`iterator.next()`会抛出`NoSuchElementException`异常
+
+使用案例：
+
+```java
+Collection col new ArrayList();
+col.add("jlc");
+col.add(25);
+col.add(true);
+
+// 遍历col集合
+// 1.先得到col对应的迭代器
+Iterator iterator = coll.iterator();
+// 2.使用while循环遍历集合
+while(iterator.hasNext()) {
+    // 使用next()方法 1.指针下移 2.将下移以后集合位置上的元素返回
+    // 返回下一个元素，类型是Object
+    Object obj = iterator.next();
+    System.out.println(obj);
+}
+// 当退出while循环后，这时iterator迭代器指向的是最后的元素，如果希望再次遍历，需要重置迭代器（即将最后的指针重新指向到最开始）
+iterator = coll.iterator();  // 重置迭代器指针到最开始
+```
+
+> 可以使用快捷键`itit`，回车，快速的得到迭代器`while`循环的代码片段
+
+##### `for`循环增强
+
+`for`循环增强是遍历集合的第二种方法，增强`for`循环可以代替`iterator`迭代器，增强`for`是简化版的`iterator`，底层还是迭代器。只能用于遍历集合和数组
+
+基本语法：
+
+```java
+for(元素类型 元素名: 集合名或数组名) {
+    访问元素
+}
+```
+
+使用案例：
+
+```java
+Collection col new ArrayList();
+col.add("jlc");
+col.add(25);
+col.add(true);
+
+// 使用for循环增强来遍历col集合
+for(Object obj: col) {
+    System.out.println(obj);
+}
+
+// 增强for也可以直接在数组中使用
+int[] nums = {1, 8, 12, 23};
+for(int i: nums) {
+    System.out.println(i);
+}
+```
+
+> 可以使用快捷键`I`，回车，得到增强`for`的代码片段
+
+***
+
+### `List`接口
+
+`List`接口是`Collection`接口的子接口
+
+#### 接口特点
+
+- `List`集合类中元素有序（即添加顺序和取出顺序一致）、且可重复
+
+  ```java
+  List list = new ArrayList();
+  list.add("jlc");
+  list.add(25);   // 本质为 list.add(new Integer(10))
+  list.add(true);
+  list.add("jlc");  // 可重复
+  System.out.println(list);   // [jlc, 25, true, jlc]  取出的顺序和传入的顺序一致
+  ```
+
+- `List`集合中的每个元素都有其对应的顺序索引，即支持索引
+
+- `List`容器中的元素都对应一个整数型的序号（索引）记载其在容器中的位置，可以根据序号存取容器中的元素
+
+  ```java
+  // 索引是从0开始的
+  System.out.println(list.get(2));   // true
+  ```
+
+- `List`接口常用的实现子类有：`ArrayList`、`LinkedList`和`Vector`
+
+#### 常用方法
+
+`List`集合里添加了一些根据索引来操作集合元素的方法
+
+```java
+List list = new ArrayList();
+list.add("jlc");
+list.add("tom");
+```
+
+- `void add(int index, Object ele)`：在`index`位置插入`ele`元素
+
+  ```java
+  // 在索引为1的位置插入一个对象
+  list.add(1, "frank");  // 如果不加索引，默认是加到最后的，这和Collection的add方法一致
+  System.out.println(list);  // [jlc, frank, tom]
+  ```
+
+- `boolean addAll(int index, Collection eles)`：从`index`位置开始将`eles`集合中的所有元素加进来
+
+  ```java
+  List list2 = new ArrayList();
+  list2.add("jlc2");
+  list2.add("tom2");
+  list.addAll(1, list2);
+  System.out.println(list);  // [jlc, jlc2, tom2, tom]
+  ```
+
+- `Object get(int index)`：获取指定`index`索引位置的元素
+
+  ```java
+  System.out.println(list.get(0));   // jlc
+  ```
+
+- `int indexOf(Object obj)`：返回`obj`内容在集合中首次出现的位置
+
+  ```java
+  System.out.println(list.indexOf("jlc"));   // 0
+  ```
+
+- `int lastIndexOf(Object obj)`：返回`obj`内容在集合中最后一次出现的位置
+
+- `Object remove(int index)`：移除指定`index`索引位置的元素，并返回此元素
+
+  ```java
+  list.remove(0);    // 移除集合中的第一个元素
+  ```
+
+- `Object set(int index, Object ele)`：替换指定位置索引`index`的元素为`ele`
+
+  ```java
+  list.set(1, "JLC");  // 将索引位置为1的地方，将内容替换为JLC
+  System.out.println(list);  // [jlc, JLC]
+  ```
+
+- `List subList(int fromIndex, int toIndex)`：返回从`fromIndex`到`toIndex`位置的子集合，`toIndex`索引的元素是取不到的
+
+  ```java
+  list.add("jlc");
+  List resList = list.subList(1, 2);
+  System.out.println(resList);  // [tom]
+  ```
+
+#### 遍历
+
+`List`有三种遍历方式：
+
+```java
+List list = new ArrayList(); // 这里的ArrayList可以换成Vector和LinkedList，遍历一样
+list.add("jlc");
+list.add("tom");
+```
+
+- 方式一：使用`iterator`迭代器
+
+  ```java
+  // 1.先得到col集合对应的迭代器
+  Iterator iterator = list.iterator();
+  // 2.使用while循环遍历集合
+  while(iterator.hasNext()) {
+      // 使用next()方法 1.指针下移 2.将下移以后集合位置上的元素返回
+      // 返回下一个元素，类型是Object
+      Object obj = iterator.next();
+      System.out.println(obj);
+  }
+  ```
+
+- 方式二：使用增强`for`
+
+  ```java
+  for(Object obj: list) {
+      System.out.println(obj);
+  }
+  ```
+
+- 方式三：使用普通`for`
+
+  ```java
+  for(int i = 0; i < list.size(); i++) {
+      Object obj = list.get(i);
+      System.out.println(obj);
+  }
+  ```
+
+#### 对集合进行排序
+
+对集合进冒泡排序，我们一般编写一个静态方法
+
+```java
+public static void sort(List list) {
+    int listSize = list.size();
+    for(int i = 0; i < listSize - 1; i++) {
+        for(int j = 0; j < listSize - 1 - i; j++) {
+            // 取出对象Book
+            Book book1 = (Book) list.get(j);
+            Book book2 = (Book) list.get(j + 1);
+            // 根据对象中的价格进行排序
+            if(book1.getPrice() > book2.getPrice()) {
+                list.set(j, book2);
+                list.set(j + 1, book1);
+            }
+        }
+    }
+}
+```
+
+#### `ArrayList`类
+
+`ArrayList`类实现了`List`接口
+
+- `ArrayList`类集合，可以存放所有的元素，甚至可以存放`null`；并且可以存放多个一样的元素
+
+  ```java
+  ArrayList arrayList = new ArrayList(); 
+  arrayList.add("jlc");
+  arrayList.add(null);
+  arrayList.add(null);
+  System.out.println(arrayList);   // [jlc, null, null]
+  ```
+
+- `ArrayList`类是由数组来实现数据存储的
+
+- `ArrayList`类基本等同于`Vector`，除了`ArrayList`类是线程不安全的（但执行效率高），在多线程下，不建议使用`ArrayList`类
+
+##### 底层源码
+
+`ArrayList`类的底操作机制和源码是非常重要的，以下是几个重要的结论：
+
+- `ArrayList`中维护了一个`Object`类型的数组`elementData`，用于存放实际的数据，数组的类型是`Object[]`，因此可以存放所有类型的数据
+
+  `transient Object[] elementData;`    `transient `表示属性不会被序列化
+
+- 当创建`ArrayList`对象时，如果使用的是无参构造器`ArrayList()`，则初始`elementData`的容量为0，第一次添加时，则扩容为10，其元素的内容都存放`null`，如果需要再次扩容，则扩容为1.5倍，以此类推
+
+  ```java
+  // 小案例来debug源码的执行过程
+  ArrayList list = new ArrayList();  // 使用无参构造器创建ArrayList对象
+  for(int i = 1; i <=10; i++) {
+      list.add(i);
+  }
+  for(int i = 11; i <=15; i++) {
+      list.add(i);
+  }
+  list.add(100);
+  list.add(200);
+  list.add(null);
+  ```
+
+  ![image-20250421134704642](..\images\image-20250421134704642.png)
+
+  ![image-20250421134915936](..\images\image-20250421134915936.png)
+
+  集合空间扩容过程：
+
+  ![image-20250421135236380](..\images\image-20250421135236380.png)
+
+  集合的扩容每次都会去检测，但不是每次都扩容，只有容量不足时，才会进行扩容
+
+  ![image-20250421140333208](..\images\image-20250421140333208.png)
+
+  > 先将数组的大小赋值给`oldCapacity`，第一次为0，则`oldCapacity`为0
+  >
+  > `oldCapacity + (oldCapacity >> 1)`表示原先数组加上原先数组的一半（向右移动一位），即扩容1.5倍，在第一次是没有使用1.5倍的扩容机制，因为`newCapacity`的值也是0，那么集合的容量就使用我们最小的容量10
+  >
+  > 如果新的容量比最大值还要大，我们使用`hugeCapacity()`方法进行处理
+  >
+  > 使用`Arrays.copyOf()`方式进行扩容，可以保障原先的数据不丢失，后面在是扩容的空间，使用`null`进行填充
+
+  `IDEA`代码编辑器在默认情况下，`Debug`显示的数据是简化后的，如果我们需要看到完整的数据，我们需要进行设置修改
+
+  ![image-20250421141250942](..\images\image-20250421141250942.png)
+
+  取消勾选：`Enable alternative...`选项
+
+- 如果使用的是指定大小的构造器`ArrayList(int)`，则初始`elementData`容量为指定大小，如果需要扩容，则直接扩容为1.5倍，以此类推
+
+#### `Vector`类
+
+定义：
+
+```java
+public class Vector<E> extends AbstractList<E>
+    implements List<E>, RandomAccess, Cloneable, java.io.Serializable
+```
+
+- `Vector`底层也是一个对象数组：`protected Objectp[] elementData;`
+- `Vector`是线程同步的，即线程安全，`Vector`类的操作方法带有`synchronized`
+
+#### `LinkedList`类
+
+`LinkedList`类底层实现了双向链表和双端队列的特点，可以添加任意元素（元素可以重复），包括`null`
+
+`LinkedList`类的线程不安全，没有实现同步
+
+##### 基本概念
+
+`LinkedList`底层维护了一个双向链表，维护了两个属性`first`和`last`，分别指向首节点和尾节点
+
+每个节点（`Node`对象），里面维护了`prev`、`next`、`item`三个属性，其中通过`prev`指向前一个，通过`next`指向后一个节点，最终实现双向链表
+
+![image-20250421145422549](..\images\image-20250421145422549.png)
+
+`LinkedList`类的元素的添加和删除，不是通过数组完成的，只是将该对象的前面节点的`next`属性指向该对象的后面节点；该对象后面节点的`prev`属性指向该对象前面的节点，即可实现该对象的删除，相对来说效率较高（不涉及到数组的扩容）
+
+模拟一个简单的双向链表：
+
+```java
+public class LinkedList01 {
+    public static void main(String[] args) {
+        // 拟一个简单的双向链表
+        // 创建三个节点，此时的三个节点孤零零的，没有任何关系
+        Node jlc = new Node("jlc");
+        Node tom = new Node("tom");
+        Node jac = new Node("jac");
+        // 连接三个节点，形成双向链表
+        // 前向指向
+        jlc.next = tom;
+        tom.next = jac;
+        // 反向指向
+        jac.pre = tom;
+        tom.pre = jlc;
+        
+        Node first = jlc;  // 让first引用指向jack，就是双向链表的头节点
+        Node last = jac;   // 让last引用指向jac，就是双向链表的尾节点
+        
+        // 从头到尾进行遍历输出
+        while(true) {
+            if(first == null) {
+                break;
+            }
+            // 输出信息
+            System.out.println(first);
+            first = first.next;   // 指向下一个节点
+        }
+        // 后续如果需要进行重新遍历，需要让first重新指向第一个节点：first = jlc;
+        
+        // 从尾到头进行遍历输出
+        while(true) {
+            if(last == null) {
+                break;
+            }
+            // 输出信息
+            System.out.println(last);
+            last = last.next;   // 指向下一个节点
+        }
+        // 后续如果需要进行重新遍历，需要让last重新指向最后一个节点：last = jac;
+        
+        // 链表添加对象/数据
+        // 要求在tom和jac之间插入一个对象smith
+        Node smith = new Node("smith");
+        smith.next = jac;
+        smith.pre = tom;
+        tom.next = smith;
+        jac.pre = smith;
+    }
+}
+
+// 定义一个Node类，该类的对象表示双向链表的一个节点
+class Node {
+    public Object item;   // 真正存放数据的地方
+    public Node next;  // 指向后一个节点
+    public Node pre;   // 指向前一个节点
+    public Node(Object name) {
+        this.item = name;
+    }
+    public String toString() {
+        return "Node name=" + item;
+    }
+}
+```
+
+##### 底层源码
+
+`LinkedList`类的增删改查案例和底层源码分析：
+
+###### 增加节点
+
+```java
+public class LinkedListCRUD {
+    public static void main(String[] args) {
+        LinkedList linkedList = new LinkedList();
+        linkedList.add(1);
+        linkedList.add(2);
+        System.out.println(linkedList);   // [1, 2] 
+    }
+}
+```
+
+源码解读：
+
+```java
+/*  源码解读
+    1. LinkedList linkedList = new LinkedList();
+    进入无参构造器 public LinkedList() {}
+    2. 这时linkedList的属性 first = null  last = null
+    3. 执行
+    public boolean add(E e) {
+        linkLast(e);
+        return true;
+    }
+*/
+```
+
+4. 将新的节点，加入到双向链表的最后：
+
+![image-20250421155845236](..\images\image-20250421155845236.png)
+
+> 一开始`first`和`last`都指向`null`
+>
+> 这个时候节点`l`指向的也是空
+>
+> 之后创建新的节点，将`add`添加的内容放入
+>
+> 因此，第一个节点，`first`、`last`和`newNode`都指向这个节点，这个节点的`next`和`pre`为`null`，只有一个节点，前面没有指向，后面也没有指向
+
+对于`linkedList.add(2);`
+
+> `new Node<>(l, e, null)`：将`l`赋值给`pre`，也就是说第二个节点（新增的节点）的`pre`属性指向第一个节点
+>
+> `last = newNode`：将`last`的指向，从原先的第一个节点指向了现在这个新增的节点
+>
+> `l.next = newNode`：将第一个节点的`next`属性指向第二个节点
+>
+> ![image-20250421161242841](..\images\image-20250421161242841.png)
+>
+> 这个时候，可以看出`first`还是指向第一个节点，而`last`指向了最后一个元素
+>
+> `size++`：表示节点的数量加一，`size`表示目前节点的数量
+>
+> `modCount++`：表示修改了多少次
+
+###### 删除节点
+
+```java
+public class LinkedListCRUD {
+    public static void main(String[] args) {
+        LinkedList linkedList = new LinkedList();
+        linkedList.add(1);
+        linkedList.add(2);
+        linkedList.add(3);
+        // 删除节点
+        linkedList.remove();  // 表示删除第一个节点，本质上调用removeFirst()
+        // remove(int index)表示删除指定索引位置的节点
+        System.out.println(linkedList);   // [2, 3] 
+    }
+}
+```
+
+源码解读：
+
+1. 执行：
+
+   ```java
+   public E remove() {
+       return removeFirst();  // 本质上调用removeFirst()
+   }
+   ```
+
+2. 执行`removeFirst()`方法：
+
+   ```java
+   public E removeFirst() {
+       final Node<E> f = first;
+       if(f == null) {
+           throw new NoSuchElementException();
+       }
+       return unlinkFirst(f);
+   }
+   ```
+
+3. 执行`unlinkFirst(f);`方法进行双向链表中第一个节点元素的删除：
+
+   ![image-20250421163223010](..\images\image-20250421163223010.png)
+
+   > `final E element = f.item;`表示将第一个节点的内容拿出来赋值给`element`，这个是作为删除函数的返回值，其实不是关键
+   >
+   > `final Node<E> next = f.next;`表示将`next`指向下一个节点
+   >
+   > `f.item = null;`和`f.next = null;`将第一个节点的内容和`next`属性指向`null`
+   >
+   > `first = next;`将`first`指向第二个元素，同时`next.prev = null;`将第二个节点的`pre`属性指向`null`，即于原先的第一个节点断开，这时第一个节点没有任何的链接的，就成为一个垃圾了，最后就会被垃圾回收机制给回收掉
+
+###### 修改节点
+
+```java
+public class LinkedListCRUD {
+    public static void main(String[] args) {
+        LinkedList linkedList = new LinkedList();
+        linkedList.add(1);
+        linkedList.add(2);
+        linkedList.add(3);
+        // 修改节点
+        linkedList.set(1, 10);   // 将索引为1的节点的内容，修改为10
+        System.out.println(linkedList);   // [1, 10, 3] 
+    }
+}
+```
+
+###### 查找节点
+
+```java
+public class LinkedListCRUD {
+    public static void main(String[] args) {
+        LinkedList linkedList = new LinkedList();
+        linkedList.add(1);
+        linkedList.add(2);
+        linkedList.add(3);
+        // 查找节点
+        System.out.println(linkedList.get(1));   // 查找索引为1的节点的内容   2
+    }
+}
+```
+
+##### 遍历 
+
+`LinkedList`类是实现的`List`接口，遍历方式与`List`类似，可以使用迭代器和增强`for`循环，因为`LinkedList`类可以拿到具体的索引，因此也可以使用普通的`for`循环进行遍历
+
+#### 各种有序集合的使用选择
+
+`Vector`类和`ArrayList`类进行比较：
+
+![image-20250421142854140](..\images\image-20250421142854140.png)
+
+- 在开发中，需要线程同步安全时，考虑使用`Vector`
+
+`ArrayList`类和`LinkedList`类的比较：
+
+![image-20250421164647823](..\images\image-20250421164647823.png)
+
+- 如果我们改查的操作多，推荐选择`ArrayList`
+- 如果我们增删的操作多，推荐使用`LinkedList`
+- 一般来说，在程序中，大多数都是使用查询，因此使用`ArrayList`类为主
+- 在项目中也可以将这两者穿插的使用，更加灵活
 
 
 
