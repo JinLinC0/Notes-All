@@ -7526,6 +7526,56 @@ public class LinkedListCRUD {
 - 如果我们增删的操作多，推荐使用`LinkedList`
 - 一般来说，在程序中，大多数都是使用查询，因此使用`ArrayList`类为主
 - 在项目中也可以将这两者穿插的使用，更加灵活
+- 两者都是线程不安全的，在单线程中推荐使用
+
+***
+
+### `Set`接口 
+
+`Set`接口的基本介绍
+
+- 无序（添加和取出的顺序不一致），没有索引
+- 不允许重复元素，所以做多包含一个`null`
+- `JDK`中实现`Set`接口的常用类有：`HashSet`和`TreeSet`
+
+常用方法：和`List`接口一样，`Set`接口也是`Collection`的子接口，因此，常用方法和`Collection`接口一样
+
+```java
+public class SetMethod {
+    public static void main(String[] args) {
+        // Set接口的实现类的对象（Set接口对象）
+        Set set = new HashSet();
+        set.add("join");
+        set.add("lucy");
+        set.add("join");  // 重复
+        set.add(null);
+        set.add(null);   // 再次添加null
+        
+        // 对指定的元素进行删除  set.remove(null);
+        
+        // 输出的结果是无序的（即添加的顺序和取出的顺序不一致）（但是取出的顺序是固定的，每一次取出的内容顺序是一样的），且不能存放重复的对象，同时可以添加一个null，重复的元素只会输出一次
+        System.out.println(set);    // [null, john, lucy, jack]
+    }
+}
+```
+
+遍历方式：和`Collection`接口一样，因为`Set`接口是`Collection`接口的子接口，因此可以使用迭代器进行遍历，同时还可以使用增强`for`进行循环，但是不能使用索引的方式来获取元素，因此不能使用普通的`for`循环
+
+```java
+// 使用迭代器进行遍历
+Iterator iterator = set.iterator();
+while(iterator.hasNext()) {
+    Object obj = iterator.next();
+    System.out.println(obj);
+}
+
+// 使用增强for循环
+for(Object o: set) {
+    System.out.print(o);
+}
+```
+
+`HashSet`实现了`Set`接口
 
 
 
