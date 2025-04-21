@@ -1,10 +1,18 @@
-# `echarts`
+# `ECharts`
+
+## 基本概念
 
 `ECharts `提供了丰富的图表类型和交互能力，使用户能够通过简单的配置生成各种各样的图表，包括但不限于折线图、柱状图、散点图、饼图、雷达图、地图等
 
-下载`echarts`：`npm install echarts --save`
+
+
+## 下载配置
+
+下载`ECharts`：`npm install echarts --save`
 
 在项目中进行引入：`import * as echarts from 'echarts';`
+
+
 
 ## 构建图表
 
