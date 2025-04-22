@@ -6,11 +6,11 @@
 
 - 截至2024/07/09 之前完成了`Markdown`、`Docker`、`Gojs`、`Hadoop`、`HTML`笔记的整理
 - 2024/07/20 完成了`Git`、`VSCode`笔记的整理
-- 2024/07/28 完成了`Web`开发环境搭建、开发积累、面试问题积累笔记的整理
+- 2024/07/28 完成了`Web`开发环境搭建、`Vue`项目配置问题笔记的整理
 - 2024/08/10 完成了`Blender`、`Ubuntu`、`Vim`笔记的整理
-- 2024/08/28 完成了`FastCrud`、`GoJs`笔记的整理
+- 2024/08/28 完成了`FastCrud`、`GoJs`、开发积累-`RBM`项目笔记的整理
 - 2024/09/13 完成了`Python`、`Django`、`Hadoop`、`ThingsBoard`笔记的整理
-- 2024/12/10 完成了`VitePress`笔记的整理
+- 2024/12/10 完成了`VitePress`、`TailwindCSS`、`VeeValidate`笔记的整理
 - 2024/12/22 完成了`Java`后端学习规划笔记的整理
 - 2025/02/21 完成了`MySQL`、`PostgreSQL`笔记的整理
 - 2025/03/02 完成了`Ubuntu`、`Vim`笔记的整理
