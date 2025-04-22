@@ -1741,13 +1741,13 @@ class Cat {
 >   public double f1() {
 >       return 1.1;
 >   }
->                                                 
+>                                                   
 >   // 兼容（可以自动转换），编译通过
 >   public double f1() {
 >       int n = 1;
 >       return n;
 >   }
->                                                 
+>                                                   
 >   // 类型不一致，且不能自动转换，编译不通过
 >   public int f1() {
 >       return 1.1;
@@ -7575,7 +7575,505 @@ for(Object o: set) {
 }
 ```
 
-`HashSet`实现了`Set`接口
+#### `HashSet`类
+
+##### 基本说明
+
+- `HashSet`类实现了`Set`接口
+
+- `HashSet`的底层其实是`HashMap`，`HashMap`的底层是数组+链表+红黑树
+
+  ```java
+  // 源码解读
+  public HashSet() {
+      map = new HashMap<>();
+  }
+  ```
+
+  模拟一个简单的数据+链表结构（这样的方式可以使数据存储高效，如果链表的长度大于8个，且数组表的大小大于64，这时就会将其结构变成红黑树，树的效率更高）：
+
+  ```java
+  // 一个数组中，其元素中存放的是节点Node，Node可以指向下一个Node，形成一个链表结构
+  public class HashSetStructure {
+      public static void main(String[] args) {
+          // 模拟一个HashSet的底层（实际上就是HashMap的底层结构）
+          // 创建一个数组，数组的类型是Node[]，有些地方直接将Node[]数组称为表
+          Node[] table = new Node[16];   // table的大小为16
+          // 创建节点
+          Node john = new Node("john", null);  // 下一个节点为空
+          // 将节点放到索引为2的数组表位置
+          table[2] = john;
+          // 再创建一个节点，并挂载到john节点后面，形成了链表的结构
+          Node jack = new Node("jack", null);
+          john.next = jack;
+          // 继续创建一个节点
+          Node rose = new Node("Rose", null);
+          jack.next = rose;   // 将rose节点挂载到jack节点后面
+      }
+  }
+  
+  // 节点类，存储数据，可以指向下一个节点，从而形成链表
+  class Node {
+      Object item;   // 存储数据
+      Node next;   // 指向下一个节点
+      
+      public Node(Object item, Node next) {
+          this.item = item;
+      }
+  }
+  ```
+
+- `HashSet`可以存放`null`值，但是只能有一个`null`，即元素不能重复（元素/对象不能重复）
+
+  ```java
+  // 元素/对象不能重复
+  public class HashSetMethod {
+      public static void main(String[] args) {
+  		Set set = new HashSet();
+          // lucy字符串指向的是同一个常量池中的常量
+          set.add("lucy");   // 返回的是true 表示添加成功
+          set.add("lucy");   // 不能添加重复的元素，返回的是false，表示添加失败
+          // new 的对象，虽然name属性相同，但是两个对象不是同一个对象
+          set.add(new Dog("tom"));  // 返回true，表示添加成功
+          set.add(new Dog("tom"));  // 返回true，表示添加成功
+          // 经典面试题，需要看源码具体分析
+          set.add(new String("jlc"));  // true
+          set.add(new String("jlc"));  // false 加入失败
+      }
+  }
+  
+  class Dog {
+      private String name;
+      public Dog(String name) {
+          this.name = name;
+      }
+      @Override
+      public String toString() {
+          return "Dog{" + "name='" + name + '\'' + '}';
+      }
+  }
+  ```
+
+- `HashSet`不能保证元素是有序的（即不保证存放元素的顺序和取出的顺序一致），取决于`hash`后，再确定索引的结果
+
+##### 扩容机制
+
+`HashSet`底层的扩容机制，其结论如下：
+
+- `HashSet`的底层是`HashMap`，第一次添加时，`table`数组扩容到16，临界值（`threshold`）是16*加载因子（`loadFactor`）为0.75 = 12，临界值作为缓冲空间，防止大量数据进入导致的阻塞
+- 如果`table`数组使用到了临界值12，就会扩容到`16*2 = 32`，新的临界值就是`32*0.75=24`，依次类推  
+- 添加一个元素时，先得到这个元素`hash`值（哈希值通过特定的方式进行运算，其值实际上就是数字），之后会将哈希值转换成索引值（决定元素具体存放到哪个索引的位置）
+- 在具体存放的时候，会找到存储表`table`，看这个索引位置是否已经存放元素，如果没有，直接加入；如果有，会调用`equals`（程序员自己定义的，不能理解为单单的字符串内容比较，字符串中的`equals`方法也是`String`类进行重写的）进行比较，如果相同，就放弃添加，如果不相同，就添加到最后
+- 在`jdk8`中，如果一条链表的元素个数大于等于`TREEIFY_THRESHOLD`（默认值是8），并且`table`的大小大于等于`MIN_TREEIFY_CAPACITY`（默认为64），就会进行树化（红黑树）
+
+源码解读：
+
+```java
+// 运行代码
+HashSet hashSet = new HashSet();
+hashSet.add("java");
+hashSet.add("php");
+hashSet.add("java");
+System.out.println(hashSet);
+```
+
+1. 调用底层的构造器：
+
+   ```java
+   public HashSet() {
+       map = new HashMap<>();
+   }
+   ```
+
+2. 调用添加`add`方法：
+
+   ```java
+   public boolean add(E e) {  // 这里的e就是添加的内容，如"java"
+       // 添加之后，如果返回null，表示添加成功了
+       return map.put(e, PRESENT)==null;  // PRESENT是hashSet中的静态对象，没有什么意义，占位
+   }
+   ```
+
+3. 执行`put`方法：会执行`hash(key)`的计算，得到`key`对应的哈希值，这个哈希值不完全等价于`hashCode`，进行了按位异或，再进行了无符号的右移16位的操作
+
+   ```java
+   public V put(K key, V value) {  // key: "java"  value: Object@550  value是PRESENT
+       return putVal(hash(key), key, value, false, true);
+   }
+   ```
+
+   > `key`的值是变化的，但是`value`的值是不变的（静态的）
+
+   `hash(key)`的计算，每添加一个元素节点，都会进行哈希值的计算：
+
+   ```java
+   static final int hash(Object key) {
+       int h;
+       // 如果key为null，则返回0，如果不为null，通过按位异或和无符号右移16位，返回对应的哈希值
+       return (key == null) ? 0 : (h = key.hashCode()) ^ (h >> 16);
+   }
+   ```
+
+4. 执行`putVal()`方法：添加内容的核心方法：
+
+   ```java
+   final V putVal(int hash, K key, V value, boolean onlyIfAbsent, boolean evict) {
+       Node<K,V>[] tab; Node<K,V> p; int n, i;   // 定义了辅助变量
+       // 下面的table是hsahMap的属性，类型是Node[]数组，存放Node节点的数组
+       // 一开始初始化的时候，table是为空的，或者其长度为0
+       if ((tab = table) == null || (n = tab.length) == 0) 
+           // 执行tab = resize()，执行后的tab变成了16个空间大小，但是其内容为null
+           n = (tab = resize()).length; 
+       
+       // 每一次的节点添加，都会经过判断
+       // 根据key,(n - 1) & hash]计算其哈希值，得到应该放到table表的哪个索引位置
+       // 并把这个位置的对象，赋值给p，判断p是否为空
+       // 如果p为空，表示还没有添加任何东西，就创建一个Node(key="java", value=PRESENT)，放到该位置
+       if ((p = tab[i = (n - 1) & hash]) == null)  
+           // 同时将hash哈希值存入，用于后续判断传入的值与该值是否相等
+           tab[i] = newNode(hash, key, value, null);  
+   	// 如果当前索引位置不为空（是链表或红黑树）
+       else {
+           Node<K,V> e; K k;  // 定义辅助变量
+           // 有三种情况的条件判断
+           // 情况一：判断当前索引位置对应链表的第一个节点的 hash 值是否和新结点的 hash 值相同
+           // 并且满足下面两个条件之一：
+           // 1. 准备加入的 key 和 p 指向的Node节点的 key 是同一个对象
+           // 2. 不是同一个对象，但是内容相同（equals()相同）（这里的equals()方法，是由程序员来确定的，不能简单的理解为比较字符串的内容）
+           // 这时就不能进行元素节点的加入
+           if (p.hash == hash &&((k = p.key) == key || (key != null && key.equals(k))))
+               // 将当前索引位置的结点赋值给 e
+               e = p;
+           // 情况二：判断当前索引位置是否是红黑树，如果是红黑树，就通过下面的方式进行比较（红黑树方式）
+           else if (p instanceof TreeNode)
+               e = ((TreeNode<K,V>)p).putTreeVal(this, tab, hash, key, value);
+           
+           // 情况三：当前索引位置是链表，使用for循环在链表比较过程中，有一个节点元素于当前添加的元素一样，就立即退出循环，不执行该元素节点的加入，如果执行完整个循环，都没有发现一样的，就会在链表的后面进行添加该新节点
+           else {
+               for (int binCount = 0; ; ++binCount) {
+                   // 比较到最后了，加入元素节点后，退出
+                   // 比较的是当前节点的下一个，当前节点和新元素的比较之前比较过了
+                   if ((e = p.next) == null) {  
+                       p.next = newNode(hans, key, value, null);
+                       // 把元素添加到链表后，立即进行判断，该链表是否已经达到8个节点，如果达到8个节点，就调用treeifyBin()方法，对当前链表进行树化（转成红黑树）
+                       if (binCount >= TREEIFY_THRESHOLD -1)
+                           treeifyBin(tab, hash);  // 注意：在进行树化时还会进行表长度的判断，如果表的长度小于64，那么是不会进行树化的，而是考虑将表进行扩容来进行这个问题的解决
+                       break;
+                   }
+                   // 比较的过程中，发现一样的，立即退出
+                   if (e.hans == hash && ((k = e.key) == key || (key != null && key.equals(k))))
+                       break;
+                   p = e;
+               }
+           }
+           // 用 e 是否为空来判断是否存在重复结点
+           if (e != null) { // existing mapping for key
+               V oldValue = e.value;
+               // 判断是否更新 value
+               // 这里 value 始终是一个 object 对象，用来占位，所以不需要更新
+               if (!onlyIfAbsent || oldValue == null)
+                   e.value = value;
+               // 一个空方法，供 HashMap 的子类实现
+               afterNodeAccess(e);
+               // 返回旧的 value
+               return oldValue;   // 返回旧值，表示添加失败的，原先的表中有这个值了
+           }
+       }
+       ++modCount;  // 记录修改次数
+       // 判断现在size值是否超过12，如果超过12就进行扩容
+       // size就是我们每加入一个节点Node(k, v, h, next)，不管是加在第一个位置还是链的最后一个位置（横向加和纵向加），size都会加一
+       if (++size > threshold)
+           resize();
+       afterNodeInsertion(evict);  // hashMap留给子类去实现的，对于hashMap来说，这个方式是空方法
+       return null;  // 返回空表示添加成功了
+   }
+   ```
+
+5. `table`数组扩容机制，执行`resize()`方法：
+
+   ```java
+   final Node<K,V>[] resize() {
+       // 定义辅助变量
+       Node<K,V>[] oldTab = table;   // 将初始化的table交给oldTab
+       // 旧数组长度 0
+       int oldCap = (oldTab == null) ? 0 : oldTab.length;
+       // 旧临界值
+       int oldThr = threshold;
+       // 新的数组长度和临界值
+       int newCap, newThr = 0;
+       // 第 n 此扩容，n > 1
+       if (oldCap > 0) {
+           // 判断旧数组长度是否大于最大值
+           if (oldCap >= MAXIMUM_CAPACITY) {
+               threshold = Integer.MAX_VALUE;
+               return oldTab;
+           }
+           // 新数组长度扩大两倍
+       	// 并判断新数组长度是否 < 最大值，同时旧数组长度是否 >= 初始长度（16）
+           else if ((newCap = oldCap << 1) < MAXIMUM_CAPACITY &&
+                    oldCap >= DEFAULT_INITIAL_CAPACITY)
+               // 新数组长度临界值扩大两倍
+               newThr = oldThr << 1; // double threshold
+       }
+   	// 判断旧数组长度临界值是否 > 0
+       else if (oldThr > 0) // initial capacity was placed in threshold
+           // 新数组长度为旧数组长度临界值
+           // oldCap 为 0，因为如果 > 0 就走第一个条件了
+           newCap = oldThr;
+       // 第一次扩容，执行的代码块
+       else {   // zero initial threshold signifies using defaults
+           // 新的数组长度默认为 16（默认table数组表的开辟空间为16个长度）
+           newCap = DEFAULT_INITIAL_CAPACITY;
+           // static final int DEFAULT_INITIAL_CAPACITY = 1 << 4; //16 位左移4位1*2*2*2*2
+           // 新的临界值默认为 12，节点数组使用12个就开始扩容了  DEFAULT_LOAD_FACTOR为0.75
+           // 防止大量数据进入导致阻塞
+           newThr = (int)(DEFAULT_LOAD_FACTOR * DEFAULT_INITIAL_CAPACITY);
+       }
+       // 判断是否新临界值为 0
+       if (newThr == 0) {
+           // 将新数组大小的 0.75 倍赋值给 ft
+           // 初始化 HashMap 时就指定了 loadFactor 为默认临界因子（0.75f）
+           float ft = (float)newCap * loadFactor;
+           // 如果新的数组大小 < 最大长度，并且 ft < 最大长度，新的数组长度临界值就为 ft
+           // 否则为整数的最大值
+           newThr = (newCap < MAXIMUM_CAPACITY && ft < (float)MAXIMUM_CAPACITY ?
+                     (int)ft : Integer.MAX_VALUE);
+       }
+       // 改变为新的临界值
+       threshold = newThr;
+       @SuppressWarnings({"rawtypes","unchecked"})
+   	// 定义新的数组，并设置了容量大小为16
+       Node<K,V>[] newTab = (Node<K,V>[])new Node[newCap];
+       // 改变数组
+       table = newTab;   // rable数组表有了空间，但是其内容都是null
+       // 判断旧数组是否为空
+       if (oldTab != null) {
+           // 按照新的数组长度创建新的数组
+           // 并遍历旧数组，将旧数组上的结点一个一个移动到新数组上
+           for (int j = 0; j < oldCap; ++j) {
+               Node<K,V> e; // 定义辅助变量
+               // 判断当前索引位置是否为空
+               if ((e = oldTab[j]) != null) {
+                   // 设置旧数组该索引处为空
+                   oldTab[j] = null;
+                   // 判断是否有下一个结点
+                   if (e.next == null)
+                       // 没有下一个结点就直接将该结点移动到新数组上
+                       // 注意：索引是由数组长度和 hash 值共同决定的
+                       // 此时计算索引用的是新数组的长度，结果可能会与旧数组的索引不同
+                       newTab[e.hash & (newCap - 1)] = e;
+                   // 判断该索引位置是不是一个红黑树
+                   else if (e instanceof TreeNode)
+                       // 移动树上的结点
+                       ((TreeNode<K,V>)e).split(this, newTab, j, oldCap);
+                   // 该索引位置是一个链表
+                   else { // preserve order
+                       // 定义 lowHead，lowTail，表示低位链表的头结点和尾节点
+                       Node<K,V> loHead = null, loTail = null;
+                       // 定义 hightHead，hightTail，表示高位链表的头结点和尾节点
+                       // 低位链表和高位链表里的位，表示的是数组索引位
+                       // 由于数组长度的增加，新数组的索引位置可能不变，也可能变大
+                       // 如果不变，就用低位链表；如果变大，就用高位链表
+                       Node<K,V> hiHead = null, hiTail = null;
+                       Node<K,V> next; // 定义下一个结点
+                       do {
+                           // 获取下一个结点
+                           next = e.next;
+                           // 计算新新数组的索引位是否不变
+                           if ((e.hash & oldCap) == 0) {
+                               // 判断当前结点是否是头结点
+                               // 因为最开始定义 loTail 为 null
+                               // 而如果添加了一个结点后，loTail 就会指新的结点，不为 null
+                               if (loTail == null)
+                                   // 将当前结点赋值给头结点
+                                   loHead = e;
+                           	// 当前结点不是头结点
+                               else
+                                   // 将当前结点添加到最后
+                                   loTail.next = e;
+                               // 尾节点指向最后的新结点
+                               loTail = e;
+                           }
+                           // 新数组的索引位变大，使用高位链表
+                           else {
+                               // 和上面的低位链表一样的操作
+                               if (hiTail == null)
+                                   hiHead = e;
+                               else
+                                   hiTail.next = e;
+                               hiTail = e;
+                           }
+                       // 继续下一个结点
+                       } while ((e = next) != null);
+                       // 判断低位链表是否为非空链表
+                       if (loTail != null) {
+                           loTail.next = null;
+                           // 移动到新数组上的索引不变
+                           newTab[j] = loHead;
+                       }
+                       // 判断高位链表是否为非空链表
+                       if (hiTail != null) {
+                           hiTail.next = null;
+                           // 移动到新数组上的索引变大，相差一个旧数组的长度
+                           newTab[j + oldCap] = hiHead;
+                       }
+                   }
+               }
+           }
+       }
+       // 返回新的数组
+       return newTab;
+   }
+   ```
+
+##### 练习案例
+
+定义一个`Employee`类，该类包含`private`成员属性`name`、`age`，要求：创建3个`Employee`放入`HashSet`中；当`name`和`age`的值相同时，认为是相同的员工，不能添加到`HashSet`集合中
+
+```java
+public class HashSetExercise {
+    public static void main(String[] args) {
+        HashSet hashSet = new HashSet();
+        hashSet.add(new Employee("jlc", 25));
+        hashSet.add(new Employee("tom", 20));
+        hashSet.add(new Employee("jack", 30));
+        // 此时加入了三个元素节点到hashSet集合中
+        hashSet.add(new Employee("tom", 20));  // 添加不进去，name和age与原来的集合中有相同的
+    }
+}
+
+class Employee {
+    private string name;
+    private int age;
+    
+    public Employee(String name, int age) {
+        this.name = name;
+        this.age = age;
+    }
+    
+    public String getName() {
+        return name;
+    }
+    public void setName(String name) {
+        this.name = name;
+    }
+    
+    public String getAge() {
+        return age;
+    }
+    public void setAge(int age) {
+        this.age = age;
+    }
+    @Override
+    public String toString() {
+        return "Employee{" + "name='" + name + '\'' + ", age=" + age + '}';
+    }
+    
+    // 重写equals方法，如果name和age值相同，则返回相同的哈希值
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Employee employee = (Employee) o;
+        return age == employee.age && Object.equals(name, employee.name);
+    }
+    // 重写hashCode方法
+    @Override
+    public int hashCode() {
+        return Object.hash(name, age);
+    }
+}
+```
+
+使用快捷键`alt+insert`，选择`equals() and hashCode()`，使用`jdk7`以上的模板，自定义选择哪些值相同来表示哈希值相同，如下所示：
+
+![image-20250422141201600](..\images\image-20250422141201600.png)
+
+![image-20250422142018475](..\images\image-20250422142018475.png)
+
+#### `LinkedHashSet`类
+
+`LinkedHashSet`是`HashSet`的子类，其底层是一个`LinkedHashMap`（`LinkedHashMap`是`HashMap`的子类），底层维护了一个数组+双向链表（`HashSet`类维护的是数组+单向的链表），与`HashSet`类最大的区别就是使用了双向链表
+
+`LinkedHashSet`根据元素的`hashCode`值来决定元素的存储位置，同时使用双向链表维护元素的次序，这使得元素看起来是以插入的顺序保存的（取出来的数据和添加的数据，顺序是一样的）
+
+`LinkedHashSet`不允许添加重复元素
+
+![image-20250422144225873](..\images\image-20250422144225873.png)
+
+> - 双向链表有头（`head`指向链表第一个节点的引用）和尾（`tail`指向链表最后一个节点的引用）
+> - 每一个节点都有`pre`或者`brfore`和`next`或者`after`属性，指向当前节点的前一个节点和后一个节点，进而组成一个双向链表
+> - 双向链表前面有一个节点，后面也有一个节点，后面的节点执行第二个添加的元素，第二个元素的前面节点指向第一个元素，会在具体的`before`和`after`中体现，构成双向链表，添加时也会进行比较，如果相同，就加入不进来
+> - 双向链表有头节点和尾节点，在遍历元素的时候，是按照头到尾的顺序进行遍历的（能够保证获取元素的时候是有序的，即插入顺序和遍历顺序一致）
+
+在第一次添加的时候，直接将数组`table`扩容到16，存放的节点类型是`LinkedHashMao$Entry`（即数组是`HashMap$Node[]`，存放的元素\数据是`LinkedHahsMap$Entry`类型，继承关系是在内部类中完成的）
+
+##### 练习案例
+
+有一个`Car`类，属性有`name`和`price`，如果`name`和`price`一样，则认为是相同的元素，就不能进行添加
+
+```java
+public class LinkedHashSetExercise {
+    public static void main(String[] args) {
+        LinkedHashSet linkedHashSet = new LinkedHashSet();
+        linkedHashSet.add(new Car("宝马", 300000));
+        linkedHashSet.add(new Car("大众", 100000));
+        linkedHashSet.add(new Car("奥迪", 350000));
+        // 上述三个对象都是可以加入到LinkedHashSet集合中的
+        System.out.println(linkedHashSet);   // 输出的顺序和输入的顺序一致
+        
+        linkedHashSet.add(new Car("奥迪", 350000));  // 加入不了
+    }
+}
+
+class Car {
+    private string name;
+    private double price;
+    
+    public Employee(String name, double price) {
+        this.name = name;
+        this.price = price;
+    }
+    
+    public String getName() {
+        return name;
+    }
+    public void setName(String name) {
+        this.name = name;
+    }
+    
+    public Double getPrice() {
+        return price;
+    }
+    public void setPrice(double price) {
+        this.price = price;
+    }
+    @Override
+    public String toString() {
+        return "Car{" + "name='" + name + '\'' + ", price=" + price + '}';
+    }
+    
+    // 重写equals方法，如果name和price值相同，则返回相同的哈希值
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Car car = (Car) o;
+        return price == car.price && Object.equals(name, car.name);
+    }
+    // 重写hashCode方法
+    @Override
+    public int hashCode() {
+        return Object.hash(name, price);
+    }
+}
+```
+
+***
+
+### `Map`接口
+
+`Map`接口存放的是双列的形式（键值对的形式）
 
 
 
