@@ -1,8 +1,122 @@
-# `RBM`项目开发过程及问题
+# 开发积累-`RBM`项目
 
-## 前端样式
+## 基本概念
 
-### 标签样式不生效问题
+`RBM`项目是重大设备风险监测管理项目，前端主要涉及到`Vue`、`Gojs`和`FastCrud`等技术框架，后端主要涉及到`Django`、`ThingsBoard`等技术框架，在开发`RBM`项目中，我主要参与的是前端的部分（包括数据图表的前端展示，`Gojs`界面的搭建和可视化实时数据的呈现，和数据大屏的制作等），同时也涉及了一小部分的后端接口的编写，在开发中遇到的一些问题，依次在本文档中进行记录。
+
+
+
+## 下拉选项禁用设置
+
+下拉选项框当没有子层内容时，这个选项框设置为不能被选中（禁用）：
+
+```vue
+<template>
+  <el-cascader
+    v-model="item.methods"
+    :options="confirmDialog.data?.methods"
+    :props="cascaderProps"
+    placeholder="请选择"
+    style="width: 200px;"
+  />
+</template>
+
+<script setup>
+import { reactive } from 'vue';
+
+const item = reactive({
+  methods: [],
+});
+
+// 数据类型介绍
+const confirmDialog = reactive({
+  data: {
+    methods: [
+      {
+        value: '1',
+        label: '选项1',
+        children: [], // 空数组，应该禁用
+      },
+      {
+        value: '2',
+        label: '选项2',
+        children: [
+          {
+            value: '2-1',
+            label: '子选项2-1',
+          },
+        ],
+      },
+    ],
+  },
+});
+
+// 下拉选项框当没有子层内容时，这个选项框设置为不能被选中
+const cascaderProps = {
+  //允许选择任意一级，最外层也可被选中
+  //checkStrictly: true,
+  disabled: (data) => {
+    return data.children && data.children.length === 0;
+  },
+};
+</script>
+```
+
+实现效果：（如果当前的选项没有子内容，这个父级的选项就被禁用，变成灰色，鼠标放上去显示无法点击）
+
+![image-20241114205710210](D:\Myproject\develop-study-notes\images\image-20241114205710210.png)
+
+
+
+## 页面路由跳转
+
+页面的跳转有两种情况，在当前的页面上进行跳转；打开一个新的页面进行跳转
+
+在当前页面的基础上进行跳转：通过动态路由`router`进行跳转
+
+```js
+import { useRouter } from 'vue-router'
+const router = useRouter()
+function goToPage(data) {
+    router.push(`/pidPreview/?id=${data.id}`)
+}
+```
+
+新开一个页面，在新开的页面上进行跳转：也是通过动态路由进行跳转，但是使用`window.open`新开一个窗口：
+
+```js
+import { useRouter } from 'vue-router'
+const router = useRouter()
+function goToPage(data) {
+    const routeUrl = router.resolve({
+        path: `/pidPreview/`,
+        query: { id: data.id }
+    });
+    window.open(routeUrl.href, '_blank');
+}
+```
+
+> `window.open(routeUrl.href, '_blank');` 是 `JavaScript` 中用于在新窗口或新标签页中打开指定` URL` 的代码，具体介绍：
+>
+> - `window.open`: 是` JavaScript` 的一个内置函数，用于打开一个新的浏览器窗口或标签页，它可以接受三个参数：
+>
+>   - `URL`: 要打开的页面的 `URL`
+>
+>   - `target`: 指定新窗口的名称或目标，常见的值包括：
+>
+>     -  `_blank`（在新窗口或标签页中打开）
+>
+>     -  `_self`（在当前窗口中打开）
+>     -  `_parent`（在父框架中打开）
+>     -  `_top`（在顶层框架中打开）
+>
+>   - `windowFeatures`（可选参数）: 可以指定新窗口的特性，如大小、位置等。这个参数在现代浏览器中通常被忽略，因为浏览器可能会阻止弹出窗口
+
+
+
+## 样式不生效问题
+
+### `span`标签样式不生效
 
 对于`<span>`标签，要想对其内容样式的修改，特别是内外边距的添加，需要在标签外部包裹一层`<div>`标签，在该标签中添加相关的样式，这样才能正常生效
 
@@ -12,7 +126,7 @@
 
 对于非常规的样式添加（一般是传统的样式添加格式无法生效），打开`F12`，选择该部分的主体，在该级进行新建样式规则
 
-时时调整好样式后，将添加的`css`代码放入到代码中，并且用:deep进行包裹
+调整好样式后，将添加的`css`代码放入到代码中，并且用`:deep`进行包裹
 
 ```ts
 :deep(span.el-radio-button__inner) {
@@ -20,13 +134,13 @@
 }
 ```
 
-这样就能在界面上生效
+这样就能在界面上生效，强制的提高了样式的优先级（非不得已，不推荐使用）
 
 
 
-## 工厂、工段创建
+## 工厂和工段相关
 
-### 工段数据无法提交到数据库
+### 数据无法提交到数据库
 
 在工段数据提交时，遇到了提交到数据库`lkt_factory_section`的数据都显示`Null`的情况，经过排查，发现接口设置错误，将返回值的`data`写成了`params`
 
@@ -79,7 +193,7 @@ await getFactoryList({}).then((res:any)=>{
 
 ### 下拉列表框内容什么时候刷新问题
 
-在一开始，设置下拉列表框内容的渲染是在整个页面刷新时进行渲染，后面考虑到过早的渲染是没有必要的，只需在新建按钮点击时，进行下拉列表框内容的渲染即可，所以，将代码进行了一些调整，将获取工厂id和name的代码放到新建表单出现前调用：
+在一开始，设置下拉列表框内容的渲染是在整个页面刷新时进行渲染，后面考虑到过早的渲染是没有必要的，只需在新建按钮点击时，进行下拉列表框内容的渲染即可，所以，将代码进行了一些调整，将获取工厂`id`和`name`的代码放到新建表单出现前调用：
 
 ```ts
 async function newTable() {
@@ -123,7 +237,7 @@ const dialogTitle = computed(() => {
 
 
 
-## 风险等级划分的查询、修改与存储
+## 风险等级相关
 
 ### 父子控件如何进行数据双向绑定
 
@@ -139,7 +253,7 @@ const dialogTitle = computed(() => {
 </template>
 
 <script setup lang="ts">
-    const chartData = ref<any[]>([]) //chartData为调用数据库后处理的数据
+    const chartData = ref<any[]>([]) // chartData为调用数据库后处理的数据
 </script>
 ```
 
@@ -152,8 +266,8 @@ interface Data {
 }
 
 const props = defineProps<Data>()
-//调用后就可以在子控件中使用父控件调用的数据库数据了
-props.chartDatas //数据
+// 调用后就可以在子控件中使用父控件调用的数据库数据了
+props.chartDatas // 数据
 </script>
 ```
 
@@ -206,7 +320,7 @@ function handleClick(params: any) {
 
 
 
-## `FastCrud`表格制作
+## `FastCrud`表格相关
 
 ### 在`FastCrud`配置本地数据时出现的数据无法导入到表格中
 
@@ -394,9 +508,9 @@ editForm: {
 viewForm: {
     wrapper: {
         buttons: {
-            cancel: {show: false}, //取消按钮
-            reset: {show: false},  //重置按钮
-            ok: {show: false},     //确认按钮
+            cancel: {show: false}, // 取消按钮
+            reset: {show: false},  // 重置按钮
+            ok: {show: false},     // 确认按钮
         }
     }
 },
@@ -426,12 +540,12 @@ addForm: {
     labelPosition: 'top',
     wrapper: {
         onOpened: async ({ form }) => {
-            form.device = context.props?.deviceId; //将外界的设备id传入进行设备name的选择
+            form.device = context.props?.deviceId; // 将外界的设备id传入进行设备name的选择
         },
     },
 },
     
-//设备字段是根据其id选择对应的设备name
+// 设备字段是根据其id选择对应的设备name
 device: {
     title: '设备',
     type: 'dict-select',
@@ -476,10 +590,10 @@ addForm: {
     wrapper: {
         onOpened: async ({ form }) => {
             context.maintenanceInfo.value = [];
-            form.device = context.props?.deviceId;  //运行速度比getFormComponentRef慢
-            //先有设备在去匹配其故障记录
+            form.device = context.props?.deviceId;  // 运行速度比getFormComponentRef慢
+            // 先有设备在去匹配其故障记录
             setTimeout(()=>{
-                crudExpose.getFormComponentRef('fault').reloadDict();  //运行速度快，需要延时
+                crudExpose.getFormComponentRef('fault').reloadDict();  // 运行速度快，需要延时
             })
         },
     },
@@ -522,7 +636,7 @@ view: {
 
 
 
-## 前端部分
+## 按钮相关
 
 ### 自定义表格删除行和添加行
 
@@ -539,7 +653,7 @@ view: {
 ```
 
 ```ts
-const maintenanceInfo = ref<any>([]) //是一个响应式的列表数据
+const maintenanceInfo = ref<any>([]) // 是一个响应式的列表数据
 ```
 
 ***
@@ -565,9 +679,7 @@ const maintenanceInfo = ref<any>([]) //是一个响应式的列表数据
 
 ## 前后端接口交互
 
-### 开发难点记录
-
-根据id获取值接口编写：
+根据`id`获取值接口编写：
 
 ```ts
 export function getDeviceCategoryById(query: InfoReq) {
@@ -589,8 +701,8 @@ async function equipmentChange() {
 })
 }
 
-console.log(equipmentType.value)  //equipmentType.value就是根据id获取到的name值
-//如果想要监听式的获取id对应的name值，需要通过watch监听器进行设置
+console.log(equipmentType.value)  // equipmentType.value就是根据id获取到的name值
+// 如果想要监听式的获取id对应的name值，需要通过watch监听器进行设置
 watch(() => props.deviceInfo, (nVal) => {
   equipmentChange()
 }, {deep:true, immediate: true })
