@@ -10,7 +10,7 @@
   - 其他框架：`WebService`（面向服务编程框架）、`Activiti`（工作流框架）、`Shiro`（安全框架）、`JPA`（持久化）、`SpringData`（持久层的通用解决方案）
 - 分布式 微服务 并行架构：
   - `Netty`
-  - ``Dubbo`（RPC框架）
+  - `Dubbo`（`RPC`框架）
   - `FastDFS`（分布式文件系统）
   - `Docker`（应用容器引擎）
   - `Spring`家族（`SpringBoot`、`SpringCloud`（组件很多：`Nacos`（阿里服务发现、配置和管理）、`Seata`（阿里分布式事务中间件）、`Sentinel`（阿里流量控制、熔断和系统负载保护）、`GateWay`（网关、限流、日志、监控和鉴权）、`OpenFeign`（服务间调用）））
