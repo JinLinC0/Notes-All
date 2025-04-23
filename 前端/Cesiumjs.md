@@ -12,19 +12,19 @@
 
 - `cesium`源码编译打包需要`gulp`，全局安装`gulp`：
 
-  ```ssh
+  ```txt
   npm install gulp -g
   ```
 
 - 对`cesium`源码安装npm依赖：
 
-  ```ssh
+  ```txt
   npm install
   ```
 
 - `build`打包：
 
-  ```ssh
+  ```txt
   npm run build
   ```
 
@@ -32,7 +32,7 @@
 
 - 运行`cesium`：
 
-  ```ssh
+  ```txt
   npm start
   ```
 
@@ -114,7 +114,7 @@
 
 注册`Cesiumjs`的`token`：引入到项目中去除相关的`logo`，在官网进行注册和获取`token`
 
-```ssh
+```txt
 eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3Njg4ZWU5Yi1iZDhiLTRhYmUtOTRiYS04YjM5NmUwNjVmMDMiLCJpZCI6MjI3MzQ3LCJpYXQiOjE3MjA1MjA4Mjh9.E5XW4LnwgfVAaBC-znaYr61m4yK0-j2qEQhi9qwFFPE
 ```
 
@@ -2354,7 +2354,7 @@ import { Fun as Test } from '/src/utils/cesiumKit/Fun.js'
 
 - 控制台报错：
 
-  ```ssh
+  ```txt
   [Vue warn]: Invalid event arguments: event validation failed for event "click".
   ```
 
