@@ -474,7 +474,7 @@ Last name: <input type="text" name="lname" /><br />
 
 
 
-## `<iframe>`标签
+## `iframe`标签
 
 `iframe`（内嵌框架）是`HTML`中的一个元素，用于在当前网页中嵌入另一个网页或内容。它提供了一种简单而强大的方式来集成外部内容，如视频、地图、广告或其他网页。
 
