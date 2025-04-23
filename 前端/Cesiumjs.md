@@ -1,6 +1,55 @@
-# `Cesiumjs`
+# `CesiumJs`
 
-`Cesiumjs`是一个开源的`JavaScript`库，用于在`Web`浏览器中创建三维地球仪和二维地图以及2.5维的地图展示。它利用了 `WebGL` 技术，可以在不需要插件的情况下，为用户提供丰富的交互式三维地理信息可视化体验
+## 基本概念
+
+`CesiumJs`是一个开源的`JavaScript`库，用于在`Web`浏览器中创建三维地球仪和二维地图以及2.5维的地图展示。它利用了 `WebGL` 技术，可以在不需要插件的情况下，为用户提供丰富的交互式三维地理信息可视化体验
+
+
+
+## `Cesium`源码编译
+
+在[Releases · CesiumGS/cesium (github.com)](https://github.com/CesiumGS/cesium/releases)下载源码包，要下线`Source Code`压缩包，不是官方发布的包，官方正式发布包已经被阉割，出不来`“Development”`
+
+- `cesium`源码编译打包需要`gulp`，全局安装`gulp`：
+
+  ```ssh
+  npm install gulp -g
+  ```
+
+- 对`cesium`源码安装npm依赖：
+
+  ```ssh
+  npm install
+  ```
+
+- `build`打包：
+
+  ```ssh
+  npm run build
+  ```
+
+  在`Source`文件夹下生成了`Cesium.js`，还在`Specs`文件夹内生成了`SpecList.js`和在`Build`文件夹下生成了`minifyShaders.state`文件`Source`文件夹下的`Cesium.js`是把`Cesium`源码中一千两百多个`js`文件做了一下引用，相当于一个索引。打包之后`cesium`根目录下多出了`Build`文件夹
+
+- 运行`cesium`：
+
+  ```ssh
+  npm start
+  ```
+
+  就可以在浏览器中进行查看了：` http://localhost:8080/`
+
+- 点击`Sandcastle`打开`cesium`官方案例
+
+### 源代码工程目录介绍
+
+- `APPs`：`demo`和相关资源
+- `source`：包含项目的源代码，即开发人员编写的原始代码，这里可能包含未编译、未打包的原始文件，例如` JavaScript` 源文件、样式表、图像、模板等
+
+- `Build`：构建过程的输出目录，其中包含了编译、打包、优化后的文件，即用于生产环境的文件
+  - `CesiumUnminified`：这个文件夹包含未压缩、未混淆的源代码，源代码通常更易读，变量和函数名保持原样，方便开发者阅读和调试
+  - `Cesium`Dev：这个文件夹包含经过压缩和混淆的代码，通常是生产环境中使用的版本
+
+
 
 ## 环境搭建
 
@@ -71,9 +120,7 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3Njg4ZWU5Yi1iZDhiLTRhYmUtOTRiYS0
 
 
 
-## 基础知识
-
-### 视图`Viewer`
+## 视图`Viewer`
 
 `Viewer` 是 `Cesium` 的最高级别的组件，`Viewer` 是一切`API`的开始，它封装了很多功能，如场景（`viewer.scene`）、时间线、动画、相机（`viewer.camera`）、信息框、事件处理、实体集合（`viewer.entities`）、数据源管理 （`ewer.dataSources`）等
 `Viewer` 的创建通常关联到一个 `HTML `元素，例如一个 `div`：
@@ -138,7 +185,9 @@ skyBox: new window.Cesium.SkyBox({
 })
 ```
 
-### 坐标系
+
+
+## 坐标系
 
 - 屏幕坐标（二维笛卡尔坐标）：屏幕坐标定义了在用户的显示屏上的像素位置。例如，一个点的屏幕坐标可能是`(x, y)`，`Cesium`中使用`Cartesian2`来描述，原点在屏幕左上角，x轴向右，y轴向下，单位为像素`px`
 
@@ -219,9 +268,9 @@ var cartesian = viewerInstance.camera.pickEllipsoid(event.position, viewerInstan
 var windowPos = Cesium.SceneTransforms.wgs84ToWindowCoordinates(scene, Cartesian3);
 ```
 
-***
 
-### 视角
+
+## 视角
 
 在`Cesium`中，我们确定的视角，需要设置相机的位置和方向
 
@@ -283,9 +332,9 @@ viewer.camera.flyTo({
  })
 ```
 
-***
 
-### 时间设置
+
+## 时间设置
 
 ```js
 // 自定义时间相关的设置
@@ -300,9 +349,9 @@ viewer.timeline.zoomTo(start, stop);  // 时间轴绑定到viewer上去
 viewer.clock.clockRange = Cesium.ClockRange.LOOP_STOP;  // 循环执行，到达终止时间，重新从起点时间开始
 ```
 
-***
 
-### `entity`实体
+
+## `entity`实体
 
 `Cesium`丰富的空间数据可视化`API`分为两部分：`Primitive API `面向三维图形开发者，更底层一些，`Entity API `是数据驱动更高级一些，它们把可视化和信息存储到统一的数据结果中，这个对象叫`Entity`
 
@@ -448,9 +497,9 @@ const entity = viewer.entities.getById(entity) // 通过ID获取
 viewer.entities.remove(entity)
 ```
 
-***
 
-### 鼠标事件
+
+## 鼠标事件
 
 鼠标事件的处理主要通过 `ScreenSpaceEventHandler` 类来实现：
 
@@ -493,9 +542,9 @@ viewer.cesiumWidget.screenSpaceEventHandler.removeInputAction(
 );
 ```
 
-***
 
-### 回调函数
+
+## 回调函数
 
 在通过鼠标绘制图形时，我们通过鼠标事件来获取位置信息，再通过回调函数进行属性值的修改
 
@@ -503,9 +552,9 @@ viewer.cesiumWidget.screenSpaceEventHandler.removeInputAction(
 
 使用` CallbackProperty` 创建的属性是动态的，它可以随时间或其它条件变化
 
-***
 
-### 锁定点
+
+## 锁定点
 
 将一个点进行锁定后，这个点会始终处于屏幕的中间位置，不管是放大还是缩小
 
@@ -524,7 +573,9 @@ viewer.scene.camera.lookAtTransform(
 );
 ```
 
-### 在地图上添加几何图形
+
+
+## 在地图上添加几何图形
 
 在` Cesium`的实体集合中添加一个新的实体，需要调用` viewer.entities.add `方法
 
@@ -628,7 +679,7 @@ async function DrawPoints() {
 
 
 
-### 动目标
+## 动目标
 
 #### `CZML`
 
@@ -1766,7 +1817,9 @@ ws.addEventListener("error", errorHandle)
 
 在`Vue`中，当我们的页面`onUnmounted`的时候，我们需要对`WebSocket`进行卸载
 
-### 场景设置
+
+
+## 场景设置
 
 #### 晨昏线
 
@@ -2168,9 +2221,9 @@ const syncViewer = () =>{
 viewerMain.scene.preRender.addEventListener(syncViewer); 
 ```
 
-***
 
-### 官方`API`文档学习
+
+## 官方`API`文档学习
 
 #### `Animation`
 
@@ -2192,9 +2245,7 @@ viewerMain.scene.preRender.addEventListener(syncViewer);
 
 
 
-***
-
-### 封装组件
+## 封装组件
 
 基本封装思想：将属性和方法写在一个类中，放在单独的一个文件下，将这个类导出，提供给其他的文件中进行直接使用，`Fun.js`的封装文件形式如下：
 
@@ -2228,66 +2279,6 @@ import { Fun as Test } from '/src/utils/cesiumKit/Fun.js'
 ```
 
 
-
-
-
-# `Cesium`源码编译
-
-在[Releases · CesiumGS/cesium (github.com)](https://github.com/CesiumGS/cesium/releases)下载源码包，要下线`Source Code`压缩包，不是官方发布的包，官方正式发布包已经被阉割，出不来`“Development”`
-
-- `cesium`源码编译打包需要`gulp`，全局安装`gulp`：
-
-  ```ssh
-  npm install gulp -g
-  ```
-
-- 对`cesium`源码安装npm依赖：
-
-  ```ssh
-  npm install
-  ```
-
-- `build`打包：
-
-  ```ssh
-  npm run build
-  ```
-
-  在`Source`文件夹下生成了`Cesium.js`，还在`Specs`文件夹内生成了`SpecList.js`和在`Build`文件夹下生成了`minifyShaders.state`文件`Source`文件夹下的`Cesium.js`是把`Cesium`源码中一千两百多个`js`文件做了一下引用，相当于一个索引。打包之后`cesium`根目录下多出了`Build`文件夹
-
-- 运行`cesium`：
-
-  ```ssh
-  npm start
-  ```
-
-  就可以在浏览器中进行查看了：` http://localhost:8080/`
-
-- 点击`Sandcastle`打开`cesium`官方案例
-
-## 源代码工程目录介绍
-
-- `APPs`：`demo`和相关资源
-- `source`：包含项目的源代码，即开发人员编写的原始代码，这里可能包含未编译、未打包的原始文件，例如` JavaScript` 源文件、样式表、图像、模板等
-
-- `Build`：构建过程的输出目录，其中包含了编译、打包、优化后的文件，即用于生产环境的文件
-  - `CesiumUnminified`：这个文件夹包含未压缩、未混淆的源代码，源代码通常更易读，变量和函数名保持原样，方便开发者阅读和调试
-  - `Cesium`Dev：这个文件夹包含经过压缩和混淆的代码，通常是生产环境中使用的版本
-
-
-
-# `<iframe>`标签的使用
-
-`iframe`（内嵌框架）是HTML中的一个元素，用于在当前网页中嵌入另一个网页或内容。它提供了一种简单而强大的方式来集成外部内容，如视频、地图、广告或其他网页。
-
-## 常见的属性
-
-- `marginheight`：顶部和底部空白的边距：`marginheight="80"`
-- `align`：对齐方式，设置`<iframe>`在所属区域的对其方式：`align="left"`
-- `frameborder`：边框控制，0表示`<iframe>`组件没有边框，1表示有边框，也可以对边框宽度进行设置：`frameborder="6"`
-- `scrolling`：滚动条设置：`scrolling="yes"`；`yes`表示即使不需要也始终显示滚动条；`no`表示即使需要也不显示滚动条；`auto`表示在需要的情况下出现滚动条
-
-- `name`：通常与`target`一起使用，根据`name`的值跳转到`iframe`中显示，`name`可自定义命名
 
 
 
