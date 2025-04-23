@@ -148,7 +148,9 @@ viewer = new Cesium.Viewer('cesiumContainer', {
 
 默认情况下的视图，其精度不是很高，也没有地形的效果，页面初始化会有一些默认的功能部件
 
-#### 自定义地形服务
+***
+
+### 自定义地形服务
 
 我们可以进行自定义的地形服务的引入：默认的地形服务是椭圆（即表面没有任何地形）
 
@@ -160,7 +162,9 @@ terrainProvider: new window.Cesium.CesiumTerrainProvider({
 }),
 ```
 
-#### 自定义影像服务
+***
+
+### 自定义影像服务
 
 我们也可以自定义地球的影像服务，改变地球的默认影像：
 
@@ -170,7 +174,9 @@ imageryProvider: new window.Cesium.ArcGisMapServerImageryProvider({
 })
 ```
 
-#### 自定义背景天空盒
+***
+
+### 自定义背景天空盒
 
 ```js
 skyBox: new window.Cesium.SkyBox({
@@ -203,16 +209,18 @@ skyBox: new window.Cesium.SkyBox({
 
 - 投影坐标系（`PCS`）：投影坐标系是一个基于二维平面的坐标系统，它是通过将地球（或其部分）投影到一个平面上来得到的，使用X和Y坐标（在平面上）来定义位置
 
-#### 基本转化
+***
 
-##### 地理坐标转三维笛卡尔坐标
+### 基本转化
+
+#### 地理坐标转三维笛卡尔坐标
 
 ```js
 // 传入的参数分别为：经度（度） 纬度（度） 高度（米）
 const Cartesian3 = Cesium.Cartesian3.fromDegrees(114, 30, 1000)
 ```
 
-##### 三维笛卡尔坐标转地理坐标
+#### 三维笛卡尔坐标转地理坐标
 
 ```js
 //第一步：笛卡尔转弧度
@@ -227,14 +235,14 @@ console.log(lat)
 console.log(cartographic.height)
 ```
 
-##### 角度和弧度的转化
+#### 角度和弧度的转化
 
 ```js
 角度转弧度：let radians = Cesium.Math.toRadians(degrees)
 弧度转角度：let degrees = Cesium.Math.toDegrees(radians)
 ```
 
-##### 获取屏幕上的坐标
+#### 获取屏幕上的坐标
 
 ```js
 // 获取画布
@@ -249,7 +257,7 @@ handler.setInputAction((event) => {
 }, Cesium.ScreenSpaceEventType.LEFT_CLICK);)
 ```
 
-##### 屏幕坐标转化为三维笛卡尔坐标
+#### 屏幕坐标转化为三维笛卡尔坐标
 
 ```js
 var ray = viewer.camera.getPickRay(windowPosition);
@@ -262,7 +270,7 @@ var cartesian3 = viewer.scene.globe.pick(ray, viewer.scene);
 var cartesian = viewerInstance.camera.pickEllipsoid(event.position, viewerInstance.scene.globe.ellipsoid);
 ```
 
-##### 三维笛卡尔坐标转化为屏幕坐标
+#### 三维笛卡尔坐标转化为屏幕坐标
 
 ```js
 var windowPos = Cesium.SceneTransforms.wgs84ToWindowCoordinates(scene, Cartesian3);
@@ -298,7 +306,9 @@ var windowPos = Cesium.SceneTransforms.wgs84ToWindowCoordinates(scene, Cartesian
 
 - `Camera.rotate(axis, angle)`: 绕着任意轴旋转相机。
 
-#### `setView`
+***
+
+### `setView`
 
 `setView`用于设置相机飞行目的点的三维坐标和视角，没有飞行过程，直接定位到设定的视域范围，用于快速切换视角
 
@@ -315,7 +325,9 @@ viewer.camera.setView({
 })
 ```
 
-#### `flyTo`
+***
+
+### `flyTo`
 
 `flyTo`是快速切换视角，带有飞行动画，可以设置飞行时长
 
@@ -355,9 +367,11 @@ viewer.clock.clockRange = Cesium.ClockRange.LOOP_STOP;  // 循环执行，到达
 
 `Cesium`丰富的空间数据可视化`API`分为两部分：`Primitive API `面向三维图形开发者，更底层一些，`Entity API `是数据驱动更高级一些，它们把可视化和信息存储到统一的数据结果中，这个对象叫`Entity`
 
-#### 创建实体
+***
 
-##### 点`point`
+### 创建实体
+
+#### 点`point`
 
 ```js
 const point = viewer.entities.add({
@@ -371,7 +385,7 @@ const point = viewer.entities.add({
 viewer.zoomTo(point)  // 将视图缩放到指定的实体，使其在视图中居中显示
 ```
 
-##### 标注`billboard`
+#### 标注`billboard`
 
 ```js
 const billboard = viewer.entities.add({
@@ -384,7 +398,7 @@ const billboard = viewer.entities.add({
 viewer.zoomTo(billboard)
 ```
 
-##### 标签`label`
+#### 标签`label`
 
 ```js
 const label = viewer.entities.add({
@@ -399,7 +413,7 @@ const label = viewer.entities.add({
 viewer.zoomTo(label)
 ```
 
-##### 线`line`
+#### 线`line`
 
 ```js
 const line = viewer.entities.add({
@@ -412,7 +426,7 @@ const line = viewer.entities.add({
 viewer.zoomTo(line)
 ```
 
-##### 面`polygon`
+#### 面`polygon`
 
 ```js
 const polygon = viewer.entities.add({
@@ -431,9 +445,9 @@ const polygon = viewer.entities.add({
 viewer.zoomTo(polygon)
 ```
 
-##### 实体`box`
+#### 实体`box`
 
-###### 长方形柱体
+##### 长方形柱体
 
 ```js
 const box = viewer.entities.add({
@@ -447,7 +461,7 @@ const box = viewer.entities.add({
 viewer.zoomTo(box)
 ```
 
-###### 圆柱体
+##### 圆柱体
 
 ```js
 const ellipse = viewer.entities.add({
@@ -463,7 +477,7 @@ const ellipse = viewer.entities.add({
 viewer.zoomTo(ellipse)
 ```
 
-##### 三维模型
+#### 三维模型
 
 加载三维模型和前面其他的可视数据区别不大，只需要`entity`带`position`属性和一个指向`glTF`模型资源的`uri`径即可··
 
@@ -477,7 +491,9 @@ viewer.zoomTo(ellipse)
  viewer.trackedEntity = entity;
  ```
 
-#### 删除实体
+***
+
+### 删除实体
 
 ```js
 // 方式一:直接删除remove
@@ -521,14 +537,18 @@ handler.setInputAction((event) => { // 注册事件监听
 - `LEFT_DOWN、RIGHT_DOWN`：鼠标左/右键按下
 - `LEFT_UP、RIGHT_UP`：鼠标左/右键释放
 
-#### 关闭或销毁事件监听
+***
+
+### 关闭或销毁事件监听
 
 ```js
 handler.destroy();    //永久性销毁事件处理器，之后它不能再被使用。
 handler.removeInputAction(eventType);  //仅移除特定事件类型的监听(如：handler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);)
 ```
 
-#### 关闭图元的点击事件
+***
+
+### 关闭图元的点击事件
 
 对于`cesium`中的图元信息，在默认的情况下，它是有鼠标左键的单击事件和双击事件的，单击图元就会展示该图元的基本信息，双击图元就会将视角放大到该图元上，有时候我们不想让这些点击事件触发，我们可以通过代码控制来进行禁用这些点击事件：
 
@@ -579,7 +599,7 @@ viewer.scene.camera.lookAtTransform(
 
 在` Cesium`的实体集合中添加一个新的实体，需要调用` viewer.entities.add `方法
 
-#### 添加一个矩形
+### 添加一个矩形
 
 ```js
 var west = -90.0;  // 矩形西边的经度为-90.0度
@@ -594,7 +614,9 @@ viewer.entities.add({
 });
 ```
 
-#### 添加一条线
+***
+
+### 添加一条线
 
 ```js
 const orangeOutlined = viewer.entities.add({
@@ -619,9 +641,9 @@ const orangeOutlined = viewer.entities.add({
   });
 ```
 
-##### `polyline`的属性
+***
 
-#### 绘制点
+### 绘制点
 
 ```js
 async function drawPoints() {
@@ -681,7 +703,7 @@ async function DrawPoints() {
 
 ## 动目标
 
-#### `CZML`
+### `CZML`
 
 `CZML`是一种用来描述动态场景的`JSON`架构的语言（简单的可以理解为数组形式），它可以用来描述点、线、布告板、模型以及其他的图元，同时定义他们是怎样随时间变化的，`CZML`可以通到很多其他的程序自动生成，或者手写进行配置也可以
 
@@ -689,7 +711,7 @@ async function DrawPoints() {
 
 可以通过`czml-writer`来生成`CZML`
 
-##### `CZML`的基本形式
+#### `CZML`的基本形式
 
 ```js
 let czml=[
@@ -725,7 +747,7 @@ let czml=[
 >
 > - 完整的`CZML`至少包合两个`packet`，第一个用于标识`CZML`，第二个`packet`对应一个场景中的对象，例如一架飞机，每个`packet`都有一个`id`属性，标示当前描述的对象
 
-##### `CZML`常用属性
+#### `CZML`常用属性
 
 |           属性名称           |                          重要子属性                          |
 | :--------------------------: | :----------------------------------------------------------: |
@@ -745,19 +767,19 @@ let czml=[
 |       `label（标签）`        | `show，textm style，font，scale，fillColor，outlineColor，outlineWidth，eyeOffset，translucencyByDistance，pixeloffset，horizontalOrigin，verticalOrigion，pixelOffsetScaleByDistance` |
 |    `billboard（广告牌）`     | `show，image，color，eyeOffset，horizontalOrigion，verticalOrigin，pixelOffset，scale，rotation，width，height，scaleByDistance，imageSubRegion，sizeInMeters，alignedAxis` |
 
-###### `id`
+##### `id`
 
 描述对象的`id`，唯一标识` CZML `源中的单个对象以及加载到同一作用域的任何其他 `CZML` 源，我们可以通过`getById`来获取这个实体，如果未指定此属性，则客户端将自动生成一个唯一的属性，但是这样我们就无法获取这个实体了
 
-###### `name`
+##### `name`
 
 对象的名称，不用唯一，用于提供给用户使用
 
-###### `parent`
+##### `parent`
 
 父对象或父文件的`id`
 
-###### `clock`
+##### `clock`
 
 整个数据集的时钟设置，仅对文档对象有效
 
@@ -768,19 +790,19 @@ let czml=[
 |    `range`    | 字符串 | 时钟的当前时间到达其起点或终点时的行为，有效值为 `'UNBOUNDED'`(当时间到达时钟的起点或终点时，时钟会继续运行，不会停止或循环，当前时间可以超过起点或终点，继续向前或向后移动)、`'CLAMPED'`（当时间到达时钟的起点或终点时，时钟会停止在该时间点，不会继续向前或向后移动） 和 `'LOOP_STOP'`（当当前时间到达时钟的终点时，时钟会自动回滚到起点，并重新开始运行） |
 |    `step`     | 字符串 | 定义时钟在时间上的步进方式，有效值为 `'SYSTEM_CLOCK'`（时钟的当前时间与系统时钟同步。时钟的当前时间会根据系统时钟的实际时间进行更新，不受`multiplier`属性的影响）、`'SYSTEM_CLOCK_MULTIPLIER' `（时钟的当前时间与系统时钟同步，但可以通过`multiplier`属性调整时间步进的速度。`multiplier`大于1时，时钟运行速度加快；`multiplier`小于1时，时钟运行速度减慢）和 `'TICK_DEPENDENT'`（时钟的当前时间根据每次`tick`调用的时间间隔进行更新。时钟的步进速度由`multiplier`属性和每次`tick`的时间间隔决定） |
 
-###### `version`
+##### `version`
 
 正在编写的`CZML` 版本，仅对文档对象有效，`CZML`目前只有1.0版本，固定值
 
-###### `description`
+##### `description`
 
 对象的`HTML`描述
 
-###### 可用性`availability`
+##### 可用性`availability`
 
 `availability`属性用来表示一个对象的数据在什么时候是可用的，如果`availability`属性没有定义，那么默认是全部时间内都可用的，在一个流中，只有定义在最后的那个`availability`起作用，其他的都会被忽略，在某一时刻，如果一个对象是可用的，那么这个对象至少要有一个可用的属性并且在此时间段内需要的属性都要有定义（也就是获取到了数据），不然`Cesium`就会等待数据直到接收到数据为止
 
-###### 位置`position`
+##### 位置`position`
 
 对象在世界中的位置属性，该属性的子属性有：
 
@@ -796,7 +818,7 @@ let czml=[
 |      `nextTime`       |  `Packet`  | 字符串或数字 | 此间隔内下一个样本的时间，指定为 `ISO 8601` 日期和时间字符串或来自`epoch`的间隔秒数。此属性用于确定不同数据包中指定的样本之间是否存在间隙 |
 |    `previousTime`     |  `Packet`  | 字符串或数字 | 此间隔内上一个样本的时间，指定为 `ISO 8601` 日期和时间字符串或来自`epoch`的间隔秒数。此属性用于确定不同数据包中指定的样本之间是否存在间隙 |
 
-###### `orientation`
+##### `orientation`
 
 对象在世界中的方向（模型在世界中的方向）
 
@@ -808,7 +830,7 @@ let czml=[
 |  `unitQuaternion`   |  数组  | 使用单位四元数（`unit quaternion`）来表示实体的方向，四元数是根据位置信息`postion`和航向（`heading`）、俯仰（`pitch`）和翻滚（`roll`）生成的，`unitQuaternion`适用于需要精确控制旋转的场景，四元数在处理旋转动画和复杂方向变化时更加稳定和高效 |
 | `velocityReference` | 字符串 | 指定实体的方向与其设置矢量之间的关系，如方向的参考属性，指向实体的位置属性：`"velocityReference": "#position"` |
 
-###### 时间间隔`intervals`
+##### 时间间隔`intervals`
 
 `CZML`数组中的每个元素对应每一个不同的时间，属性的值。时间间隔的定义使用`interval` 属性，通过`ISO8601 interval`格式的字面值表示
 
@@ -837,7 +859,7 @@ let czml=[
 
 `interval`属性是可选的，如果没有定义，默认为整个时间，表明该属性贯穿整个时间段
 
-###### 时间戳`epoch`
+##### 时间戳`epoch`
 
 时间戳采样来控制位置信息
 
@@ -862,7 +884,7 @@ let czml=[
 - `nextTime`：在时间间隔内下一个采样的时间，可以通过`ISO8061`方式，也可以通过与`epoch`秒数来定义。它决定了不同`packet`之间的采样是否有停顿
 - `previousTime`：在时间间隔内前一个采样的时间，可以通过`ISO8061`方式，也可以通过与`epoch`秒数来定义，它决定了不同`packet`之间的采样是否有停顿
 
-###### `billboard`
+##### `billboard`
 
 `billboard`属性表示标记广告牌属性，与视图对其的广告牌或图像，广告牌通过 `position` 属性在场景中定位，其子属性有：
 
@@ -909,7 +931,7 @@ let czml=[
 >   | :------: | :----------: | :----------------------------------------------------------: |
 >   | `number` | 数字或者数组 | 该值可以是单个数字，在这种情况下，该值在间隔内是恒定的，也可以是一个数组。如果它是一个数组，并且数组有一个元素，则该值在间隔内是恒定的。如果它有两个或多个元素` [Time， Value]`，则它们是时间标记的样本 |
 
-###### `label`
+##### `label`
 
 `label`标签是放置在场景中的一串文本，其子属性和`billboard`类似，可以参考`billboard`的子属性，`label`的相似子属性有`eyeOffset`、`horizontalOrigin`、`verticalOrigin`、`pixelOffset`、`scale`、`show`
 
@@ -956,7 +978,7 @@ let czml=[
 },
 ```
 
-###### `path`
+##### `path`
 
 `path`属性即路径属性，是由对象随时间推移运动定义的折线，`path`的子属性和`billboard`类似的属性这里不做介绍，可以参考`billboard`的子属性，类似的子属性有：`show`
 
@@ -987,7 +1009,7 @@ let czml=[
 >   |   `color`   | 表面的颜色，该子属性有以下的属性值：`rgba`、`rgbaf`、`reference`、`epoch`、`nextTime`和`previousTime`  子属性查看之前的介绍，这里不做详细的说明 |
 >   | `glowPower` | 光芒的强度，该子属性有以下的属性值：`number`、`rgbaf`、`reference`、`epoch`、`nextTime`和`previousTime`  子属性查看之前的介绍，这里不做详细的说明 |
 
-###### `model`
+##### `model`
 
 `model`为3维模型属性，`model`的子属性和`billboard`类似的属性这里不做介绍，可以参考`billboard`的子属性，类似的子属性有：`show`、`scale`
 
@@ -1002,7 +1024,7 @@ let czml=[
 |     `articulations`     | 定义模型的关节动画，用于控制模型的可动部分，其子属性为模型绘制时定义的各个部位的属性名，这些子属性有以下的属性值：`number`、`rgbaf`、`reference`、`epoch`、`nextTime`和`previousTime`  子属性查看之前的介绍，这里不做详细的说明 |
 | ``nodeTransformations`` | 定义模型中特定节点的变换（如平移、旋转、缩放），对于特定关键属性有如下的子属性：`translation`(通过`cartesian`控制)、`rotation`(通过`quaternion`控制) |
 
-##### `CZML`动态路径
+#### `CZML`动态路径
 
 主要涉及的`Api`和方法：
 
@@ -1146,7 +1168,7 @@ viewer.trackedEntity.orientation = Cesium.Quaternion.fromHeadingPitchRoll(new Ce
 
 我们可以打印`viewer.trackedEntity.orientation`的四元数，将四元数填入模型中的`unitQuaternion`数组中，直接使用数组即可调整方向
 
-##### `CZML`文件加载
+#### `CZML`文件加载
 
 `CZML`文件最终成为了`CzmlDataSource`对象，被加载到`viewer`的`datasources`中
 
@@ -1168,7 +1190,7 @@ dataSourcePromise.then(function (dataSource) {
 
 注意：当加载多个`czml`文件时，场景信息会以最后一个`czml`文件定义的为准
 
-##### `CZML`文件移除
+#### `CZML`文件移除
 
 `CZML`文件的移除，即`CzmlDataSource`对象的移除
 
@@ -1189,7 +1211,7 @@ cesium.viewer.dataSources.removeAll(true)
 
 ***
 
-#### 加载3维模型
+### 加载3维模型
 
 主要涉及的`Api`和方法：
 
@@ -1255,7 +1277,7 @@ addModel(url, height) {  // 调用方法传递的参数为模型的url和模型�
 
 ***
 
-#### `gltf`模型节点动画
+### `gltf`模型节点动画
 
 主要涉及的`Api`和方法：
 
@@ -1264,7 +1286,7 @@ addModel(url, height) {  // 调用方法传递的参数为模型的url和模型�
 - `Primitive`：图元方式管理模型
 - `ModelNode`：模型节点的类
 
-##### `gltf`模型的构成要素
+#### `gltf`模型的构成要素
 
 在建模的时候，模型的骨架由关节和节点构成，我们需要对节点进行控制来实现动画的效果
 
@@ -1280,7 +1302,7 @@ let primitive = window.viewer.scene.primitives.add(Cesium.Model.fromGltf({
 
 ***
 
-#### `articulations`自定义动画
+### `articulations`自定义动画
 
 在`CZML`数组中的`model`属性中加入`articulations`子属性来自定义3维模型的动画，火箭发射的自定义动画如下所示：
 
@@ -1450,7 +1472,9 @@ articulations: {   // 定义动画参数
 >   - `Height`：定义物体或其特定部分的高度变化
 >   - `Width`：定义物体或其特定部分的宽度变化
 
-#### 制作模型旋转动画
+***
+
+### 制作模型旋转动画
 
 1. 整体的模型是需要分部件的，如果没有分离，需要将模型拆开进行布局
 2. 选择一个部件制作旋转动画，右键该部件->设置原点->(原点->质心（体积))，如果想要自定义旋转中心，可以先通过游标进行确定位置，在将旋转中心放到游标的位置
@@ -1460,13 +1484,14 @@ articulations: {   // 定义动画参数
 6. 我们可以右键所有关键帧，设置关键帧为线性插值，来保证运动的平滑
 7. 进入动画页面，外部插值设置为连续，保证首尾平滑效果（依次点击通道->插值模式->线性插值）
 
-#### 生成路径数组
+***
+
+### 生成路径数组
 
 编写生成路径数组的函数，传入起点和终点的经纬度和高度信息，生成路径数组
 
 ```js
-
-function generateArcPath(startLon, startLat, startHeight, endLon, endLat, endHeight, numPoints) {
+Wfunction generateArcPath(startLon, startLat, startHeight, endLon, endLat, endHeight, numPoints) {
     const startCartographic = new Cesium.Cartographic(Cesium.Math.toRadians(startLon), Cesium.Math.toRadians(startLat), startHeight);
     const endCartographic = new Cesium.Cartographic(Cesium.Math.toRadians(endLon), Cesium.Math.toRadians(endLat), endHeight);
 
@@ -1489,7 +1514,9 @@ function generateArcPath(startLon, startLat, startHeight, endLon, endLat, endHei
 
 > `numPoints`表示生成该路径数组中有几个生成点，点越多路径的弧度更平滑
 
-#### 导弹机动发射
+***
+
+### 导弹机动发射
 
 导弹机动发射的函数方法，外界输入起始点的经纬度和高度后，点击发送按钮，就可以发射导弹
 
@@ -1666,7 +1693,9 @@ const launchMissile = () => {
 </style>
 ```
 
-#### `WebSocket`
+***
+
+### `WebSocket`
 
 `WebSocket`是一种用于在`Web`应用程序和服务器之间建立实时、双向的通信连接，属于应用层协议，它基于`TCP`传输协议，并复用`HTTP`的握手通道，`WebSocket`可以在浏览器中进行使用，支持双向通信，使用比较简单，当数据需要在一段时间内需要时刻变化时，我们可以使用`WebSocket`来完成页面的实时响应（服务端将生成的数据发送客户端，客户端页面马上就监听到，之后再进行响应），而不是通过前后端的方式，通过定时器不断的请求接口得到数据
 
@@ -1688,9 +1717,9 @@ const ws = new WebSocket(`ws://localhost:8081/ws/${uid}`); // 服务的的地址
 
 如果服务端的地址错误，在前端中会显示`WebSocket`连接失败的提示报错，没有抛出错误表示连接成功
 
-##### `WebSocket`的四个函数
+#### `WebSocket`的四个函数
 
-###### `open`
+##### `open`
 
 `WebSocket`通信当服务端开启时会触发`open`函数
 
@@ -1701,7 +1730,7 @@ const openHandle = () => {
 ws.addEventListener("open", openHandle)
 ```
 
-###### `close`
+##### `close`
 
 `WebSocket`通信当服务端关闭时会触发`close`函数，我们将服务端停掉后，客户端可以立刻触发钩子，来触发对应的函数
 
@@ -1712,7 +1741,7 @@ const closeHandle = () => {
 ws.addEventListener("close", closeHandle)
 ```
 
-###### `message`
+##### `message`
 
 `message`函数可以获取后端生成并传递的数据消息
 
@@ -1724,7 +1753,7 @@ const messageHandle = (data) => {
 ws.addEventListener("message", messageHandle)
 ```
 
-###### `error`
+##### `error`
 
 `WebSocket`通信当客户端没有正确使用服务端的地址时会触发`error`函数
 
@@ -1751,14 +1780,14 @@ ws.onclose = function(event) {
 }
 ```
 
-##### 操作`WebSocket`的方法
+#### 操作`WebSocket`的方法
 
 对于生成的`const ws = new WebSocket();`对象，我们可以用一些方法来对通信进行控制
 
 - `close`：关闭`WebSocket`连接：`ws.close()`
 - `send`：客户端向服务的发送消息：`ws.send("我来自客户端")`，发送的数据可以是字符串、`Blob` 对象或` ArrayBuffer `对象
 
-##### 重连
+#### 重连
 
 当我们关闭服务端的时候，客户端可以监听到服务端被关闭了，但是我们后面重新开启服务的的时候，客户端是不能去重新自动连接的，因此我们需要写一个重连的方法，我们可以通过定时器进行实现：当我们`WebSocket`关闭的钩子执行后，我们需要有一个`restart`的方法，该方法中有一个定时器，当执行`restart`方法后，定时器就会执行，我们可以设置定时器每隔5秒去重新请求连接服务端，只要连接到了服务端，我们就关闭这个定时器：
 
@@ -1813,7 +1842,7 @@ ws.addEventListener("message", messageHandle)
 ws.addEventListener("error", errorHandle)
 ```
 
-##### `WebSocket`的卸载
+#### `WebSocket`的卸载
 
 在`Vue`中，当我们的页面`onUnmounted`的时候，我们需要对`WebSocket`进行卸载
 
@@ -1821,11 +1850,13 @@ ws.addEventListener("error", errorHandle)
 
 ## 场景设置
 
-#### 晨昏线
+### 晨昏线
 
 晨昏线的设置只需要设置：`viewer.scene.globe.enableLighting = true;`即可
 
-#### 场景截图
+***
+
+### 场景截图
 
 对于场景截图的设置，我们需要对`viewer`进行特定的初始化设置，否则加载出来的图片是全黑没有内容的：
 
@@ -1865,7 +1896,9 @@ export function exportImage(){
 }
 ```
 
-#### 场景信息
+***
+
+### 场景信息
 
 对于地球中的某个场景，我们想要点击它时可以显示出其具体的描述信息，我们需要对`viewer`进行特定的初始化设置：
 
@@ -1907,7 +1940,9 @@ const czml = [
 
 这样我们点击地球上的对应的节点就可以看到其对应的描述信息
 
-#### 经纬度网络
+***
+
+### 经纬度网络
 
 设置经纬度网络需要对经度和纬度进行分开设置同时还需要进行抗锯齿设置(在折线进行放大的时候会出现锯齿状的形态，开启抗锯齿可以避免这种情况)
 
@@ -1990,7 +2025,9 @@ for (let lat = -80; lat <= 80; lat += 10) {
 }
 ```
 
-#### 地球坐标系
+***
+
+### 地球坐标系
 
 创建地球坐标系的案例需要先设置地球透明遮罩的效果，即可以看到地球的内部，从而口语定位地球坐标系的原点位置，实现地球透明遮罩效果：
 
@@ -2053,7 +2090,9 @@ viewer.scene.primitives.add(new Cesium.DebugModelMatrixPrimitive({
 }));
 ```
 
-#### 圆形空间网格
+***
+
+### 圆形空间网格
 
 添加圆形空间网格需要指定圆心的坐标和半径，同时要给出圆环的数量和径向数量：
 
@@ -2106,7 +2145,9 @@ for (let i = 0; i < numRadials; i++) {
 }
 ```
 
-#### 矩形空间网格
+***
+
+### 矩形空间网格
 
 ```js
 // 定义矩形的中心位置和尺寸
@@ -2169,7 +2210,9 @@ for (let i = 0; i <= numVerticalLines; i++) {
 }
 ```
 
-#### 鹰眼地图
+***
+
+### 鹰眼地图
 
 鹰眼地图是指共和主地球同步的辅助查看地球，鹰眼地球是不能进行旋转，拖动和放大等操作的，只能辅助主地球进行查看操作，同步主地球的视角
 
@@ -2280,9 +2323,9 @@ import { Fun as Test } from '/src/utils/cesiumKit/Fun.js'
 
 
 
+## 在线`Cesium`项目
 
-
-# `Sandpack`
+### `Sandpack`安装配置
 
 安装`andpack`：`npm i sandpack-vue3`
 
@@ -2290,11 +2333,7 @@ import { Fun as Test } from '/src/utils/cesiumKit/Fun.js'
 
 `showNavigator`在展示界面引入顶部组件
 
-
-
 安装本地依赖库：`npm install --save-dev tsup`
-
-
 
 ```vue
 <div v-for="item in elementData" :key="item.id" @click="indexBtn(`first${item.title}`)">
@@ -2303,35 +2342,33 @@ import { Fun as Test } from '/src/utils/cesiumKit/Fun.js'
 </div>
 ```
 
-图片渲染不出来
+***
 
-@无法被识别，在`ElementMap.js`文件中不能使用@，要重新用回`/src`
+### 遇到的问题
 
+- 添加天气系统发现`cesium`的版本不能使用`1.99`的版本，不然使用天气系统
 
+- 获取代码的更目录：`../../`
 
+- 图片渲染不出来：`@`无法被识别，在`ElementMap.js`文件中不能使用@，要重新用回`/src`
 
+- 控制台报错：
 
-控制台报错：
+  ```ssh
+  [Vue warn]: Invalid event arguments: event validation failed for event "click".
+  ```
 
-```ssh
-[Vue warn]: Invalid event arguments: event validation failed for event "click".
-```
+  这个报错的原因是因为在使用`el-menu`绑定`click`事件时，必须要在组件的内部加上`index`属性：
 
-这个报错的原因是因为在使用el-menu绑定click事件时，必须要在组件的内部加上`index`属性：
-
-```vue
-<el-menu-item v-for="item in elementLineData" :key="item.id" :index="item.title" @click="goAnchor(item.title)">
-    <el-icon><View /></el-icon>
-    <span>{{item.title}}</span>
-</el-menu-item>
-```
-
-
-
-获取代码的更目录：`../../`
+  ```vue
+  <el-menu-item v-for="item in elementLineData" :key="item.id" :index="item.title" @click="goAnchor(item.title)">
+      <el-icon><View /></el-icon>
+      <span>{{item.title}}</span>
+  </el-menu-item>
+  ```
 
 
 
 
 
-添加天气系统发现`cesium`的版本不能使用`1.99`的版本，不然使用天气系统
+
