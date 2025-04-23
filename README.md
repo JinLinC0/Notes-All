@@ -8,7 +8,7 @@
 - 2024/07/20 完成了`Git`、`VSCode`笔记的整理
 - 2024/07/28 完成了`Web`开发环境搭建、`Vue`项目配置问题笔记的整理
 - 2024/08/10 完成了`Blender`、`Ubuntu`、`Vim`笔记的整理
-- 2024/08/28 完成了`FastCrud`、`GoJs`、开发积累-`RBM`项目笔记的整理
+- 2024/08/28 完成了`FastCrud`、`GoJs`、开发积累-`RBM`项目、`CesiumJs`笔记的整理
 - 2024/09/13 完成了`Python`、`Django`、`Hadoop`、`ThingsBoard`笔记的整理
 - 2024/12/10 完成了`VitePress`、`TailwindCSS`、`VeeValidate`笔记的整理
 - 2024/12/22 完成了`Java`后端学习规划笔记的整理
