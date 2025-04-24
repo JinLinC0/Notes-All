@@ -166,7 +166,6 @@ tooltip: {
         color: '#fff'
     }
 },
-
 ```
 
 ***
