@@ -10,6 +10,7 @@
 - 2024/08/10 完成了`Blender`、`Ubuntu`、`Vim`笔记的整理
 - 2024/08/28 完成了`FastCrud`、`GoJs`、开发积累-`RBM`项目、`CesiumJs`笔记的整理
 - 2024/09/13 完成了`Python`、`Django`、`Hadoop`、`ThingsBoard`笔记的整理
+- 2024/10/13 完成了`Pinia`、`ECharts`、`Element Plus`笔记的整理
 - 2024/12/10 完成了`VitePress`、`TailwindCSS`、`VeeValidate`笔记的整理
 - 2024/12/22 完成了`Java`后端学习规划笔记的整理
 - 2025/02/21 完成了`MySQL`、`PostgreSQL`笔记的整理
