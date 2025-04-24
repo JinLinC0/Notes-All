@@ -109,6 +109,3 @@ console.log(routerStore.get);  // 也可以通过get方法读取具体的属性�
 <style lang="scss">
 </style>
 ```
-
-### 使用`pinia`来维护我们的菜单路由
-

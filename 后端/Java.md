@@ -1741,13 +1741,13 @@ class Cat {
 >   public double f1() {
 >       return 1.1;
 >   }
->                                                     
+>                                                       
 >   // 兼容（可以自动转换），编译通过
 >   public double f1() {
 >       int n = 1;
 >       return n;
 >   }
->                                                     
+>                                                       
 >   // 类型不一致，且不能自动转换，编译不通过
 >   public int f1() {
 >       return 1.1;
@@ -8891,6 +8891,569 @@ System.out.print(list);   // 原先的排序顺序 [tom, smith, king, milan]
   // 将集合中的tom替换为Tom
   Collections.replaceAll(list, "tom", "Tom");
   ```
+
+
+
+## 泛型
+
+泛型在实际的开发中，使用的比较普遍，同时，在`Java`源码中，也大量的用到了泛型
+
+### 泛型的引入
+
+泛型的引入和优点：
+
+编写程序，在`ArrayList`集合中，添加三个`Dog`对象，`Dog`对象包含`name`和`age`，并输出`name`和`age`（要求使用`getXxx()`方法）：
+
+```java
+public class Generic01 {
+    public static void main(Sting[] args) {
+        // 使用传统的方式来实现
+        ArrayList arrayList = new ArrayList();
+        arrayList.add(new Dog("wangcai", 10));
+        arrayList.add(new Dog("xiaohei", 8));
+       
+        
+        // 使用传统的方式解决该问题是没有任何问题的，但是假如程序员不小心添加了一只猫进去，其集合也是不会抛出异常的
+        arrayList.add(new Cat("xiaomao", 8)); // 代码不会出现异常提示，但是遍历输出的时候会抛出异常（即代码存在隐患，但是编译器发现不了）
+        
+         // 遍历输出
+        for(Object o: arrayList) {
+            // 向下转型
+            Dog dog = (Dog) o;
+            System.out.println(dog.getName() + "-" + dog.getAge());
+        }
+    }
+}
+
+class Dog {
+    private String name;
+    private int age;
+    public Dog(String name, int age) {
+        this.name = name;
+        this.age = age;
+    }
+    
+    public String getName() {
+        return name;
+    }
+    public void setName(String name) {
+        this.name = name;
+    }
+    
+    public int getAge() {
+        return age;
+    }
+    public void setAge(int age) {
+        this.age = age;
+    }
+}
+
+class Cat {
+    private String name;
+    private int age;
+    public Dog(String name, int age) {
+        this.name = name;
+        this.age = age;
+    }
+    
+    public String getName() {
+        return name;
+    }
+    public void setName(String name) {
+        this.name = name;
+    }
+    
+    public int getAge() {
+        return age;
+    }
+    public void setAge(int age) {
+        this.age = age;
+    }
+}
+```
+
+> 使用传统方法的问题：
+>
+> - 不能对加入到集合`ArrayList`中的数据类型进行约束（不安全）
+> - 遍历的时候，需要进行类型转换，如果集合中数据量较大，对效率有影响
+
+使用泛型来解决上述问题：
+
+```java
+public class Generic01 {
+    public static void main(Sting[] args) {
+        // 使用泛型的方式来实现
+        // ArrayList<Dog>表示存放到ArrayList集合中的元素只能是Dog类型（更多细节后面阐述）
+        // 如果编译器发现添加的类型，不满足要求，就会报错
+        ArrayList<Dog> arrayList = new ArrayList<Dog>();
+        arrayList.add(new Dog("wangcai", 10));
+        arrayList.add(new Dog("xiaohei", 8));
+        arrayList.add(new Cat("xiaomao", 8)); // 编译器给出报错提示，说明Cat类型不能放到该集合中
+        
+        // 遍历输出
+        // 使用泛型进行遍历，可以直接取出Dog类型，而不是Object类型
+        for(Dog dog: arrayList) {
+            System.out.println(dog.getName() + "-" + dog.getAge());
+        }
+    }
+}
+```
+
+> 使用泛型的好处：
+>
+> - 编译时，检查添加元素的类型，提高了安全性
+> - 减少了类型转换的次数，提高了效率
+
+***
+
+### 泛型介绍
+
+泛型可以理解为广泛的类型（表示数据类型的一种类型），可以指定将具体的数据类型（`Integer`、`String`、`Dog`等）赋给泛型，在系统提供的`ArrayList`类中，`public class ArrayList<E> {}`这个`<E>`就是一个泛型（这个字母一般是使用`E`或者`T`来表示），在使用时将具体的数据类型传递给它，后续在使用中的时候，`E`就使用`Dog`来替换
+
+- 泛型又称为参数化类型，是`jdk5.0`出现的新特性，解决数据类型的安全问题
+
+- 在类声明或实例化时只要指定好需要的具体类型即可
+
+  如：`ArrayList<Dog> arrayList = new ArrayList<Dog>();`
+
+- `Java`泛型可以保证如果程序在编译时没有发出警告，运行时就不会产生`ClassCastException`异常。同时，使用泛型可以使代码更加简洁和健壮
+
+- 泛型的作用：可以在类声明时通过一个标识表示类中某个属性的类型，或者是某个方法的返回值的类型，或者是参数类型
+
+  ```java
+  public class Generic02 {
+      public static void main(String[] args) {
+          Person<String> p = new Person<String>("jlc");   
+          // 如果传入的不是String类型的数据，就会报错
+          /* 这样这个Person类就等价于
+              class Person {
+                  String name;
+                  public Person(String name) {
+                      this.name = name;
+                  }
+                  public String f() {
+                      return name;
+                  }
+              }
+          */
+      }
+  }
+  
+  // 在类声明时通过一个标识表示类中某个属性的类型
+  class Person<E> {
+      E name;  // 泛型E表示属性name的数据类型，该数据类型是在定义Person对象的时候指定的（即在编译期间就确定了E是什么类型）
+      
+      // E可以使用在某个方法的参数类型
+      public Person(E name) {
+          this.name = name;
+      }
+      
+      // E可以使用在某个方法的返回类型
+      public E f() {
+          return name;
+      }
+  }
+  ```
+
+  > 注意：`E`具体的数据类型在定义`Person`对象的时候指定，即在编译期间，就确定`E`是什么类型
+
+基本语法：
+
+- 接口使用泛型：`interface 接口名<T> {}`
+- 类使用泛型：`class 类名<K, V> {}`，对于`HashMap`类就是这种形式
+
+> 说明：
+>
+> - 其中，`T`、`K`、`V`不代表值，而是表示类型（创建具体对象的时候进行指定的）只能是引用类型，不能是其他的数据类型，否则会报错
+>
+>   ```java
+>   List<Integer> lsit = new ArrayList<Integer>();  // Integer是引用数据类型，正确
+>   List<int> lsit2 = new ArrayList<int>();  // int是基本数据类型，不正确
+>   ```
+>
+>   不同的类其泛型的数量不同，有一个泛型的，也有需要传入两个泛型的
+>
+> - 任意字母都可以，常用`T`表示，是`Type`的缩写
+
+泛型的实例化：一般是在创建具体对象的时候进行指定泛型的具体类型的，如：
+
+```java
+// 情况一：在创建具体对象的时候指定具体的类型
+List<String> strList = new ArrayList<String>();
+// 情况二：取出对象/集合的时候，也可以指定具体的类型
+Iterator<Customer> iterator = customers.iterator();
+```
+
+注意事项：
+
+- 在给泛型指定具体类型后，可以传入该类型或者其子类型
+
+  ```java
+  public class Generic03 {
+      public static void main(String[] args) {
+          Pig<A> aPig = new Pig<A>(new A());  // E指定了A类型，构造器传入了new A()
+          // 如果没有继承关系
+          Pig<A> aPig = new Pig<A>(new B());  // 会报错，构造器希望传入的是A类型
+          // 但是如果B类继承了A类，就不会报错，构造器可以传入该类型或者其子类型
+          Pig<A> aPig = new Pig<A>(new B());   // 不报错
+      }
+  }
+  
+  class A {}
+  class B extends A {}
+  
+  class Pig<E> {
+      E e;
+      public Pig(E e) {
+          this.e = e;
+      }
+  }
+  ```
+
+- 对于泛型的形式，在实际的开发中，我们往往进行简写：
+
+  ```java
+  // 完整的形式
+  List<String> strList = new ArrayList<String>();
+  // 简写的形式
+  List<String> strList = new ArrayList<>();  // 编译器会进行类型的推断
+  ```
+
+  如果我们如下的方式进行简写：`List list = new ArrayList();`，系统默认给它的泛型是`<E>`，其中`E`就是`Object`类型，等价于：`List<Object> list = new ArrayList<>();`（你觉得没有使用泛型，但是系统实际上使用了泛型，只是使用的是`Object`）
+
+具体的应用实例：
+
+```java
+public class Generic03 {
+    public static void main(String[] args) {
+        // 使用泛型的方式给HashMap放入3个学生对象  K -> String  V -> Student
+        HashMap<String, Student> hm = new HashMap<String, Student>();
+        /*
+        	底层HashMap的声明为：
+        	public class HashMap<K, V> {}
+        */
+        // 放入3个学生对象，要按照泛型指定的类型进行存放
+        hm.put("one", new Student("tom", 28));
+        hm.put("two", new Student("jlc", 25));
+        hm.put("three", new Student("jack", 28));
+        // 循环遍历
+        // 先得到Entry对象，这里的K和V是直接通过HashMap声明的泛型继承下来的
+        Set<Map.Entry<String, Student>> entries = hm.entrySet();
+        Iterator<Map.Entry<String, Student>> iterator = entries.iterator();
+        while(iterator.hasNext()) {
+            Map.Entry<String, Student> next = iterator.next();
+            System.out.println(next.getKey() + "-" + next.getValue());
+        }
+}
+
+class Student {
+    private String name;
+    private int age;
+    public Person(String name, int age) {
+        this.name = name;
+        this.age = age;
+    }
+    
+    public String getName() {
+        return name;
+    }
+    public void setName(String name) {
+        this.name = name;
+    }
+    
+    public int getAge() {
+        return age;
+    }
+    public void setAge(int age) {
+        this.age = age;
+    }   
+}
+```
+
+### 自定义泛型
+
+自定义泛型，就是我们自己写类或者接口，然后为其定义泛型
+
+#### 自定义泛型类
+
+基本语法：
+
+```java
+class 类名<T, R...> {  // ... 表示可以有多个泛型
+    成员;
+}
+```
+
+使用细节：
+
+- 普通成员（属性和方法）可以使用泛型
+
+- 使用泛型的数组，不能初始化：`T[] t = new T[8];`，不正确，泛型的数组不能进行初始化
+
+  因为类型没有确定下来，是不能知道开辟多大空间的
+
+- 静态成员中不能使用类的泛型（静态成员和对象是没有关系的，是和类相关的，在类加载的时候，对象一般是没有创建的，而泛型是在对象创建的时候进行指定的），因此，如果静态成员使用了泛型，`JVM`就无法完成初始化
+
+- 泛型类的类型，是在创建对象时确定的（因为创建对象时，需要指定确定类型）
+
+- 如果在创建对象时，没有指定类型，默认是`Object`
+
+自定义一个泛型类：
+
+```java
+public class Generic04 {
+    public static void main(String[] args) {
+        // 此时将Double类型指定给T；将String类型指定给R；将Integer类型指定给M
+        Tiger<Double, String, Integer> g = new Tiger<>("john");
+        g.setT(10.9); // T为Double类型，传入的也是double类型，编译通过
+        g.setT("yy"); // 错误，T为Double类型，传入的是String类型，类型不对
+        System.out.println(g);  // Tiger{name='john', r=null, m=null, t=10.9}
+        
+        Tiger g2 = new Tiger("john"); // 泛型T R M 默认都是Object类型
+        g2.setT("yy");  // 正确，此时T是Object类型，传入的是String类型，是Object的子类型
+        System.out.println(g2);  // Tiger{name='john', r=null, m=yy, t=null}
+    }
+}
+
+// Tiger类后面有泛型，所以我们把Tiger称为自定义泛型类
+// T, R, M是泛型的标识符，一般是单个的大写字母，且泛型的标识符可以有多个
+class Tiger<T, R, M> {
+    String name;
+    // 普通成员可以使用泛型
+    R r;
+    M m;
+    T t;
+    // 构造器
+    public Tiger(String name) {
+        this.name = name;
+    }
+    // 构造器使用泛型
+    public Tiger(String name, R r, M m, T t) {
+        this.name = name;
+        this.r = r;
+        this.m = m;
+        this.t = t;
+    }
+    // 方法可以使用泛型（1. 传递的参数使用泛型）（2. 返回的类型使用泛型）
+    public void setT(T t) {
+        this.t = t;
+    }
+    public T getT() {
+        return t;
+    }
+    public void setR(R r) {
+        this.r = r;
+    }
+    public R getR() {
+        return r;
+    }
+    public void setM(M m) {
+        this.m = m;
+    }
+    public M getM() {
+        return m;
+    }
+}
+```
+
+#### 自定义泛型接口
+
+基本语法：
+
+```java
+interface 接口名<T, R...> {
+    
+}
+```
+
+注意事项：
+
+- 接口中，静态成员也不能使用泛型（这个和泛型类规定一样）在接口中，所有的成员都是静态成员
+- 泛型接口的类型，在继承接口或实现接口时确定
+- 如果没有指定类型，默认为`Object`
+
+```java
+// 自定义泛型接口
+interface IUsb<U, R> {
+    // 普通方法中，可以使用接口泛型
+    R get(U u);
+    void hi(R r);
+    void run(R r1, R r2, U u1, U u2);
+    // 在jdk8中，可以在接口中，使用默认方法，也是可以使用泛型的
+    default R method(U u) {
+        return null;
+    }
+}
+
+// 在继承接口时，指定泛型接口的类型
+interface IA extends IUsb<String, Double> {}
+// 当我们去实现IA接口时，因为IA在继承IUsb接口时，指定了U为String，R为Double，因此在实现IUsb接口方法时，使用String替换U，使用Double替换R
+class AA implements IA {
+    @Override
+    public Double get(String s) {
+        return null;
+    }
+    @Override
+    public void hi(Double aDouble) {}
+    @Override
+    public void run(Double r1, Double r2, String u1, String u2) {}
+}
+
+// 在类实现接口时，直接指定泛型接口的类型
+// 给U指定Integer，给R指定Float，所以当我们在实现IUsb方法时，会使用Integer替换U，Float替换R
+class BB implements IUsb<Integer, Float> {
+    @Override
+    public Float get(Integer integer) {
+        return null;
+    }
+    @Override
+    public void hi(Float aFloat) {}
+    @Override
+    public void run(Float r1, Float r2, Integer u1, Integer u2) {}
+}
+```
+
+#### 自定义泛型方法
+
+基本语法：
+
+```java
+修饰符<T, R...> 返回类型 方法名(参数列表) {}
+```
+
+注意事项：
+
+- 泛型方法，可以定义在普通类中，也可以定义在泛型类中
+- 当泛型方法被调用使用，类型会确定
+- `public void eat(E e) {}`，修饰符后没有`<T, R...>`，所以`eat`方法不是泛型方法，而是使用了类声明的泛型
+- 泛型方法可以使用类声明的泛型，也可以使用自己声明的泛型
+
+```java
+public class Generic05 {
+    public static void main(String[] args) {
+		// 当泛型方法被调用使用，类型会确定（只不过是系统进行自动的判断）
+        Car car = new Car();
+        car.fly("宝马", 100);  // 当调用方法时，传入参数，编译器就会确定类型
+    }
+}
+
+// 泛型方法，可以定义在普通类中
+class Car {
+    // 普通方法
+    public void run() {}
+    // 泛型方法  <T, R>是泛型，提供给fly使用
+    public<T, R> void fly(T t, R r) {}
+}
+
+// 泛型方法，可以定义在泛型类中
+class Fish<T, R> {
+    // 普通方法
+    public void run() {}
+    // 泛型方法  泛型<U, M>一般要和泛型类中的泛型字母区分开来
+    public<U, M> void fly(U u, M m) {}
+}
+```
+
+***
+
+### 泛型的继承和通配符
+
+泛型不具备继承性，下面的语句是错误的：
+
+```java
+List<Object> list = new ArrayList<String>();  // 泛型不具备继承性
+```
+
+通配符：
+
+- `<?>`：表示支持任意泛型类型
+- `<? extends A>`：支持`A`类以及`A`类的子类，规定了泛型的上限
+- `<? super A>`：支持`A`类以及`A`类的父类，不限于直接父类，规定了泛型的下限
+
+```java
+public class Generic06 {
+    public static void main(String[] args) {
+		List<Object> list1 = new ArrayList<>();
+        List<String> list2 = new ArrayList<>();
+        List<AA> list3 = new ArrayList<>();
+        List<BB> list4 = new ArrayList<>();
+        List<CC> list5 = new ArrayList<>();
+        
+        // 如果是List<?> c，可以接受任意的泛型类型
+        printCollection1(list1);  // 可以
+        printCollection1(list2);  // 可以
+        printCollection1(list3);  // 可以
+        printCollection1(list4);  // 可以
+        printCollection1(list5);  // 可以
+        
+        // List<? extends AA>表示上限，只能接受AA以及AA的子类
+        printCollection1(list1);  // 报错
+        printCollection1(list2);  // 报错
+        printCollection1(list3);  // 可以
+        printCollection1(list4);  // 可以
+        printCollection1(list5);  // 可以
+        
+        // List<? super AA>表示下限，可以接受AA以及AA的父类
+        printCollection1(list1);  // 可以
+        printCollection1(list2);  // 报错
+        printCollection1(list3);  // 可以
+        printCollection1(list4);  // 报错
+        printCollection1(list5);  // 报错
+    }
+    
+    // List<?>表示任意的泛型类型都可以接受
+    public static void printCollection1(List<?> c) {
+        for(Object object: c) {
+            System.out.println(object);
+        }
+    }
+    
+    // List<? extends AA>表示上限，可以接受AA以及AA的子类
+    public static void printCollection2(List<? extends AA> c) {
+        for(Object object: c) {
+            System.out.println(object);
+        }
+    }
+    
+    // List<? super AA>表示下限，可以接受AA以及AA的父类
+    public static void printCollection3(List<? extends AA> c) {
+        for(Object object: c) {
+            System.out.println(object);
+        }
+    }
+}
+
+class AA {}
+class BB extends AA {}
+class CC extends BB {}
+```
+
+***
+
+### `JUnit`
+
+一个类有很多功能代码需要测试，为了测试，就需要写入到`main`方法中，但是如果有多个功能代码测试，就需要进行来回的注销，切换就很麻烦，因此如果有一个程序直接运行的方法，就会方便很多，并可以给出相关信息，这就有了`JUnit`
+
+`JUnit`是一个`Java`语言的单元测试框架，多数`Java`的开发环境都已经集成了`JUnit`作为单元测试的工具
+
+对于一个方法我们如果想要其直接运行测试，而不是写到`main`方法中，我们使用`Java`语言的单元测试框架：
+
+```java
+public class JUnitTest {
+    public static void main(String[] args) {
+        
+    }
+    
+    @Test
+    public void m1() {
+        System.out.println("m1方法被调用");
+    }
+}
+```
+
+> 在想要测试的方法之前加入`@Test`，之后输入`alt+enter`，选择加入`Add 'JUnit5.4' to classpath`，系统就会快速的引入相关的包和一些类文件
+>
+> 加入后，代码左侧出现了绿色的小箭头，点击绿色的小箭头，运行这个方法即可得到这个方法运行的结果
 
 
 
