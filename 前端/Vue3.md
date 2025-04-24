@@ -1,14 +1,10 @@
 # `Vue3`
 
-## 了解`Vue3`
+## 基本概念
 
-在过去，我们每访问一个页面，都要去后台将这个页面拿过来
+在过去，我们每访问一个页面，都要去后台将这个页面拿过来，但是对应`Vue3`，他是单页面的，经过一次请求，将页面经过`vue`打包处理后变成`js`和`css`文件，全部返回给前台，返回的是一个页面，当用户在切换不同地址的时候，不会向后台发送请求，在打包的文件中会有访问的逻辑，匹配到第一个页面，会把第一个页面返回出来，单页面实现了完全的前后端分离，我们可以把前后端放到不同的服务器上，单页面适用于比较复杂的项目
 
-但是对应`Vue3`，他是单页面的，经过一次请求，将页面经过`vue`打包处理后变成`js`和`css`文件，全部返回给前台，返回的是一个页面，当用户在切换不同地址的时候，不会向后台发送请求，在打包的文件中会有访问的逻辑，匹配到第一个页面，会把第一个页面返回出来
-
-单页面实现了完全的前后端分离，我们可以把前后端放到不同的服务器上，单页面适用于比较复杂的项目
-
-`Vue.js`是一个渐进式JavaScript框架，旨在通过尽可能简单的` API `实现响应式的数据绑定和组合的视图组件
+`Vue.js`是一个渐进式`JavaScript`框架，旨在通过尽可能简单的` API `实现响应式的数据绑定和组合的视图组件
 
 `Vue3`相比`Vue2`有以下的新特性：速度更快：体积减少：更易维护；更接近原生；更易使用 
 
@@ -4310,118 +4306,6 @@ talkStore.$subscribe((mutate, state) => {
 
 
 ## 状态管理和 `HTTP` 请求
-
-### `Pinia`
-
-`Pinia `是一个用于 `Vue.js` 应用程序的状态管理库，它提供一个更加简单和灵活的` API`，同时还保留 `Vuex` 的主要功能，如状态管理、动作和获取器，它是 `Vuex `的轻量级替代品，并充分利用了` Vue 3` 的 `Composition API`，[具体参考手册](https://pinia.vuejs.org/zh/cookbook/)
-
-使用`Pinia`时，需要对其进行安装：`npm install pinia@next`
-
-然后在主文件（通常是 `main.js` 或 `main.ts`）中，创建一个新的 `Pinia`实例，并将其挂载到` Vue` 应用实例中：
-
-```js
-import { createPinia } from 'pinia'
-const pinia = createPinia();
-app.use(pinia);
-```
-
-在安装好环境后，就可以开始创建自己的`Pinia store`，创建一个一个新的文件`stores/counter.js`，使用 `defineStore` 函数来定义 store：
-
-```js
-import { defineStore } from 'pinia';
-
-export const useCounterStore = defineStore('counter', {
-  state: () => ({
-    count: 0,
-  }),
-  actions: {
-    increment() {
-      this.count++;
-    },
-  },
-});
-```
-
-之后就可以在你的 `Vue` 组件中使用这个`store`：
-
-```js
-import { useCounterStore } from '../stores/counter';
-
-export default {
-  setup() {
-    const counter = useCounterStore();
-
-    return {
-      count: counter.count,
-      increment: counter.increment,
-    };
-  },
-};
-```
-
-#### 状态（`State`）
-
-状态是在 `store` 中存储的数据，每个 `Pinia store `都有自己的状态，这个状态是一个 `JavaScript` 对象，可以在定义 `store` 时初始化状态
-
-```js
-import { defineStore } from 'pinia';
-
-const useStore = defineStore({
-  id: 'myStore',
-  state: () => ({
-    count: 0,
-    user: null,
-  }),
-});
-```
-
-其中，`count` 和 `user` 就是这个 `store` 的状态
-
-#### 动作（`Actions`）
-
-动作是一种修改`store` 状态的方法，在 `Pinia` 中，可以在 `actions` 属性中定义动作
-
-```js
-import { defineStore } from 'pinia';
-
-const useStore = defineStore({
-  id: 'myStore',
-  state: () => ({
-    count: 0,
-  }),
-  actions: {
-    increment() {
-      this.count++;
-    },
-  },
-});
-```
-
-其中，`increment` 就是一个动作，它将 `count` 的值增加 1
-
-#### 获取器（`Getters`）
-
-获取器是一种依赖于 `store` 状态并产生计算值的函数，这些值将被缓存，直到依赖的状态改变。在 `Pinia` 中，可以在 `getters` 属性中定义获取器：
-
-```js
-import { defineStore } from 'pinia';
-
-const useStore = defineStore({
-  id: 'myStore',
-  state: () => ({
-    count: 0,
-  }),
-  getters: {
-    doubleCount() {
-      return this.count * 2;
-    },
-  },
-});
-```
-
-其中，`doubleCount` 就是一个获取器，它返回 `count` 的两倍
-
-***
 
 ### `axios`请求工具
 
