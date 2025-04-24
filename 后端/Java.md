@@ -9457,6 +9457,149 @@ public class JUnitTest {
 
 
 
+## 线程
+
+线程相关的概念：
+
+- 程序（`program`）：是为了完成特定任务，用某种语言编写的一组指令的集合（程序就是我们写的代码）
+
+- 进程是指运行中的程序，当我们使用`QQ`时，就启动了一个进程，操作系统会为该进行分配内容空间，如果我们又打开了浏览器，则又启动了一个进程，操作系统将为其分配一个新的内存空间
+
+  进程是程序的一次执行过程，或是正在运行的一个程序，是动态的过程：有它自身的产生、存在和消亡的过程
+
+- 线程：线程是由进程创建的，是进程的一个实体，一个进程可以拥有多个线程，如迅雷进程可以下载多个文件，这里的多个文件下载任务就是多个线程
+
+  - 单线程：同一个时刻，只允许执行一个线程
+  - 多线程：同一个时刻，可以执行多个线程
+
+- 并发：同一个时刻，多个任务交替执行，造成一种貌似同时的错觉，简单来说，单核`cpu`实现的多任务就是并发
+
+- 并行：同一个时刻，多个任务同时执行，多核`cpu`可以实现并行
+
+  如果任务太多的情况下，并发和并行可以同时出现
+
+```java
+// 查看当前电脑中的cpu个数/核心数
+public class CpuNum {
+    public static void main(String[] args) {
+        Runtime runtime = Runtime.getRuntime();
+        int cupNums = runtime.availableProcessors();
+    }
+}
+```
+
+***
+
+### 基本使用
+
+线程的继承关系图：
+
+![image-20250424155222246](..\images\image-20250424155222246.png)
+
+创建线程的两种方式：
+
+- 继承`Thread`类，重写`run`方法
+
+  ```java
+  public class Thread01 {
+      public static void main(String[] args) throws InterruptedException {
+          // 创建一个Cat对象，当作线程使用
+          Cat cat = new Cat();
+          // cat.run();  // 相当于调用普通方法，没有开辟新的子线程，还是串行化的执行
+          cat.start();  // 启动子线程 Thread-0
+          // 当main线程启动一个子线程Thread-0，主线程不会阻塞，会继续执行（主线程和子线程交替执行）
+          // 主线程和子线程交替执行：如果是多个cpu的情况是并行执行，如果是单个cpu的情况是并发执行
+          System.out.println("主线程继续执行" + Thread.currentThread().getName()); // Thread.currentThread().getName()表示返回当前执行线程的名字，这里是主线程名字（main）
+          for(int i = 0; i < 10; i++) {
+              System.out.println("主线程 i=" + i);
+              // 主线程休眠1秒钟
+              Thread.sleep(1000);
+          }
+      }
+  }
+  
+  // 当一个类继承了Thread类，该类就可以当做线程使用
+  // 我们需要重写run方法，写上自己的业务代码
+  // Thread类中的run方法，是实现了Runnable接口的run方法
+  class Cat extends Thread {
+      int times = 0;
+      @Override
+      public void run() {  // 线程的业务需求：每隔一秒中输出一句话：我是一只猫，超过80次则退出
+          while(true) {
+              System.out.println("我是一只猫" + (++times) + "线程名" + Thread.currentThread().getName());  // 这里开启的子线程是Thread-0
+              // 让该线程休眠一秒钟
+              try {
+                  Thread.sleep(1000);
+              } catch (InterruptedException e) {
+                  e.printStackTrace();
+              }
+              if (times == 80) {
+                  break;  // 退出循环，这时线程也就结束了
+              }
+          }
+      }
+  }
+  ```
+
+  ![image-20250424164516715](..\images\image-20250424164516715.png)
+
+  当我们运行程序的时候，就相当于启动了这个进程，当运行到了主方法`main`时，就开启了主线程（线程名为`main`），后续执行到`cat.start();`时，开启了一个子线程（线程名为`Thread-0`）（只要是线程就可以开辟新的子线程），主线程和子线程交替执行，当两个线程都执行完后，进程也就退出了（不是主线程结束了，进程就结束了，而是所有线程都结束了，进程才会结束）
+
+  对于`cat.start();`语句，如果调用的是`cat.run();`那么就不会开辟新的子线程，在`Cat`中的执行线程依然是`main`线程，`run`方法就是一个普通的方法，只有等到`run`方法里面的内容执行完后，才会继续执行`main`方法中的后续内容（也就是说不会和之前一样进行交替的执行了，相当于是串行化的执行）
+
+  `start()`的底层源码解读：
+
+  1. ```java
+     public synchronized void start() {
+         start0();
+     }
+     ```
+
+  2. `start0()`是本地方法，是`JVM`调用，底层是`c/c++`实现，真正实现多线程的效果是`start0()`，而不是`run()`方法
+
+     ![image-20250424171614586](..\images\image-20250424171614586.png)
+
+- 实现`Runnable`接口，重写`run`方法
+
+  `Java`是单继承的，在某些情况下一个类可能已经继承了某个父类，这时就不能在用继承`Thread`类的方法来创建线程显然就不可以了，因此`Java`设计者提供了另外的创建线程的方式，即通过实现`Runnable`接口来创建线程
+
+  编写程序，该程序每隔一秒，在控制台输出一次，当输出10次后，自动退出，使用实现`Runnable`接口的方式实现
+
+  ```java
+  public class Thread01 {
+      public static void main(String[] args) throws InterruptedException {
+  		Cat cat = new Cat();
+          // Runnable接口中没有start()开辟新线程的方法，不能使用cat.start()
+          // 需要创建Thread对象，把cat对象（实现了Runnable接口），放入Thread中
+          // 这里底层使用了一个设计模式（代理模式）
+          Thread thread = new Thread(dog);
+          thread.start();
+      }
+  }
+  
+  // 通过实现Runnable接口开发线程
+  class Cat implements Runnable {
+      int times = 0;
+      @Override
+      public void run() {  // 线程的业务需求：每隔一秒中输出一句话：我是一只猫，超过80次则退出
+          while(true) {
+              System.out.println("我是一只猫" + (++times) + "线程名" + Thread.currentThread().getName());  // 这里开启的子线程是Thread-0
+              // 让该线程休眠一秒钟
+              try {
+                  Thread.sleep(1000);
+              } catch (InterruptedException e) {
+                  e.printStackTrace();
+              }
+              if (times == 10) {
+                  break;  // 退出循环，这时线程也就结束了
+              }
+          }
+      }
+  }
+  ```
+
+  
+
 ## 设计模式
 
 设计模式是在大量的实践中总结和理论化之后的代码结构、编程风格、以及解决问题的思考方式。设计模式就像经典的棋谱，不同的棋局，我们使用不同的棋谱，免去我们自己再思考和摸索
