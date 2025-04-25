@@ -10271,6 +10271,100 @@ class DeadLockDemo extends Thread {
 
 
 
+## `IO`流
+
+### 文件
+
+文件的概念：是用于保存数据的地方，如经常使用的`word`文档，`txt`文档等。文件既可以保存一张图片，也可以保存视频，声音等
+
+#### 文件流
+
+文件在程序中是以流的形式来操作的
+
+![image-20250425153439580](..\images\image-20250425153439580.png)
+
+流：数据在数据源（文件）和程序（内存）之间经历的路径
+
+输入流：数据从数据源（文件）到程序（内存）的路径
+
+输出流：数据从程序（内存）到数据源（文件）的路径
+
+输入流和输出流是针对内存而言的，到内存的为输入流，出内存的为输出流
+
+#### 常用的文件操作
+
+`File`文件类的继承关系：
+
+![image-20250425154806581](..\images\image-20250425154806581.png)
+
+##### 创建文件
+
+创建文件对象相关的构造器方法：
+
+- `new File(String filePath)`：根据路径构建一个`File`对象
+- `new File(File parent, String child)`：根据父目录文件+子路径构建一个`File`对象
+- `new File(String parent, String child)`：根据父目录+子路径构建一个`File`对象
+
+创建文件代码实现：
+
+```java
+public class FileAdd {
+    public static void main(String[] args) {
+        
+    }
+    // 方式一：通过new File(String pathname)构造器创建文件
+    public void create01() {
+        String filePath = "d:\\news.txt";    // 路径的分隔符使用/也是可以的
+        File file = new File(filePath);  // 实例化文件对象  这里只是在内存中创建一个文件对象
+        try {
+            // 调用createNewFile()方法创建文件，输出信息流，在磁盘中写入文件
+            file.createNewFile();  
+            System.out.println("文件创建成功");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    // 方式二：通过new File(File parent, String child)构造器创建文件
+    public void create02() {
+        File parentFile = new File("d:\\");
+        String fileName = "news.txt";
+        File file = new File(parentFile, fileName);  // 实例化文件对象
+        try {
+            file.createNewFile();  // 调用createNewFile()方法创建文件
+            System.out.println("文件创建成功");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    // 方式三：通过new File(String parent, String child)构造器创建文件
+    public void create03() {
+        String parentPath = "d:\\";
+        String filePath = "news.txt";
+        File file = new File(parentPath, filePath);  // 实例化文件对象
+        try {
+            file.createNewFile();  // 调用createNewFile()方法创建文件
+            System.out.println("文件创建成功");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+##### 获取文件相关信息
+
+首先需要实例化出具体的文件对象：`File file = new File("d:\\news.txt");`
+
+- `getName`：获取文件的名字：`file.getName()`
+- `getAbsolutePath`：获取文件的绝对路径
+- `getParent`：获取文件的父级目录
+- `length`：获取文件的大小（多少个字节）
+-  `exists`：判断是否存在这个文件
+- `isFile`：判断是不是一个文件
+- `isDirectory`：判断是不是一个目录
+
+
+
 ## 设计模式
 
 设计模式是在大量的实践中总结和理论化之后的代码结构、编程风格、以及解决问题的思考方式。设计模式就像经典的棋谱，不同的棋局，我们使用不同的棋谱，免去我们自己再思考和摸索
