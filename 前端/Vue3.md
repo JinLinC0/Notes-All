@@ -10,6 +10,10 @@
 
 相比`Vue2`增加了一些新功能：`framents`（组件支持有多个根节点）；`Teleport`（模板移动到 `DOM` 中 `Vue app` 之外的其他位置，在组件的逻辑位置写模板代码，然后在 `Vue` 应用范围之外渲染它）；`createRenderer`（构建自定义渲染器，我们能够将 `vue` 的开发模型扩展到其他平台我们可以将其生成在`canvas`画布上）；`composition Api`（组合式`api`，将将相同功能的变量进行一个集中式的管理）
 
+`Vue3`会涉及到一些关于`Vue2`的选项式`API`的知识，学习一点`Vue2`的知识是必要的，可能后续的项目会需要对`Vue2`的框架进行维护
+
+`vue`可以将相关的功能代码抽离分割在一起，方便开发者快速阅读
+
 [Vue官网](https://cn.vuejs.org/)
 
 
@@ -218,13 +222,7 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
 
 
 
-## 基础知识
-
-这一个章节用于了解`Vue`的基础语法，主要是描述基本功能，会涉及到一些关于`Vue2`的选项式`API`的知识，学习一点`Vue2`的知识是必要的，可能后续的项目会需要对`Vue2`的框架进行维护
-
-`vue`可以将相关的功能代码抽离分割在一起，方便开发者快速阅读
-
-### 组件和应用
+## 组件和应用
 
 `vue`就是基于组件进行编程的
 
@@ -232,9 +230,9 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
 
 应用主要是将“家''安排在哪个位置：`app.mount('#app')`
 
-***
 
-### 属性的绑定
+
+## 属性的绑定
 
 有的时候，属性需要进行动态的设置，应该通过数据进行动态的操作
 
@@ -246,13 +244,15 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
 
 如果动态设置的属性是`null`或者`undefined`，那么这个动态属性就无效
 
-***
 
-### 选项式`API`
+
+## 选项式`API`
 
 在`vue2`中，选项式`API`是非常常用的，选项式`API`中，在一个组件中会有很多个属性，数据，方法，计算属性和侦听器都作为选项式`API`的属性
 
-#### 数据
+***
+
+### 数据
 
 `vue`中的数据在语法中使用：`{{data}}`
 
@@ -279,7 +279,7 @@ data(){
 
 `{{ n === 1 ? 'jlc' : 'JLC'}}`
 
-##### 从外部文件中引入数据
+#### 从外部文件中引入数据
 
 我们可以对数据库的调用进行模拟的操作，将自定义的数据放到一个文件中，以供我们进行调用，数据文件可以使用`.js`或者`.json`的后缀，数组文件形式为：
 
@@ -339,7 +339,9 @@ export default [
 
 进行了一些修改，通过原型进行了修改，可以在响应式对象中进行使用
 
-#### 方法
+***
+
+### 方法
 
 在逻辑代码中需要定义方法，以供使用
 
@@ -364,13 +366,15 @@ methods: {
 
 如果事件函数没有进行参数的传递，我们在调用的时候可以将括号进行省略
 
-##### 事件修饰符
+#### 事件修饰符
 
 `vue`提供了一下快速定义的修饰符，用来对事件进行修饰
 
 对事件的默认行为进行阻止：`<div @click.prevent="add">{{name}}<div>`，这个行为添加后，点击事件就会被进行阻止，点击后不会在触发方法函数
 
-#### 计算属性
+***
+
+### 计算属性
 
 在计算属性中可以进行相应方法的书写：
 
@@ -395,7 +399,9 @@ methods: {
 },
 ```
 
-#### 侦听器
+***
+
+### 侦听器
 
 `watch`侦听器是用于监测一个数据的改变，当数据发生变化时，我们要做一系列的业务
 
@@ -410,23 +416,23 @@ watch: {
 },
 ```
 
-***
 
-### 文本插值
 
-数据绑定最常见的形式就是使用 {{...}}（双大括号）的文本插值，{{...}} 标签的内容将会被替代为对应组件实例中 message 属性的值，如果 message 属性的值发生了改变，{{...}} 标签内容也会更新
+## 文本插值
 
-如果不想改变标签的内容，可以通过使用 v-once 指令执行一次性地插值，当数据改变时，插值处的内容不会更新
+数据绑定最常见的形式就是使用` {{...}}`（双大括号）的文本插值，`{{...}} `标签的内容将会被替代为对应组件实例中 `message` 属性的值，如果 `message` 属性的值发生了改变，`{{...}} `标签内容也会更新
+
+如果不想改变标签的内容，可以通过使用 `v-once `指令执行一次性地插值，当数据改变时，插值处的内容不会更新
 
 ```vue
 <span v-once>这个将不会改变: {{ message }}</span>
 ```
 
-`v-html`指令用于输出 html 代码`<span v-html="rawHtml"></span>` 执行rawHtml内容的相关HTML格式
+`v-html`指令用于输出 `html` 代码`<span v-html="rawHtml"></span>` 执行`rawHtml`内容的相关`HTML`格式
 
-***
 
-### 指令
+
+## 指令
 
 `Vue` 指令（`Directives`）是 `Vue.js` 的一项核心功能，它们可以在` HTML` 模板中以 `v-` 开头的特殊属性形式使用，用于将响应式数据绑定到 `DOM` 元素上或在 `DOM` 元素上进行一些操作
 
@@ -442,7 +448,9 @@ watch: {
 |      `v-on`      | 用于在` HTML` 元素上绑定事件监听器，使其能够触发 `Vue` 实例中的方法或函数 |
 |    `v-model`     | 用于在表单控件和 `Vue` 实例的数据之间创建双向数据绑定，负责监听用户的输入事件以更新数据 |
 
-#### `v-if`
+***
+
+### `v-if`
 
 `v-if`和`v-else`可以根据表达式的值进行选择的渲染元素
 
@@ -510,7 +518,9 @@ export default [
 </template>
 ```
 
-#### `v-show`
+***
+
+### `v-show`
 
 `v-show`可以使对应的元素显示/隐藏，该指令通常绑定在要被显示/隐藏的元素上
 
@@ -539,7 +549,9 @@ const HelloVueApp = {
 - 其次，`v-if`是可以与`v-else-if`一起使用的，`v-show`没有这个功能
 - `v-show`是不能和`<template>`标签进行使用的，`v-if`是支持的
 
-#### `v-for`
+***
+
+### `v-for`
 
 `v-for`就是用来控制循环的，通常用来遍历对象和数组
 
@@ -628,7 +640,9 @@ export default {
 </script>
 ```
 
-#### `v-model`
+***
+
+### `v-model`
 
 `v-model`可以绑定`input`、`textarea`、`checkbox`、`radio`、`select`等属性，`v-model`是支持双向绑定的，通常与表单进行结合
 
@@ -692,9 +706,9 @@ export default {
 </script>
 ```
 
-##### `v-model`的修饰符
+#### `v-model`的修饰符
 
-###### `lazy`
+##### `lazy`
 
 ```vue
 <input type="text" v-model.lazy="message">
@@ -703,7 +717,7 @@ export default {
 
 默认情况下，`v-model`在进行双向绑定时，绑定的是`input`事件，那么会在每次内容输入后就将最新的值和绑定的属性进行同步（有数据发生改变对应的`data`中的数据就会自动发生改变）；如果我们在`v-model`后跟上`lazy`修饰符，那么会将绑定的事件失去焦点后或点击`enter`，只有在提交时（比如回车）才会触发，这样可以节约资源的开销
 
-###### `number`
+##### `number`
 
 `number`：转换为数字类型，将type设置为`"number"`是没有效果的，还是`string`类型，但是可以通过以下的方式进行设置，会进行隐式转化
 
@@ -712,7 +726,7 @@ export default {
 <h2>{{message}}</h2>
 ```
 
-###### `trim`
+##### `trim`
 
 如果要自动过滤用户输入的前后空白字符，可以给`v-model`添加 `trim` 修饰符
 
@@ -721,7 +735,7 @@ export default {
 <h2>{{message}}</h2>
 ```
 
-###### `v-model`自定义修饰符
+##### `v-model`自定义修饰符
 
 比如，自定义修饰符：`toupper`将字符串中的字符转化为大写
 
@@ -759,7 +773,7 @@ export default {
 </script>
 ```
 
-##### 不使用`v-model`来实现`v-model`的效果
+#### 不使用`v-model`来实现`v-model`的效果
 
 使用`v-model`：
 
@@ -866,11 +880,11 @@ export default {
 
 可以进行简写：`<Hdinput v-model="title">`
 
-***
 
-### 组件的样式控制
 
-#### 全局样式
+## 组件的样式控制
+
+### 全局样式
 
 全局样式一般在外部写一个`.css`文件，用于存放各种属性样式，如：
 
@@ -894,7 +908,9 @@ import './assets/hd.css'
 </template>
 ```
 
-#### 组件样式
+***
+
+### 组件样式
 
 为这个组件单独的定义样式，这个样式声明是和组件在同一个`vue`文件下的，用`<style>`标签进行包裹：
 
@@ -908,7 +924,9 @@ import './assets/hd.css'
 
 全局样式和组件样式方法的选择：绝大多数的情况下，组件的样式都使用组件样式进行定制，但是对于一些全局的样式，如：一些`ui`库（`element-plus`），它们都定义好了一些样式给其组件使用，所以需要对其样式进行全局的引入，我们如果对其样式不满意，则需要在全局进行一个修改控制
 
-#### `sass`和`scoped`
+***
+
+### `sass`和`scoped`
 
 安装`yarn add -D sass`拓展后，就可以使用`scss`样式语法：
 
@@ -928,7 +946,9 @@ import './assets/hd.css'
 </style>
 ```
 
-#### 动态样式
+***
+
+### 动态样式
 
 有时候，我们需要对样式进行动态的计算，进行样式动态的选择和使用
 
@@ -957,11 +977,15 @@ import './assets/hd.css'
 
 上述的例子中，当`active`的值为`true`时，使用`current`样式，反之，则不使用这个样式
 
-#### 不合法样式表达
+***
+
+### 不合法样式表达
 
 我们知道，`is-delete`命名的样式是不合法的，是不能直接在`class`中引入的，那我们非要进行引入，就需要将这个样式变成字符串的形式进行引入：`class="{ 'is-delete' }"`
 
-#### 组件传递`css`样式
+***
+
+### 组件传递`css`样式
 
 组件的使用方式就是类似的使用`html`标签的形式，组件也是可以进行传递`css`样式的
 
@@ -971,7 +995,9 @@ import './assets/hd.css'
 
 在`Vue2`中，只有`<div>`的顶级标签，但是在`Vue3`中，还有`<section>`、`<main>`标签等等，当`<section>`、`<main>`和`<div>`三个标签同时存在时，`<ClassList class="hd" />`标签不能进行追加样式，因为那三个标签是兄弟节点关系，`Vue`不知道要将这个样式加到哪个标签上，所以即使声明了，也不会进行追加样式，如果想要进行追加，需要进行明确的指定，如：`<section :class="$attrs.class"></section>`，那么`hd`样式就加入到`<section>`标签中
 
-#### `style`行级样式
+***
+
+### `style`行级样式
 
 行级样式的使用方式，与`class`没有什么区别，行级样式是比较有针对性的对这行的标签进行设置，而`class`样式相比行级样式可以进行复用
 
@@ -979,9 +1005,9 @@ import './assets/hd.css'
 
 `<div style="color: red;" v-bind:style="{backgroundColor : "green"} />`
 
-***
 
-### 事件
+
+## 事件
 
 绑定事件需要使用到`v-on`的指令：
 
@@ -989,7 +1015,9 @@ import './assets/hd.css'
 
 我们可以对`v-on`指令进行省略：`<div @click="num = num + 1">{{num}}</div>`
 
-#### 鼠标事件
+***
+
+### 鼠标事件
 
 - 点击鼠标左键触发：`@click="hd"`
 - 双击鼠标左键触发：`@dblclick="hd"`
@@ -1028,7 +1056,9 @@ export default {
     }
 ```
 
-#### 事件对象
+***
+
+### 事件对象
 
 事件对象描述了你当前鼠标点击的位置，当前的事件类型等等，会有详细的事件信息
 
@@ -1079,7 +1109,9 @@ export default {
 </script>
 ```
 
-#### 事件修饰符
+***
+
+### 事件修饰符
 
 修饰符存在的行为是为了减少在逻辑层的`demo`操作，使事件的修饰在模型层完成
 
@@ -1126,7 +1158,9 @@ export default {
 
 - `@click.passive`：不阻止默认行为，如果函数内部写了阻止默认行为的方法：`event.preventDefault()`也会失效，减少判断，比如在出发滚动事件的时候，没必要，滚动一下，就去判断，减少了性能的开销
 
-#### 键盘事件
+***
+
+### 键盘事件
 
 键盘按下时触发的事件
 
@@ -1161,7 +1195,9 @@ export default {
 
 `<input type="text" @keyup.ctrl.k="key" />`
 
-#### 键盘事件和鼠标事件结合
+***
+
+### 键盘事件和鼠标事件结合
 
 按住键盘上的`alt`后再鼠标点击时触发：（直接点击是不触发事件的）
 
@@ -1187,9 +1223,9 @@ export default {
 
 注意：只要键盘按下了`alt`键，同时鼠标左键点击会触发，同时按下`alt`键加上其他键，再点击鼠标左键也能触发，只要有包含按下`alt`键即可，如果我们希望完全的只按`alt`键，加鼠标左键触发，可以加上以下的修饰符：`@click.alt.exact="hd"`
 
-***
 
-### `props`传递数据
+
+## `props`传递数据
 
 在`Vue`中，`props`是使用频率最高的一种通信方式，父组件通过子组件的 `props `属性将数据直接传递到子组件内部，供子组件调用处理
 
@@ -1273,7 +1309,9 @@ export default{
 - Function：函数
 - Object：对象
 
-#### 批量设置`props`
+***
+
+### 批量设置`props`
 
 单一进行设置传递参数的方式：
 
@@ -1283,7 +1321,9 @@ export default{
 
 `<hd-button v-bind="{ content: '保存', type: 'success' }"/>`
 
-#### `required`验证
+***
+
+### `required`验证
 
 在我们之前的情况下，如果父组件不传入`content`内容，子组件就会使用默认值，如果我们要求某些`props`的数据在父组件传值的时候必须要进行设置，我们可以在子组件中使用以下的`required`验证方法，如果父组件不传递内容，就会报错
 
@@ -1296,7 +1336,9 @@ props: {
 }
 ```
 
-#### 单向数据流
+***
+
+### 单向数据流
 
 单向数据流是指父组件内的数据变化，会影响子组件；但是反过来是不行的，它是单向的
 
@@ -1347,11 +1389,11 @@ watch:{
 
 综上所述：子组件可以又其响应式的特性，同时也可以根据传递过来的`props`来改变我们的响应式数据
 
-***
 
-### 非`props`的传递
 
-#### 属性的传递
+## 非`props`的传递
+
+### 属性的传递
 
 有一些属性是不在我们定义的`props`属性范围之内的，如：样式`class`，`id`等等，系统会自动的将其放到我们子组件的根元素标签上
 
@@ -1401,7 +1443,9 @@ export default{
 
 如果单单只要一个`id`，可以这么取：`:id="$attrs.id"`
 
-#### 事件的传递
+***
+
+### 事件的传递
 
 父级组件传递的不仅仅只是数据，也可以传递事件方法函数
 
@@ -1468,7 +1512,7 @@ export default{
 
 我们可以绑定`v-bind="$attrs"`到任何的元素上来使该事件进行触发（但是这样是将所有的非`props`都放在这个标签下了，后续可以对事件的非`props`进行独立的设置）
 
-##### `$emit`触发自定义事件
+#### `$emit`触发自定义事件
 
 声明：`emits: {'click'}`后，在父级组件绑定的`click`就不能触发了，我们可以在想要的标签位置通过`$emit`进行自定义事件的触发
 
@@ -1532,7 +1576,7 @@ methods:{
 }
 ```
 
-##### 自定义事件的验证
+#### 自定义事件的验证
 
 自定义事件在调用的过程中，我们也可以进行验证
 
@@ -1554,9 +1598,9 @@ emits:{
 
 后续在`ts`语法中，使用强类型也可以起到这样的效果
 
-***
 
-### 插槽
+
+## 插槽
 
 在组件中，插槽的概念为给组件开一个孔，我们可以通过这个孔往组件中输入内容，组件可以根据需要开辟任意多的插槽
 
@@ -1570,7 +1614,9 @@ emits:{
 
 任何的内容都可以把它以插槽的形式插入到任何一个组件当中
 
-#### 默认插槽
+***
+
+### 默认插槽
 
 默认插槽是指在组件中没有特定命名的插槽，也就是没有使用`v-slot`指令进行命名的插槽
 
@@ -1581,7 +1627,7 @@ emits:{
 写了`<slot>`后就像插线板一样开了一个口，在任何地方调用组件就可以把内容输入到这里面，自动替换插槽这个位置
 
 ```vue
-//Card.vue文件：子组件
+// Card.vue文件：子组件
 <temple>
     <div>
         <h2>jlc</h2>
@@ -1591,7 +1637,7 @@ emits:{
 ```
 
 ```vue
-//App.vue文件：父组件
+// App.vue文件：父组件
 <temple>
     <div>
         <card>插槽学习</card>
@@ -1611,13 +1657,13 @@ import card from './Card.vue'
 
 如果不想在这个子组件中插入任何的内容，我们可以把这个子组件标签变成一个独立标签`<card />`，不再使用块标签
 
-##### 插槽的作用域
+#### 插槽的作用域
 
 插槽`<card>插槽学习</card>`写到了哪个组件当中，其作用域就在哪个组件当中，和插槽最终被放置的组件没有关系，比如说父级组件和子组件都有一个`show`函数，`<card>插槽学习</card>`写到了父组件当中，那就执行父级组件的`show`函数
 
 作用域一般只相关的函数、方法和使用的数据
 
-##### 插槽的默认内容
+#### 插槽的默认内容
 
 插槽是接收父级组件传递过来的内容，也可以允许父级组件不传时有一个默认的内容
 
@@ -1627,7 +1673,9 @@ import card from './Card.vue'
 
 当在调用这个组件的时候，如果在调用组件时，不传递内容`<card></card>`，插槽就会显示默认的内容；如果传递了内容，就会对默认的内容进行覆盖
 
-#### 具名插槽
+***
+
+### 具名插槽
 
 默认插槽也是有名字的；默认插槽`<slot />`等价于；`<slot name="default" >`
 
@@ -1675,7 +1723,9 @@ import card from './Card.vue'
 
 在子组件中将数据返回回来，在子组件中可以将数据暴露给父组件
 
-#### 作用域插槽
+***
+
+### 作用域插槽
 
 作用域插槽是一种可以让父组件向子组件传递数据并且在子组件中使用这些数据的方法
 
@@ -1875,9 +1925,9 @@ export default {
 
 以上两种简写形式只适用于默认插槽，我们可以将插槽的使用放到组件上，不用在里面使用`<template>`标签包裹，但是如果子组件中有多个插槽，都想往父组件中传递参数，那父组件就不能将插槽放到组件上进行接收参数，只能都使用`<template>`标签包裹
 
-***
 
-### 动态组件
+
+## 动态组件
 
 在父组件中点击不同的`<div>`标签，实现动态的加载不同的组件，这种情况下，如果不使用动态组件，那么需要在父组件中将这些需要进行加载的组件都引入进来，通过`v-if`来进行判断渲染，但是通过动态组件，可以进行动态的加载组件：
 
@@ -1932,7 +1982,9 @@ app.component('card', Card)
 
 使用`<keep-alive>`标签进行包裹，就能将组件的数据进行缓存起来
 
-#### 数据穿透组件
+***
+
+### 数据穿透组件
 
 在`vue`中，页面之间的传值是必不可少的，组件传值包括父子组件传值，子组件和子组件之间的传值，祖孙组件传值
 
@@ -1989,11 +2041,13 @@ export default {
 </script>
 ```
 
-#### 使用`ref`操作组件
+***
+
+### 使用`ref`操作组件
 
 我们可以通过`ref`来直接操作组件或者原生`HTML`的方式，我们可以通过编程的形式访问到组件：在`HTML`中是通过`id`属性对某个标签元素进行访问的，在`vue`中，我们是通过`ref`进行对组件的访问
 
-##### 操作`HTML`标签
+#### 操作`HTML`标签
 
 ```vue
 <template>
@@ -2013,7 +2067,7 @@ export default {
 
 点击按钮，使输入框中的值变为为`aaa`
 
-##### 操作组件
+#### 操作组件
 
 ```vue
 <template>
@@ -2088,7 +2142,9 @@ export default ({
 </script>
 ```
 
-#### `vuex`
+***
+
+### `vuex`
 
 `vuex`是各个页面传值的重要工具，传值功能非常强大，不管页面的层级有多深，都可以一步到位传递数据
 
@@ -2159,7 +2215,7 @@ export default ({
 
 <script>
 import { computed } from 'vue'
-import {useStore} from 'vuex'  // 引入取值的方法
+import { useStore } from 'vuex'  // 引入取值的方法
 export default ({
     setup() {
         // 从vuex数据仓库里面取数据
@@ -2188,8 +2244,10 @@ export default ({
     padding: 20px 0;
 }
 </style>
+```
 
-其中index.js中的代码为：
+```js
+// 其中index.js中的代码为：
 import {createStore} from 'vuex'
 
 export default createStore({
@@ -2210,13 +2268,12 @@ export default createStore({
             store.commit('trigger')
         }
     }
-
 })
 ```
 
-***
 
-### 生命周期函数
+
+## 生命周期函数
 
 `Vue`组件实例在创建时要经历一系列的初始化步骤，在此过程中`Vue`会在合适的时机，调用特定的函数，从而让开发者有机会在特定阶段运行自己的代码，这些特定的函数统称为：生命周期函数
 
@@ -2264,9 +2321,9 @@ onBeforeMount(() => {
 })
 ```
 
-***
 
-### 组合式`API`
+
+## 组合式`API`
 
 选项式`API`是在`export default`对象中一个一个写选项功能，组合`API`是将这些功能组合在一起，方便我们的统一管理，不用进行写一堆的选项，同时，我们可以方便的将一些功能剥离成一个文件方便我们的复用，对于组合式`API`，我们统一写在`setup()函数中`
 
@@ -2284,7 +2341,9 @@ export default({
 
 在`setup()`中进行声明数据和方法后，需要将其`return`返回出去才能提供给模板标签使用
 
-#### `ref`函数的使用
+***
+
+### `ref`函数的使用
 
 使用`ref`函数时，需要对其进行引入组合式`API`：`import { ref } from 'vue'`
 
@@ -2351,7 +2410,9 @@ function test() {
 }
 ```
 
-#### `reactive`函数的使用
+***
+
+### `reactive`函数的使用
 
 使用`reactive`函数时，需要对其进行引入组合式`API`：`import { reactive } from 'vue'`
 
@@ -2409,7 +2470,9 @@ ref和reactive使用原则：
 2. 若需要一个响应式对象，层级不深，`ref`、`reactive`都可以
 3. 若需要一个响应式对象，且层级较深，推荐使用`reactive`
 
-#### `toRef`函数的使用
+***
+
+### `toRef`函数的使用
 
 使用`toRef`函数时，需要对其进行引入组合式`API`：`import { toRef } from 'vue'`
 
@@ -2436,7 +2499,9 @@ let age_big = toRef(person, "age");
 name.value   age.value    age_big.value
 ```
 
-#### `toRefs`函数的使用
+***
+
+### `toRefs`函数的使用
 
 使用`toRefs`函数时，需要对其进行引入组合式`API`：`import {toRefs} from 'vue'`
 
@@ -2465,7 +2530,9 @@ export default({
 </script>
 ```
 
-#### `computed`计算属性
+***
+
+### `computed`计算属性
 
 使用`computed`时，需要对其进行引入组合式`API`：`import { computed } from 'vue'`
 
@@ -2542,7 +2609,9 @@ let fullName = computed({
 });
 ```
 
-#### `watch`监听器
+***
+
+### `watch`监听器
 
 `watch`侦听器是用于监测一个数据的改变，当数据发生变化时，我们要做一系列的业务
 
@@ -2737,7 +2806,9 @@ watch(
 );
 ```
 
-#### `watchEffect`监听器
+***
+
+### `watchEffect`监听器
 
 使用`watchEffect`时，需要对其进行引入组合式`API`：`import {watchEffect} from 'vue'`
 
@@ -2816,7 +2887,9 @@ watchEffect(() => {
 });
 ```
 
-#### shallowRef和shallowReactive
+***
+
+### `shallowRef`和`shallowReactive`
 
 使用时，需要对其进行引入组合式API：`import {shallowRef,shallowReactive} from 'vue'`
 
@@ -2867,13 +2940,15 @@ export default ({
 </script>
 ```
 
-***
 
-### `setup`函数
+
+## `setup`函数
 
 `setup`函数是`Composition API`（组合`API`）的入口函数，是启动页面后会自动执行的函数（可以在网页的控制界面看到执行的结果），项目中定义的所有变量，方法等都需要在`setup`函数中，在`setup`函数中定义的变量和方法最后都需要`return`出去，否则无法在视图层中使用
 
-#### `props`在`setup`中的使用
+***
+
+### `props`在`setup`中的使用
 
 在`setup`函数中的第一个参数中可以接收`props`的值
 
@@ -2893,7 +2968,9 @@ export default {
 </script>
 ```
 
-#### 自定义事件调用
+***
+
+### 自定义事件调用
 
 父组件通过`props`向子组件进行传递值，子组件修改值后，将值通过事件返回给父组件
 
@@ -2961,7 +3038,9 @@ export default {
 </script>
 ```
 
-#### 父组件直接操作子组件的数据
+***
+
+### 父组件直接操作子组件的数据
 
 ```vue
 <template>
@@ -3001,7 +3080,9 @@ export default{
 
 这样我们如果通过父组件去读取没有被暴露的内容，就会显示`undefined`
 
-#### 在`setup`中使用`provide`和`inject`
+***
+
+### 在`setup`中使用`provide`和`inject`
 
 `Provider/Inject`发布/订阅通信可以实现任意组件间通信：如果两个组件不是父子组件关系，而是深度嵌套的组件，并且深层子组件只需要父组件的部分内容，这个时侯如果使用` Props` 属性逐级传下去，将会显得非常麻烦而且容易出错。针对这种情况，`Vue `推出了发布订阅进行通信，即`Provider/Inject` 通信，`Provider/Inject` 通信，需要有一个 `Provider` 和一个或者多个 `Inject`。在父组件中，`Provider` 负责提供数据，深层子组件里的 `Inject` 负责读取数据。这种通信方式，不管父子组件中间相隔多久，都是可以实现的
 
@@ -3074,9 +3155,9 @@ export default {
 
 改变数据的前提条件：这个数据一点要是响应式数据
 
-***
 
-### `＜script setup＞`语法糖
+
+## `＜script setup＞`语法糖
 
 该语法允许开发人员定义组件而无需从 `JavaScript `块中导出任何内容（不需要使用`export default`），只需定义变量并在模板中使用它们，该方法代码更少、更简洁的，不需要使用 `return {}` 暴露变量和方法了，使用组件时不需要主动注册
 
@@ -3091,9 +3172,11 @@ const num = ref(100)
 </script>
 ```
 
-#### 获取后端数据
+***
 
-##### 使用生命周期构造函数异步获取
+### 获取后端数据
+
+#### 使用生命周期构造函数异步获取
 
 ```vue
 <template>
@@ -3110,7 +3193,7 @@ onMounted(async() => {
 </script>
 ```
 
-##### `suspense`处理全局异步读取数据
+#### `suspense`处理全局异步读取数据
 
 在`setup`中，全局是异步的，具有全局的`async`，所有我们直接使用`await`是不报错的，但是我们这样模板是渲染不出来的，我们需要使用`<suspense>`标签进行包裹才行，这个标签表示当我们异步完成时，才会渲染我们标签中的内容
 
@@ -3129,7 +3212,9 @@ todos.value = await fetch('后端数据地址').then(r => r.json())
 
 `<suspense>`标签有两个插槽：默认插槽`<template #default>`和请求过程中显示的插槽`<template #fallback>`，在异步请求的过程中渲染插槽的内容
 
-#### `defineProps`处理`props`数据
+***
+
+### `defineProps`处理`props`数据
 
 在父级组件通过`foo="qqq"`（传递表达式需要前面加冒号，传递字符串一般不需要）在子组件标签中进行向子组件传递数据
 
@@ -3149,7 +3234,7 @@ props.bar
 
 在`Vue 3`和`TypeScript`中，如果要传递静态的`Props`，可以在父组件中直接在子组件的标签上使用`Props`的语法来传递静态值
 
-##### `defineProps`结合`ts`接口`interface`的基本用法
+#### `defineProps`结合`ts`接口`interface`的基本用法
 
 `defineProps`的属性：
 
@@ -3176,7 +3261,7 @@ let name= ref('jlc');
 </script>
 ```
 
-子组件接收props
+子组件接收`props`
 
 ```vue
 <template>
@@ -3207,7 +3292,7 @@ const props = defineProps({
 </script>
 ```
 
-#### `defineEmits`处理`emit`自定义事件
+### `defineEmits`处理`emit`自定义事件
 
 自定义事件常用于：子 => 父，我们通常在父级组件中拿取数据，在子组件中对数据进行操作，如删除操作，子组件删除完数据后，在父组件中的数据是没有变化的因此我们需要通知一下父组件，告知父组件我已经完成删除动作了，通知父组件来完成数据的重新加载，所以我们需要在父组件中来向子组件传递自定义的事件：当删除数据后，父组件再把数据重新拉取一下：
 
@@ -3250,7 +3335,9 @@ const del = async() => {
 
 在 `<script setup>` 中，`defineEmits`方法不需要手动的引入，系统在运行的时候会自动创建这个方法
 
-#### 封装`fetch`网络请求
+***
+
+### 封装`fetch`网络请求
 
 我们一般创建一个`useRequest.js`文件夹，来封装我们的网络请求：
 
@@ -3315,9 +3402,9 @@ const del = async() => {
 </script>
 ```
 
-***
 
-### `vue3`与`typescript`结合
+
+## `vue3`与`typescript`结合
 
 我们在写代码的时候，编辑器就会提供我们类型，比如创建一个对象，里面加上一些属性，当我们后续使用这个变量时，我们输入这个变量加上.就能看到这个属性，在过去我们的`ide`会为我们进行提供这些功能，有比较强的代码提示，但是对于使用后端传递过来的数据时，我们是无法通过上述方式进行属性的提示的（因为系统只能查询到这个类型是`any`，不知道返回的数据具体是什么样的类型，所以就无法给我们代码提示），基于这个情况，我们需要使用`TS`强类型提示的功能
 
@@ -3377,11 +3464,15 @@ const f: user | string | boolean = { name: 'abc' }
 f = true  // 这样修改是正确的
 ```
 
-#### 异步数据请求没有类型提示情况
+***
+
+### 异步数据请求没有类型提示情况
 
 在不使用`TS`的情况下，提供后端去请求异步的数据，之后我们调用这个数据，是不会出现该数据属性的类型提示的，数据的属性名称也不会进行提示的给出，我们一般需要到接口/网络请求中进行后端传递的数据中进行属性的查询，如果属性敲错了，代码中也是不会进行报错的（但是运行的时候会报错，可能也不报错，如果数据中没有这个属性，读取到的是`undefined`，那么就什么也看不见），因为系统根本就不知道这个异步的数据中有什么属性，系统返回的类型是`any`（不确定是什么东西）在`ts`语法中，尽量杜绝使用类型为`any`的变量
 
-#### 通过泛型声明类型
+***
+
+### 通过泛型声明类型
 
 所以我们就需要使用`TS`语法，给异步请求的数据加上类型，那么当我们写错属性的时候就会在代码处进行报错：
 
@@ -3405,19 +3496,21 @@ const props = defineProps<{
 </script>
 ```
 
-***
 
-### `vue3`的抽离封装
 
-#### 导出语法
+## 抽离封装
 
-##### `export default` 和 `export`
+### 导出语法
+
+#### `export default` 和 `export`
 
 `export default`和`export`都能导出一个模块里面的常量，函数，文件，模块等，在其它文件或模块中通过`import`来导入进行使用。但是，在一个文件或模块中，`export`和`import`可以有多个，`export default`却只能有一个
 
 通过`export`方式导出，在导入的时候需要加`{}`大括号，`export default` 就不需要
 
-#### 自定义`hook`
+***
+
+### 自定义`hook`
 
 `hook`--本质是一个函数，把`setup`函数中使用的`Composition API`进行了封装
 
@@ -3568,9 +3661,9 @@ const {dogList,addDog} = useDog();
 </script>
 ```
 
+***
 
-
-#### 自定义标签的抽离封装
+### 自定义标签的抽离封装
 
 我们可以将一个 `Vue` 组件的模板、逻辑与样式封装在单个文件中，这个文件包含了组件的模板、`JavaScript` 代码以及 `CSS` 样式，`.vue`单文件包括：
 
@@ -3584,7 +3677,7 @@ const {dogList,addDog} = useDog();
 
 封装好后，我们就可以在其他组件中使用这个组件，在 `Vue `中，如果要使用自定义组件，第一步需要做的就是将其注册到应用中，`Vue `组件的注册可以有两种方式：全局注册和局部注册
 
-##### 全局注册
+#### 全局注册
 
 在`./src/main.js`引入：
 
@@ -3595,7 +3688,7 @@ import HelloRunoob from './components/HelloRunoob.vue'
 app.component('hello-runoob', HelloRunoob) // 自定义标签注册，引号中表示后续要调用的标签名
 ```
 
-##### 局部注册
+#### 局部注册
 
 局部注册的组件只能在其所属的组件内部使用，无法在其他组件（包括子组件）中直接使用
 
@@ -3628,727 +3721,6 @@ import MyComponent from './MyComponent.vue';
 ```
 
 通过全局或局部注册组件，我们可以在应用中灵活地使用和组织组件，实现不同层次的封装和复用
-
-
-
-## 路由管理
-
-一个网站有很多的页面，比如首页，列表详情页等等，过去的形式是访问一个页面就通过后台来进行渲染，最后交给我们的浏览器，如果使用`vue`来控制，我们可以将这些页面都拿给前台，`vue`会根据请求的地址栏（如请求`/home`），渲染对应的页面，页面其实也是组件，路由会根据地址栏来渲染哪个组件，对于这些页面，我们可以将其整个打包在一个文件中，我们也可以在切换的时候按需进行引入（懒加载），执行路由是不发生网络请求的，这和超链接有所不同
-
-### `vue-router`
-
-有了路由后，就可以对页面进行一个切换，`Vue` 路由允许我们通过不同的 `URL` 访问不同的内容，我们一般使用`vue`提供的包`vue-router`来管理我们的路由
-
-### 安装
-
-安装路由：`npm install vue-router@4`
-
-### 基本配置
-
-我们可以对路径别名进行配置，通过`@`符号进行文件路径的查找，要使用`@`符号来代替绝对路径的`src`文件夹，我们需要对其进行配置，在`vite.config.js`文件中添加一个`resolve`属性：
-
-```js
-import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue'
-import path from 'path'
-
-// https://vitejs.dev/config/
-export default defineConfig({
-  plugins: [vue()],
-  resolve: {
-    alias: {  // 配置路径别名
-      '@': path.resolve(__dirname, 'src')  // 用@代表src文件夹
-    }
-  }
-})
-```
-
-后续当我们输入`@`符时，就找到了项目中的`src`目录，后续访问文件就不需要使用相对路径进行查找文件了，直接使用`@`，在`src`文件中开始进行查找即可，但是使用`@`符是没有路径提示的，为了实现路径提示，我们需要在根目录新建一个`jsconfig.json`的文件，这个文件只针对`.js`文件有效，如果用的是`ts`语法，需要配置`tsconfig.json`的文件：
-
-```json
-{
-    "compilerOptions": {
-        "baseUrl": ".",
-        "paths": {
-            "@/*": ["src/*"]  // 配置@符号指向src目录及其子目录
-        }
-    }
-}
-```
-
-但是，`ctrl`+鼠标点击路径，跳转到这个文件会失效，我们需要安装一个插件：别名路径跳转，安装完后就可以进行正常的跳转了
-
-对于`vite`中我们使用`@`符号来代替当前目录的`src`文件夹，可以在`vite.config.js`文件中进行以下的配置：
-
-```js
-import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue'
-import path from 'path'
-
-export default defineConfig({
-    plugins: [vue()],
-    resolve: {
-      alias: {'@': path.resolve(__dirname, 'src')}  // @符就是当前目录的src
-    },
-})
-```
-
-通常在`src`文件夹下创建一个文件夹`router`，在`router`文件夹下创建一个`index.js`文件（路由的配置文件）`index.js`的代码如下：
-
-```js
-import { createRouter, createWebHistory } from "vue-router";
-
-const routes = [
-    {// 首页界面
-        path: '/',   //根据path进行界面的先后跳转，/表示打开浏览器就打开的界面
-        name: 'home',
-        component: () => import('@/pages/Home.vue'),
-    },
-    {
-        path: '/CodeAndCesium',
-        alias: ["/code", "/cesium"], // 设置访问的别名，可以通过别名进行访问
-        name: 'codeandcesium',
-        component: () => import('@/pages/CodeAndCesium.vue'),
-    }
-]
-
-const router = createRouter({  // 创建路由器
-    history: createWebHistory(),  //路由的表现方式 
-    routes  // 路由规则
-})
-
-export default router
-```
-
-> - 路由的表现方式有两种形式：`createWebHistory`和`createWebHashHistory`前者可以直接通过`path`路径进行地址的跳转；后者在使用跳转的时候需要加上锚点#，再加上`path`路径进行跳转，更加推荐使用前者的方式：前者对搜索引擎的友好程度更好（`URL`更加美观，不带有`#`，更接近传统的网站`URL`，但是后期项目上线，需要服务端配合处理路径问题，否则刷新会有`404`错误），在两者中都可以进行前缀的添加限制，如`history: createWebHistory('shop')`，那么访问根目录就变成了：`http://localhost:5173/shop/`
-> - 对应设置别名`alias`：之前是通过在地址栏后面输入`/CodeAndCesium`进行对应组件的访问，设置完别名后，我们就可以使用别名进行访问来代替原来的访问方式，一个路由的别名可以设置多个，用数组的形式进行包裹
-> - 注意`alias`和`name`的区别：别名是我们跳转的真实的路径，而`name`是不更改其本来的路径的
-
-在`main.js`文件中对路由进行进行挂载：
-
-```js
-import { createApp } from 'vue'
-import App from './App.vue'
-import router from './router'  // 不用读到index.js，index文件会被自动读取
-
-const app = createApp(App)
-app.use(router)  // 声明使用路由
-app.mount('#app')
-```
-
-在`App.vue`中进行路由的使用：
-
-```vue
-<template>
-	<router-view />
-</template>
-
-<script setup>
-</script>
-```
-
-> - 这样打开浏览器，就使用我们的路由，一开始渲染我们`/`路径下的组件，可以在地址栏进行路由的跳转
->
-> - `<router-view />`组件是用来渲染我们的页面的，我们在这个组件的同一个模板中写的任何的内容，在所有的页面中都会显示
->
->   ```vue
->   <template>
->   	<span>111</span>
->   	<router-view />
->   </template>
->   ```
->
->   所以，有的时候写一个页面，有一部分是固定的（如导航栏，目录等），只想要一个部分进行页面渲染的路由切换，就可以通过这个方法实现
-
-### 查询字符串和路径传递参数
-
-#### 字符串传递参数`query`
-
-使用查询字符串来传递参数比较常见，查询字符串就是在路径地址后面加上一个`?`，再带上参数，如：`http://localhost:5173/?id=100&title=详情内容`，当然这个字符串是可以随便自定义的，但是地址中的字符串是什么，在接收的组件中就要对应写什么，也可以不给所有的查询字符串都传递参数
-
-```vue
-// 可以在文件中传递参数
-<RouterLink 
-  :to="{
-    //name:'xiang', //用name也可以跳转
-    path:'/news/detail',
-    query:{
-      id:news.id,
-      title:news.title,
-      content:news.content
-    }
-  }"
->
-{{news.title}}
-</RouterLink>
-```
-
-我们在这个被访问的组件下通过`{{ $route.query.id }}`就可以接收这个`id`字符传递的参数值；通过`{{ $route.query.title }}`就可以接收`title`字符串传递的参数值
-
-```vue
-<template>
-    id: {{ $route.query.id }}
-    title: {{ $route.query.title }}
-</template>
-
-<script setup>
-import { useRoute } from 'vue-router'
-const route = useRoute()
-console.log(route.query)
-</script>
-```
-
-![image-20241009140525300](D:\Myproject\项目学习文档\images\image-20241009140525300.png)
-
-#### 路径传递参数`params`
-
-路径传递参数，就需要在`router/index.js`文件中，对`path`进行内容的添加从而传递参数：`path: '/CodeAndCesium/:id/title/:title'`
-
-在访问地址中通过`http://localhost:5173/codeAndCesium/007/name/在线编译器`方式就可以将要传递的内容007和在线编译器进行传递，同时在接收参数的组件中使用`{{ $route.params.id }}`和`{{ $route.params.title }}`来接收参数
-
-但是这种方法是在路径上进行修改，必须要保证访问的路径和对应的路由规则是相同的，不然是访问不到正确的页面的，如果我们不想要传递`title`参数，我们只需要在其后面加个`?`，`path: '/CodeAndCesium/:id/title/:title?'`，在地址栏输入：`http://localhost:5173/codeAndCesium/007/title`即可不传递`title`参数进行访问
-
-```vue
-//也可以在文件中进行传递参数
-<RouterLink 
-  :to="{
-    name:'xiang', //传递params参数时，若使用to的对象写法，只能用name配置项，不能用path
-    params:{
-      id:news.id,
-      title:news.title,
-      content:news.title
-    }
-  }"
->
-  {{news.title}}
-</RouterLink>
-```
-
-```js
-//接收参数文件
-import {useRoute} from 'vue-router'
-const route = useRoute()
-// 打印params参数
-console.log(route.params)
-```
-
-### 路由跳转
-
-在创建完路由后，可以在主界面通过`<router-link>` 组件设置一个导航链接，通过设置的路由切换不同组件界面，`<router-link>` 组件的功能与超链接的功能较为相似，进行一个导航跳转，但是该组件相比`<a>`标签，可以在不重新加载页面的情况下更改` URL`
-
-`<router-link>`控件的常用属性：
-
-|      属性      |                             描述                             |
-| :------------: | :----------------------------------------------------------: |
-|      `to`      |                     跳转到目标路由的链接                     |
-|   `replace`    | 跳转时调用调用 `router.replace() `而不是 `router.push()`，设置后导航后不会留下` history `记录 |
-|    `append`    |                在当前 (相对) 路径前添加其路径                |
-| `active-class` |                 链接激活时使用的 `CSS `类名                  |
-|    `event`     |                        触发导航的事件                        |
-
-在`App.vue`文件下：
-
-```vue
-<template>
-	<router-link to="/">Go to Home</router-link>
-	<router-link to="/CodeAndCesium">Go to CodeAndCesium</router-link>
-	<hr />
-	<router-view />
-</template>
-
-<script setup>
-</script>
-```
-
-但是这种通过`path`方法跳转路由的方法有个问题：如果后续修改了这个地址的`path`，那么页面中使用过之前的`path`的地方都要进行手动的修改，不然跳转会报错；针对这种情况，我们可以通过其`name`进行跳转，如果其`path`发生改变，还是可以通过`name`进行跳转，跳转后，其地址栏会自动的变成新设置的`path`，不需要在模板中批量的修改这些地址
-
-```vue
-<template>
-	<router-link :to="{ name: 'home' }">Go to Home</router-link>
-	<router-link :to="{ name: 'codeandcesium' }">Go to CodeAndCesium</router-link>
-	<hr />
-	<router-view />
-</template>
-
-<script setup>
-</script>
-```
-
-`:to`表示动态属性的绑定
-
-#### `router-link`与传参结合
-
-```vue
-<template>
-	<router-link to="/?id=100&title=详情内容">查询字符串传参</router-link>
-	<router-link to="/codeAndCesium/007">路径传参</router-link>
-</template>
-```
-
-`router-link`传参的动态属性绑定
-
-```vue
-<template>
-	<router-link :to="{name: 'home', query:{id:200, title:'vue3'}}">动态查询字符串传参</router-link>
-</template>
-```
-
-在`vue`中，如果使用的是同一个页面，当传递的参数改变，这个组件不会进行重新的刷新（即在同一个页面中，通过传递参数进行路由的切换（地址栏发生变化），页面是不会进行改变的），对于这个问题，我们可以通过`watch`监听器来进行参数变化的监听，当监听到传递来的参数发生变化时，重新在去向后台去哪一次数据：
-
-```js
-import { useRoute } from 'vue-router'
-import { watch, ref } from 'vue'
-const route = useRoute()
-const datas = ref()  // 首先需要将数据变成响应式的数据
-watch(route, async () => {
-    // 监听传递来的参数发生变化时，重新请求一次数据
-    datas.value = await api.find(route.params.id)
-})
-// 一开始请求一次数据
-datas.value = await api.find(route.params.id)
-```
-
-### 自定义404页面
-
-当我们访问一个地址的时候，如果该地址没有定义匹配的路由，我们需要给他显示一个404页面，即表示页面找不到
-
-我们首先需要定义一个404页面，比如`errorPage.vue`：
-
-```vue
-<template>
-    error
-</template>
-
-<script setup>
-
-</script>
-
-<style lang="scss" scoped>
-
-</style>
-```
-
-在路由文文件中进行添加：
-
-```js
-{
-    path: '/:pathMatch(.*)*',   // pathMatch可以写任意的内容，写any也是常见的
-    name: 'errorpage',   // name可以不要
-    component: () => import('@/pages/ErrorPage.vue'),
-}
-```
-
-### 编程式导航
-
-编程式导航，一般用在页面中将其编程到一个按钮中，触发按钮进行路由的跳转：
-
-```vue
-<template>
-	<el-button @click="goTo">使用编程式导航跳转</el-button>
-</template>
-
-<script setup>
-import { useRouter } from 'vue-router'
-const router = useRouter()
-const goTo = () => {
-    router.push("/codeAndCesium/007")
-}
-</script>
-```
-
-### 页面样式
-
-对于`<router-view />`组件，它实际上就是一个自定义标签，具有普通标签的特性，我们可以对其添加样式，但是这个标签没有唯一的根节点，需要通过`<div>`进行包裹，在根节点进行样式的设置：
-
-```vue
-<template>
-	<router-link :to="{ name: 'home' }">Go to Home</router-link>
-	<router-link :to="{ name: 'codeandcesium' }">Go to CodeAndCesium</router-link>
-	<hr />
-	<div class="router-view">
-		<router-view />
-    </div>
-</template>
-
-<script setup>
-</script>
-
-<style>
-.router-view{
-	background-color: gray;
-    padding: 20px
-}
-</style>
-```
-
-这样经过路由渲染的页面都有相同的背景样式
-
-### 嵌套路由结合共享组件
-
-嵌套路由就是子路由，在`router/index.js`文件中定义子路由的方式：
-
-```js
-const routes = [
-    {// 首页界面
-        path: '/',   //根据path进行界面的先后跳转，/表示打开浏览器就打开的界面
-        name: 'home',
-        component: () => import('@/pages/Home.vue'),
-    },
-    {
-        path: '/vip',
-        component: () => import('@/pages/vip.vue'),
-        children: [
-            {
-                path: '',  // 进入的是默认页面
-        		component: () => import('@/pages/default.vue'),
-            },
-            {
-                path: 'info',  // 通过在地址栏后加上/info进行访问
-        		component: () => import('@/pages/info.vue'),
-            },
-        ]
-    }
-]
-```
-
-如果想要显示子页面，我们也需要在父页面中加上`<router-view />`标签来进行子页面的渲染
-
-### 重定向
-
-当我们想要页面可以访问到其他某个页面，那么我们可以使用重定向来进行
-
-```js
-{
-    path: 'svip',
-    redirect: '/vip'
-}
-```
-
-当我们访问`svip`页面时，直接跳转到了`vip`的页面
-
-重定向也可以像编程式导航一样直接传递对象
-
-```js
-{
-    path: 'svip',
-    redirect: {name: 'home', query:{id:200, title:'vue3'}}
-}
-```
-
-### 获取当前的路由信息
-
-在路由中提供了一个方法用于获取当前的路由信息：
-
-```js
-import { useRoute, useRouter } from 'vue-router'
-
-const route = useRoute()
-const router = useRouter()
-// route表示当前的路由信息；router表示路由操作者，一般用于路由跳转
-```
-
-### 全局前置守卫
-
-全局前置守卫的作用是对请求进行拦截，在`main.js`文件中对全局前置守卫进行设置
-
-```js
-import { createApp } from 'vue'
-import App from './App.vue'
-import './index.css'
-import ElementPlus from 'element-plus'
-import 'element-plus/dist/index.css'
-import router from './router'
-
-const app = createApp(App)
-
-app.use(ElementPlus)
-app.use(router)
-
-router.beforeEach((to, from, next) => {
-    console.log("to:", to)  //即将进入的路由信息
-    console.log("from:", from)  //当前即将离开的路由信息
-    //next()  // 继续执行，如果注释掉，首页都不会显示
-    
-    // 设置条件拦截，阻止跳转到name为codeandcesium的页面
-    if(to.name == 'codeandcesium'){
-        next(false)
-    }else{
-        next()
-    }
-})
-
-app.mount('#app')
-```
-
-`from`表示是从哪个内容页回来的；`to`表示当前的路由信息
-
-### 路由的命名视图
-
-路由的视图命名只的是当我们点击某个路由的时候，我们希望页面顶部的导航栏中显示的内容是不一样的，对于这个情况，我们可以使用视图的命名
-
-### 路由的布局视图
-
-
-
-
-
-通常，在`src`文件夹创建一个文件夹`pages`，用来存放项目的所有页面
-
-更改浏览器的默认样式，默认的浏览器是带有距离边框的，我们可以在public文件夹中的index.html文件中加入以下的代码：
-
-```html
-<style type="text/css">
-      body{
-        margin: 0;
-        padding: 0;
-      }
-</style>
-```
-
-还可以通过`https://www.bootcdn.cn/normalize/`引入link标签来修改默认浏览器的样式，在index.html文件中加上，这样浏览器的样式就能统一，使用所有浏览器的效果就更加一致
-
-```html
-<link href="https://cdn.bootcdn.net/ajax/libs/normalize/8.0.1/normalize.min.css" rel="stylesheet">
-```
-
-在项目文件夹中创建style文件夹，在文件夹中创建headtap.css文件，用来存放相关界面的样式
-
-在项目文件夹中创建static文件夹，用于存放静态文件（包括图片等等）
-
-
-
-## 状态管理和 `HTTP` 请求
-
-### `axios`请求工具
-
-`axios`是通过`promise`实现对`ajax`技术的封装；`ajax`技术实现了网页的局部数据刷新，`axios`实现了对`ajax`的封装，[`axios`官方文档](https://axios-http.com/zh/docs/intro)
-
-安装：`npm install axios --save`
-
-`axios`支持多种请求方式：
-
-- `axios(config)`
-- `ios.request(config)`
-- `axios.get(url[, config])`
-- `axios.delete(url[, config])`
-- `axios.head(url[, config])`
-- `axios.post(url[, data[, config]])`
-- `axios.put(url[, data[, config]])`
-- `axios.patch(url[, data[, config]])`
-
-具体形式：
-
-```js
-axios({
-    url: '/getUsers',
-    method: 'get',
-    responseType: 'json', // 默认的
-    data: {
-        //'a': 1,
-        //'b': 2,
-    }
-}).then(function (response) {
-    console.log(response);
-    console.log(response.data);
-}).catch(function (error) {
-    console.log(error);
-    })
-```
-
-#### 在`Vue3`项目使用`Axios`
-
-首先需要在`main.js`或者`main.ts`文件中加载`axios`组件和请求`request`
-
-```js
-import { Request } from '@/utils/request';
-import VueAxios from 'vue-axios'
-
-app.use(VueAxios, Request.init())
-```
-
-`request`请求的基本形式如下：
-
-```ts
-import axios, {AxiosInstance, AxiosRequestConfig, AxiosResponse} from 'axios';
-import {message, notification} from 'ant-design-vue';
- 
-export class Request {
-    public static axiosInstance: AxiosInstance;
- 
-    // constructor() {
-    //     // 创建axios实例
-    //     this.axiosInstance = axios.create({timeout: 1000 * 12});
-    //     // 初始化拦截器
-    //     this.initInterceptors();
-    // }
- 
-    public static init() {
-        // 创建axios实例
-        this.axiosInstance = axios.create({
-            baseURL: '/api',
-            timeout: 6000
-        });
-        // 初始化拦截器
-        this.initInterceptors();
-        return axios;
-    }
- 
-    // 为了让http.ts中获取初始化好的axios实例
-    // public getInterceptors() {
-    //     return this.axiosInstance;
-    // }
- 
- 
- 
-    // 初始化拦截器
-    public static initInterceptors() {
-        // 设置post请求头
-        this.axiosInstance.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded';
-        /**
-         * 请求拦截器
-         * 每次请求前，如果存在token则在请求头中携带token
-         */
-        this.axiosInstance.interceptors.request.use(
-            (config: AxiosRequestConfig) => {
- 
-                // const token = Vue.ls.get(ACCESS_TOKEN)
-                // if (token) {
-                //     config.headers['Authorization'] = 'Bearer ' + token
-                // }
- 
-                // 登录流程控制中，根据本地是否存在token判断用户的登录情况
-                // 但是即使token存在，也有可能token是过期的，所以在每次的请求头中携带token
-                // 后台根据携带的token判断用户的登录情况，并返回给我们对应的状态码
-                // if (config.headers.isJwt) {
-                    const token = localStorage.getItem('ACCESS_TOKEN');
-                    if (token) {
-                        config.headers.Authorization = 'Bearer ' + token;
-                    }
-                // }
-                return config;
-            },
-            (error: any) => {
-                console.log(error);
-            },
-        );
- 
- 
-        // 响应拦截器
-        this.axiosInstance.interceptors.response.use(
-            // 请求成功
-            (response: AxiosResponse) => {
-                // if (res.headers.authorization) {
-                //     localStorage.setItem('id_token', res.headers.authorization);
-                // } else {
-                //     if (res.data && res.data.token) {
-                //         localStorage.setItem('id_token', res.data.token);
-                //     }
-                // }
- 
-                if (response.status === 200) {
-                    // return Promise.resolve(response.data);
-                    return response;
-                } else {
-                    Request.errorHandle(response);
-                    // return Promise.reject(response.data);
-                    return response;
-                }
-            },
-            // 请求失败
-            (error: any) => {
-                const {response} = error;
-                if (response) {
-                    // 请求已发出，但是不在2xx的范围
-                    Request.errorHandle(response);
-                    return Promise.reject(response.data);
-                } else {
-                    // 处理断网的情况
-                    // eg:请求超时或断网时，更新state的network状态
-                    // network状态在app.vue中控制着一个全局的断网提示组件的显示隐藏
-                    // 关于断网组件中的刷新重新获取数据，会在断网组件中说明
-                    message.warn('网络连接异常,请稍后再试!');
-                }
-            });
-    }
- 
- 
-    /**
-     * http握手错误
-     * @param res 响应回调,根据不同响应进行不同操作
-     */
-    private static errorHandle(res: any) {
-        // 状态码判断
-        switch (res.status) {
-            case 401:
-                break;
-            case 403:
-                break;
-            case 404:
-                message.warn('请求的资源不存在');
-                break;
-            default:
-                message.warn('连接错误');
-        }
-    }
-}
-```
-
-编写接口：
-
-```js
-import { Request } from '@/utils/request';
- 
-export function login (parameter: any)  {
-    return Request.axiosInstance({
-        url: '/cxLogin',
-        method: 'post',
-        data: parameter
-    })
-}
-```
-
-##### `Axios` 请求
-
-发起一个 `GET` 请求：
-
-```js
-const axios = require('axios');
-
-// 向给定ID的用户发起请求
-axios.get('/user?ID=12345')
-  .then(function (response) {
-    // 处理成功情况
-    console.log(response);
-  })
-  .catch(function (error) {
-    // 处理错误情况
-    console.log(error);
-  })
-  .finally(function () {
-    // 总是会执行
-  });
-```
-
-发起一个 `POST` 请求：
-
-```js
-axios.post('/user', {
-    firstName: 'Fred',
-    lastName: 'Flintstone'
-  })
-  .then(function (response) {
-    console.log(response);
-  })
-  .catch(function (error) {
-    console.log(error);
-  });
-```
-
-##### `axios` 封装
-
-项目中会有很多的模块都需要发送网络请求，常见的比如登录模块，首页模块等，如果我们项目中直接使用诸如`axios.get()`, `axios.post()`，会存在很多弊端，所以我们需要对`axios`进行封装
-
-
 
 
 
