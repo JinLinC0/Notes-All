@@ -9529,6 +9529,10 @@ public class CpuNum {
 
 ![image-20250424155222246](..\images\image-20250424155222246.png)
 
+***
+
+### 创建线程
+
 创建线程的两种方式：
 
 - 继承`Thread`类，重写`run`方法
@@ -9603,7 +9607,7 @@ public class CpuNum {
       public static void main(String[] args) throws InterruptedException {
   		Cat cat = new Cat();
           // Runnable接口中没有start()开辟新线程的方法，不能使用cat.start()
-          // 需要创建Thread对象，把cat对象（实现了Runnable接口），放入Thread中
+          // 需要创建Thread对象，把cat对象（实现了Runnable接口的对象），放入Thread中
           // 这里底层使用了一个设计模式（代理模式）
           Thread thread = new Thread(dog);
           thread.start();
@@ -9631,7 +9635,641 @@ public class CpuNum {
   }
   ```
 
+  使用代码来模拟线程代理：
   
+  ```java
+  // 代码实现的线程代理类，模拟了一个极简的Thread类
+  class ThreadProxy implements Runnable {
+      private Runnable target = null;  // 属性，类型是Runnable
+      @Override
+      public void run() {
+          if(target != null) {
+              target.run();
+          }
+      }
+      // 构造器，接收一个实现了Runnable接口的对象
+      public ThreadProxy(Runnable target) {
+          this.target = target;
+      }
+      
+      public void start() {
+          start0();
+      }
+      // start0方法是真正实现多线程的方法
+      public void start0() {
+          run();
+      }
+  }
+  ```
+
+继承`Thread`和实现`Runnable`的区别：
+
+- 从`Java`的设计来看，通过继承`Thread`或者实现`Runnable`接口来创建线程本质上没有区别，从`jdk`帮助文档看出`Thread`类本身就实现了`Runnable`接口，都是实现了`start()`方法中的`start0()`方法
+
+- 实现`Runnable`接口方式更加适合多个线程共享一个资源的情况，并且避免了单继承的限制（因此，没有特殊的要求，推荐使用实现`Runnable`接口方式来创建线程）
+
+  ```java
+  T1 t1 = new T1();  // T1实现了Runnable接口
+  // 可以通过一个资源创建多个线程
+  Thread thread1 = new Thread(t1);
+  Thread thread2 = new Thread(t1);
+  thread1.start();
+  thread2.start();
+  ```
+
+***
+
+### 多线程执行
+
+编写一个程序，在`main`线程中启动两个线程，一个线程每隔1秒输出`hello,world`，输出10次，退出；另一个线程每隔1秒输出`hi`，输出5次退出：
+
+```java
+public class Thread01 {
+    public static void main(String[] args) throws InterruptedException {
+		T1 t1 = new T1();
+        T2 t2 = new T2();
+        Thread thread1 = new Thread(t1);
+        Thread thread2 = new Thread(t2);
+        thread1.start();  // 启动第一个线程
+        thread2.start();  // 启动第二个线程
+    }
+}
+
+class T1 implements Runnable {
+    int count = 0;
+    @Override
+    public void run() {
+        while(true) {
+            System.out.println("hello,world" + (++count));
+            // 让该线程休眠一秒钟
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            if (times == 10) {
+                break;  // 退出循环，这时线程也就结束了
+            }
+        }
+    }
+}
+
+class T2 implements Runnable {
+    int count = 0;
+    @Override
+    public void run() {
+        while(true) {
+            System.out.println("hi" + (++count));
+            // 让该线程休眠一秒钟
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            if (times == 5) {
+                break;  // 退出循环，这时线程也就结束了
+            }
+        }
+    }
+}
+```
+
+多线程售票问题出现的超卖现象：
+
+```java
+public class Thread02 {
+    public static void main(String[] args) {
+        SellTicket01 sellTicket01 = new SellTicket01();
+        SellTicket02 sellTicket02 = new SellTicket02();
+        SellTicket03 sellTicket03 = new SellTicket03();
+        
+        // 这时会出现一个超卖的现象，售票结束的时候，剩余的票数可能为负的（-1，或者-2）
+        sellTicket01.start();  // 启动第一个线程
+        sellTicket02.start();  // 启动第二个线程
+        sellTicket03.start();  // 启动第三个线程
+    }
+}
+
+// SellTicket01为例，SellTicket02，SellTicket03类似
+class SellTicket01 ectends Thread {
+    private static int ticketNum = 100;  // 让多个线程共享ticketNum
+    @Override
+    public void run() {
+        while(true) {
+            if(ticketNum <= 0) {
+                System.out.println("售票结束");
+                break;
+            }
+            // 让该线程休眠50毫秒
+            try {
+                Thread.sleep(50);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            System.out.println("窗口" + Thread.currentThread().getName() + "售出一张票" + "剩余票数=" + (--ticketNum));
+        }
+    }
+}
+```
+
+***
+
+### 线程终止
+
+线程的终止通常有两种方式：
+
+- 当线程完成任务后，会自动退出
+
+- 还可以通过使用变量来控制`run`方法退出的方式停止线程，即通知方式
+
+  启动一个线程`t`，要求在`main`线程中去停止线程`t`：
+
+  ```java
+  public class Thread02 {
+      public static void main(String[] args) {
+          T t = new T();
+          t.start();  // 该线程一旦运行了，就不会终止
+      }
+  }
+  
+  class T ectends Thread {
+      @Override
+      public void run() {
+          while(true) {
+              // 让该线程休眠50毫秒
+              try {
+                  Thread.sleep(50);
+              } catch (InterruptedException e) {
+                  e.printStackTrace();
+              }
+              System.out.println("T 运行中");
+          }
+      }
+  }
+  ```
+
+  我们希望可以控制线程的终止，我们可以设置一个控制变量：
+
+  ```java
+  public class Thread02 {
+      public static void main(String[] args) {
+          T t = new T();
+          t.start();  // 该线程一旦运行了，就不会终止
+          
+          // 使用通知方式，让t退出run方法，从而终止t线程
+          // 让主线程休眠10秒，再通知t线程退出
+          Thread.sleep(10 * 1000);  // 主线程main休眠，子线程是在运行的
+          t.setLoop(false);
+      }
+  }
+  
+  class T ectends Thread {
+      private boolean loop = true;
+      @Override
+      public void run() {
+          while(loop) {
+              // 让该线程休眠50毫秒
+              try {
+                  Thread.sleep(50);
+              } catch (InterruptedException e) {
+                  e.printStackTrace();
+              }
+              System.out.println("T 运行中");
+          }
+      }
+      // 控制线程的退出
+      public void setLoop(boolean loop) {
+          this.loop = loop;
+      }
+  }
+  ```
+
+### 线程的常用方法
+
+- `setName`：设置线程的名称，使之与参数`name`相同
+
+  ```java
+  T t = new T();
+  t.setName("测试线程");
+  ```
+
+- `getName`：返回该线程的名称
+
+  ```java
+  T t = new T();
+  t.getName();  // 返沪线程的名称
+  
+  // 返回当前运行的线程名称
+  Thread.currentThread().getName()  // 返回的是设置的名称，如果没有设置名称，返回的是默认名称
+  ```
+
+- `start`：使该线程开始执行；`Java`虚拟机底层调用该线程的`start0`方法
+
+  `start`方法底层会创建新的线程，调用`run`，`run`就是一个简单的方法调用，不会启动新的线程
+
+- `run`：调用线程对象`run`方法
+
+- `setPriority`：更改线程的优先级
+
+  ```java
+  T t = new T();
+  t.setPriority(Thread.MAX_PRIORITY);  // 设置优先级为最高
+  ```
+
+  线程的优先级范围有三种：
+
+  - `MAX_PRIORITY`：10  （优先级最高）
+  - `MIN_PRIORITY`：1    （优先级最低）
+  - `NORM_PRIORITY`：5  （正常的优先级，默认情况）
+
+- `getPriority`：获取线程的优先级，返回的是优先级对应的数值
+
+- `sleep`：在指定的毫秒数内让当前正在执行的线程休眠（暂停执行）（线程的静态方法）
+
+  ```java
+  try {
+      Thread.sleep(5000);
+  } catch (InterruptedException e) {
+      // 当线程执行到一个interrupt方法时，就会catch一个异常，可以加入自己的业务代码
+      System.out.println(Thread.currentThread.getName() + "被中断了");
+      // InterruptedException是捕获一个中断异常
+  }
+  ```
+
+- `interrupt`：中断线程（中断线程不是停止线程）一般用于中断正在休眠的线程
+
+  ```java
+  t.interrupt();  // 一般是用于中断正在休眠的子线程，让子线程恢复执行
+  ```
+
+- `yield`：线程的礼让，让出`cpu`，让其他线程执行，但礼让的时间不确定，所以也不一定礼让成功
+
+  对于并发的程序，如果`cpu`觉得来回切换可以完成任务（可以兼顾多个线程），那么这个礼让就不一定成功；`cpu`在资源紧张的时候，其成功的概率会更高
+
+- `join`：线程的插队，插队的线程一旦插队成功，则肯定先执行完插入线程的所有任务
+
+  ![image-20250425110919858](..\images\image-20250425110919858.png)
+
+  `main`线程创建一个子线程，每隔一秒输出`hello`，输出20次，主线程每隔一秒输出`hi`，输出20次，两个线程同时执行，当主线程输出五次后，就让子线程运行完毕，主线程再继续执行
+
+  ```java
+  public class Thread01 {
+      public static void main(String[] args) throws InterruptedException {
+  		T t = new T();
+          t.start();  // 子线程开始执行
+          
+          // 主线程执行的内容
+          for(int i = 0; i <= 20; i++) {
+              Thread.sleep(1000);
+              System.out.println("hi");
+              if(i == 5) {
+                  // Thread.yoeld();  // 礼让，不一定成功
+                  t.join();  // 线程的插队：让t子线程执行完毕后，主线程再继续执行
+              }
+          }
+      }
+  }
+  
+  class T ectends Thread {
+      @Override
+      public void run() {
+          for(int i = 1; i <= 20; i++) {
+              // 让该线程休眠1秒
+              try {
+                  Thread.sleep(1000);
+              } catch (InterruptedException e) {
+                  e.printStackTrace();
+              }
+              System.out.println("hello");
+          }
+      }
+  }
+  ```
+
+- 守护线程
+
+  用户线程：也叫工作线程，当线程的任务执行完成或通知方式结束
+
+  守护线程：一般是为工作线程服务的，当所有的用户线程结束，守护线程自动结束（即使它是无限循环的）
+
+  常见的守护线程：垃圾回收机制
+
+  将一个线程设置为守护线程：
+
+  ```java
+  public class Thread02 {
+      public static void main(String[] args) throws InterruptedException {
+  		DaemonThread daemonThread = new DaemonThread();
+          // 如果我们希望main主线程结束后，子线程自动结束，只需要将子线程设置为守护线程即可
+          daemonThread.setDaemon(true);  // 注意要先设置再启动线程
+          daemonThread.start();  // 子线程开启
+          
+          // 主线程开始
+          for(int i = 1; i < 10; i++) {
+              System.out.println("hi");
+              Thread.sleep(1000);
+          }
+      }
+  }
+  
+  // 创建一个类，后续用于守护进程
+  class DaemonThread ectends Thread {
+      @Override
+      public void run() {
+          while(true) {
+              // 让该线程休眠1秒
+              try {
+                  Thread.sleep(1000);
+              } catch (InterruptedException e) {
+                  e.printStackTrace();
+              }
+              System.out.println("hello");
+          }
+      }
+  }
+  ```
+
+***
+
+### 线程的生命周期
+
+线程的状态查看方式：`getState()`，用于查看线程的当前状态
+
+在`JDK`中使用`Thread.State`枚举表示了线程的几种状态，线程可以处于以下的状态之一：
+
+|      状态       |                            描述                            |
+| :-------------: | :--------------------------------------------------------: |
+|      `NEW`      |                  尚未启动的线程处于此状态                  |
+|   `RUNNABLE`    |            在`Java`虚拟机中执行的线程处于此状态            |
+|    `BLOCKED`    |            被阻塞等待监视器锁定的线程处于此状态            |
+|    `WAITING`    |       正在等待另一个线程执行特定动作的线程处于此状态       |
+| `TIMED_WAITING` | 正在等待另一个线程执行动作达到指定等待时间的线程处于此状态 |
+|  `TERMINATED`   |                   已退出的线程处于此状态                   |
+
+有些地方会将`RUNNABLE`状态进行细化，分为`Ready`状态和`Running`状态，分别为就绪状态和运行状态
+
+![image-20250425132602335](..\images\image-20250425132602335.png)
+
+***
+
+### 线程的同步机制
+
+线程的同步机制：
+
+- 在多线程编辑中，一些敏感数据不允许被多个线程同时访问，此时就使用同步访问技术，保证数据在任何同一时刻，最多有一个线程访问，以保证数据的完整性
+- 可以理解为线程同步，即当有一个线程在对内存进行操作时，其他线程都不可以对这个内存地址进行操作，直到该线程完成操作时，其他线程才能对该内存地址进行操作
+
+实现同步的具体方法：`Synchronized`
+
+1. 同步代码块
+
+   ```java
+   synchronized(对象) {  // 得到对象的锁，才能操作同步代码
+       // 需要被同步的代码
+   }
+   ```
+
+2. `Synchronized`放在方法声明中，表示整个方法为同步方法
+
+   ```java
+   public synchronized void m(String name) {
+       // 需要被同步的代码
+   }
+   ```
+
+对于售票问题出现的超卖问题，我们可以使用线程的同步机制进行解决（在方法上进行加锁）：
+
+```java
+public class Thread02 {
+    public static void main(String[] args) {
+        SellTicket01 sellTicket01 = new SellTicket01();
+        SellTicket02 sellTicket02 = new SellTicket02();
+        SellTicket03 sellTicket03 = new SellTicket03();
+        
+        // 这时会出现一个超卖的现象，售票结束的时候，剩余的票数可能为负的（-1，或者-2）
+        sellTicket01.start();  // 启动第一个线程
+        sellTicket02.start();  // 启动第二个线程
+        sellTicket03.start();  // 启动第三个线程
+    }
+}
+
+// SellTicket01为例，SellTicket02，SellTicket03类似
+class SellTicket01 ectends Thread {
+    private static int ticketNum = 100;  // 让多个线程共享ticketNum
+    private boolean loop = true;
+    // 使用同步方法，即在同一个时刻，只能有一个线程来执行sell方法
+    public synchronized void sell() {
+        if(ticketNum <= 0) {
+            System.out.println("售票结束");
+            loop = false;
+            return;
+        }
+        // 让该线程休眠50毫秒
+        try {
+            Thread.sleep(50);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        System.out.println("窗口" + Thread.currentThread().getName() + "售出一张票" + "剩余票数=" + (--ticketNum));
+    }
+    
+    @Override
+    public void run() { 
+        while(loop) {
+            sell();  // sell()方法是一个同步方法
+        }
+    }
+}
+```
+
+![image-20250425141340215](..\images\image-20250425141340215.png)
+
+> 对于三个线程想要同步的执行我们的代码块方法，线程之间会争夺这把锁（这把锁是放在对象上的），如果`t1`这个线程拿到了这把锁，就会进行运行这个方法，执行完方法后，会将锁放回进去。然后三个线程又去争夺这把锁（主要看这个锁是公平锁还是非公平锁），从而解决了超卖的现象
+
+***
+
+### 锁的概念
+
+#### 互斥锁
+
+- 在`Java`语言中，引入了对象互斥锁的概念，来保证共享数据操作的完整性
+
+- 每个对象都对应于一个可以称为"互斥锁"的标记（一个数字来表示），这个标记用来保证在任意时刻，只能有一个线程访问该对象
+
+- 关键字`synchronized`来与对象的互斥锁联系，当某个对象用`synchronized`修饰时，表明该对象在任意时刻只能由一个线程访问
+
+- 同步的局限性：导致程序的执行效率降低
+
+- 同步方法（非静态的）的锁可以是`this`，也可以是其他对象（要求是同一个对象）
+
+  同步方法如果没有使用`static`修饰，默认锁对象为`this`
+
+  对于售票问题：
+
+  ```java
+  class SellTicket01 ectends Thread {
+      private static int ticketNum = 100;  // 让多个线程共享ticketNum
+      private boolean loop = true;
+      // 使用同步方法，即在同一个时刻，只能有一个线程来执行sell方法
+      // public synchronized void sell() {} 就是一个同步方法
+      // 这时的锁在this对象上
+      public synchronized void sell() {
+          if(ticketNum <= 0) {
+              System.out.println("售票结束");
+              loop = false;
+              return;
+          }
+          // 让该线程休眠50毫秒
+          try {
+              Thread.sleep(50);
+          } catch (InterruptedException e) {
+              e.printStackTrace();
+          }
+          System.out.println("窗口" + Thread.currentThread().getName() + "售出一张票" + "剩余票数=" + (--ticketNum));
+      }
+      
+      @Override
+      public void run() { 
+          while(loop) {
+              sell();  // sell()方法是一个同步方法
+          }
+      }
+  }
+  ```
+
+  我们可以在具体的代码块上进行加锁：
+
+  ```java
+  public void sell() {
+      synchronized (this) {   // 这个时候，互斥锁还是加在this对象上的
+          if(ticketNum <= 0) {
+              System.out.println("售票结束");
+              loop = false;
+              return;
+          }
+          // 让该线程休眠50毫秒
+          try {
+              Thread.sleep(50);
+          } catch (InterruptedException e) {
+              e.printStackTrace();
+          }
+          System.out.println("窗口" + Thread.currentThread().getName() + "售出一张票" + "剩余票数=" + (--ticketNum));
+      }
+  }
+  
+  // 同步方法（非静态的）的锁可以是this，也可以是其他对象（要求是同一个对象）
+  Object object = new Object();
+  public void sell() {
+      // 可以是其他对象（要求是同一个对象），但是synchronized (new Object()) {} 是不同的对象 
+      synchronized (object) {   
+          if(ticketNum <= 0) {
+              System.out.println("售票结束");
+              loop = false;
+              return;
+          }
+          // 让该线程休眠50毫秒
+          try {
+              Thread.sleep(50);
+          } catch (InterruptedException e) {
+              e.printStackTrace();
+          }
+          System.out.println("窗口" + Thread.currentThread().getName() + "售出一张票" + "剩余票数=" + (--ticketNum));
+      }
+  }
+  ```
+
+- 同步方法（静态的）的锁为当前类本身
+
+  如果方法使用`static`修饰，默认锁对象为`当前类.class`
+
+  ```java
+  public synchronized static void m1() {}  
+  // public synchronized static void m1() {} 的锁是加在当前类上的，即SellTicket01.class
+  ```
+
+  ```java
+  public static void m1() {
+      synchronized (SellTicket01.class) {  // 锁是加在当前类上的，写this会报错
+          ,,,
+      }
+  }
+  ```
+
+注意事项：
+
+- 推荐使用同步代码块或同步方法，因为同步的代码越少，相对来说效率越高
+- 要求多个线程的锁对象必须为同一个对象
+
+#### 线程的死锁
+
+基本概念：多个线程都占用了对方的锁资源，但不肯相让（双方都没有机会去释放资源，也没有机会去获取资源），导致了死锁，在编程中一定要避免死锁的发生
+
+模拟线程的死锁：
+
+```java
+public class DeadLock {
+    public static void main(String[] args) {
+        // 模拟死锁
+        DeadLockDemo A = new DeadLockDemo(true);
+        DeadLockDemo B = new DeadLockDemo(false);
+        A.start();
+        B.start();
+    }
+}
+
+class DeadLockDemo extends Thread {
+    static Object o1 = new Object();  // 保证多线程共享一个对象，这里使用static
+    static Object o2 = new Object();
+    boolean flag;
+    // 构造器
+    public DeadLockDemo(boolean flag) {
+        this.flag = flag;
+    }
+    
+    @Override
+    public void run() {
+        // 如果flag为true，线程A就会先得到o1对象锁，然后尝试去获取o2对象锁
+        // 如果线程A得不到o2对象锁，就会阻塞
+        // 如果flag为false，线程B就会先得到o2对象锁，然后尝试去获取o1对象锁
+        // 如果线程B得不到o1对象锁，就会阻塞
+        // 当两个线程都阻塞，就会出现死锁，我要的资源在对方手里
+        if (flag) {
+            synchronized(o1) {  // 对象互斥锁，下面就是同步代码
+                System.out.println(Thread.currentThread().getName() + "进入1");
+                synchronized(o2) {
+                    System.out.println(Thread.currentThread().getName() + "进入2");
+                }
+            }
+        } else {
+            synchronized(o2) {
+                System.out.println(Thread.currentThread().getName() + "进入3");
+                synchronized(o1) {
+                    System.out.println(Thread.currentThread().getName() + "进入4");
+                }
+            }
+        }
+    }
+}
+```
+
+#### 释放锁
+
+下面的几个操作会释放锁：
+
+- 当前线程的同步方法、同步代码块执行结束
+- 当前线程在同步代码块、同步方法中遇到`break`、`return`
+- 当前线程在同步代码块、同步方法中出现了未处理的`Error`或者`Exception`，导致异常结束
+- 当前线程在同步代码块、同步方法中执行了线程对象的`wait()`方法，当前线程暂停，并释放锁
+
+但是要注意，下面的方式不会释放锁：
+
+- 线程执行同步代码块或同步方法时，程序调用`Thread.sleep()`或者`Thread.yield()`方法暂停当前线程的执行
+
+- 线程执行同步代码块时，其他线程调用了该线程的`suspend()`方法，将线程挂起
+
+  注意：`suspend()`和`resume()`方法目前都不太推荐使用了（已经过时了）
+
+
 
 ## 设计模式
 
