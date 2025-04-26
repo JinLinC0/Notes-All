@@ -158,7 +158,7 @@ app.mount('#app')
 </RouterLink>
 ```
 
-我们在这个被访问的组件下通过`{{ $route.query.id }}`就可以接收这个`id`字符传递的参数值；通过`{{ $route.query.title }}`就可以接收`title`字符串传递的参数值
+我们在这个被访问的组件下通过以下的方式就可以看到传递的参数值
 
 ```vue
 <template>
@@ -179,7 +179,7 @@ console.log(route.query)
 
 路径传递参数，就需要在`router/index.js`文件中，对`path`进行内容的添加从而传递参数：`path: '/CodeAndCesium/:id/title/:title'`
 
-在访问地址中通过`http://localhost:5173/codeAndCesium/007/name/在线编译器`方式就可以将要传递的内容007和在线编译器进行传递，同时在接收参数的组件中使用`{{ $route.params.id }}`和`{{ $route.params.title }}`来接收参数
+在访问地址中通过`http://localhost:5173/codeAndCesium/007/name/在线编译器`方式就可以将要传递的内容`007`和在线编译器进行传递，同时在接收参数的组件中进行参数的接收
 
 但是这种方法是在路径上进行修改，必须要保证访问的路径和对应的路由规则是相同的，不然是访问不到正确的页面的，如果我们不想要传递`title`参数，我们只需要在其后面加个`?`，`path: '/CodeAndCesium/:id/title/:title?'`，在地址栏输入：`http://localhost:5173/codeAndCesium/007/title`即可不传递`title`参数进行访问
 
