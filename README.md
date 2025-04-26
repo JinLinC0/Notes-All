@@ -12,8 +12,9 @@
 - 2024/09/13 完成了`Python`、`Django`、`Hadoop`、`ThingsBoard`笔记的整理
 - 2024/10/13 完成了`Vue3`、`Pinia`、`ECharts`、`Element Plus`笔记的整理
 - 2024/12/10 完成了`VitePress`、`TailwindCSS`、`VeeValidate`笔记的整理
-- 2024/12/22 完成了`Java`后端学习规划笔记的整理
+- 2024/12/30 完成了`Vue Router`笔记的整理
+- 2025/01/22 完成了`Java`后端学习规划笔记的整理
 - 2025/02/21 完成了`MySQL`、`PostgreSQL`笔记的整理
 - 2025/03/02 完成了`Ubuntu`、`Vim`笔记的整理
-- 2025/03/11 完了`NestJs`笔记的整理
+- 2025/03/18 完成了`NestJs`笔记的整理
 
