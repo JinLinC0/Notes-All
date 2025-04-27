@@ -1741,13 +1741,13 @@ class Cat {
 >   public double f1() {
 >       return 1.1;
 >   }
->                                                           
+>                                                               
 >   // 兼容（可以自动转换），编译通过
 >   public double f1() {
 >       int n = 1;
 >       return n;
 >   }
->                                                           
+>                                                               
 >   // 类型不一致，且不能自动转换，编译不通过
 >   public int f1() {
 >       return 1.1;
@@ -10968,9 +10968,346 @@ public class BufferedCopy02 {
 
   - `Externalizable`：该接口有方法需要实现，一般不推荐使用
 
+对于对象处理流中：`ObjectOutputStream`类提供了序列化功能；`ObjectInputStream`类提供了反序列化功能（但是两个的本质都还是一个处理流，在构造器函数中可以接受`InputStream`或者`OutputStream`的子类，还遵守修饰器模式）
 
+对象处理流使用的注意事项：
 
+- 读写顺序要一致，如果顺序不正确，会抛出异常
 
+- 要求事项序列化或反序列化对象，需要实现`Serializable`接口
+
+- 序列化中的类中建议添加`SerialVersionUID`，为了提高版本的兼容性
+
+  ```java
+  class Dog implements Serializable {
+      private String name;
+      private int age;
+      // SerialVersionUID为序列化的版本号，可以提高版本的兼容性
+      // 如果类的属性只有name和age，后续又加入了一个属性，如果有序列化的版本号时，系统就会认为该修改是一个版本的修改，而不认为其是一个新的类
+      private static final long SerialVersionUID = 1L;
+      
+      public Dog(String name, int age) {
+          this.name = name;
+          this.age = age;
+      }
+  }
+  ```
+
+- 序列化对象时，默认将里面所有属性都进行序列化，但除了`static`或`transient`修饰的成员（系统不会进行序列化，在序列化保存信息的时候，不会对上述两种修饰符的属性进行保存，反序列化时读取的值为`null`）
+
+- 序列化对象时，要求里面属性的类型也需要实现序列化接口
+
+  ```java
+  class Dog implements Serializable {
+      private String name;  // 这里的属性是String类型，系统已经实现了Serializable序列化接口
+      private int age;
+      // 序列化对象时，要求里面属性的类型也需要实现序列化接口，否则会报错
+      private Master master = new Master();
+      
+      public Dog(String name, int age) {
+          this.name = name;
+          this.age = age;
+      }
+  }
+  
+  // 让Master类也实现序列化接口
+  class Master implements Serializable {}
+  ```
+
+- 序列化具备可继承性，也就是如果某类已经实现了序列化，则它的所有子类也已经默认实现了序列化
+
+###### `ObjectOutputStream`
+
+我们一般使用`ObjectOutputStream`对象处理流完成数据的序列化
+
+```java
+// 将基本数据类型和一个Dog对象(name, age)，保存到data.dat文件中
+public class ObjectOutputStream_ {
+    public static void main(String[] args) throws Exception {
+        // 序列化后，保存的文件格式，不是纯文本，而是按照它的格式来保存
+        String filePath = "d:\\data.dat";
+        ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filePath));
+        // 序列化数据到 d:\\data.dat文件中  如果只使用write()方式进行保存，只能保存数据，不能保存类型
+        // 对于具体类型的数据，我们要使用相应的方式进行序列化保存
+        // int基本数据类型会在底层进行自动装箱为Intege类（Integer类实现了Serializable接口）
+        oos.writeInt(100);   
+        // boolean基本数据类型在底层进行自动装箱为Boolean类（Boolean类实现了Serializable接口）
+        oos.writeBoolean(true);
+        // char基本数据类型在底层进行自动装箱为Character类（Character类实现了Serializable接口）
+        oos.writeChar('a');
+        // double基本数据类型在底层进行自动装箱为Double类（Double类实现了Serializable接口）
+        oos.writeDouble(9.5);
+        // String类型可以直接使用writeUTF()方式进行序列化操作
+        oos.writeUTF("这是一个字符串");
+        // 将dog对象进行序列化保存   Dog需要实现Serializable接口才可以进行序列化保存
+        oos.writeObject(new Dog("小黑", 8));
+        
+        // 关闭流，关闭外层流即可，底层会自动关闭FileOutputStream流
+        oos.close();
+        System.out.println("数据保存完毕，以序列化的形式保存");
+    }
+}
+
+// 如果需要序列化某个类的对象，需要实现Serializable接口
+class Dog implements Serializable {
+    private String name;
+    private int age;
+    
+    public Dog(String name, int age) {
+        this.name = name;
+        this.age = age;
+    }
+}
+```
+
+> 通过序列化进行数据的保存，可以将数据的值和类型一同进行保存
+>
+> 序列化保存的时候，数据是按照数据序列化的顺序进行保存的
+
+###### `ObjectInputStream`
+
+我们可以使用`ObjectInputStream`类通过反序化的方式，读取`data.dat`数据并进行反序列化恢复数据
+
+```java
+public class ObjectInputStream_ {
+    public static void main(String[] args) throws Exception {
+        // 指定要反序列化的文件
+		String filePath = "d:\\data.dat";
+        
+        ObjectInputStream ois = new ObjectInputStream(new FileInputStream(filePath));
+        
+        // 读取（反序列化）的顺序要和保存的数据（序列化）的数据顺序一致，否则会出现异常
+        System.out.println(ois.readInt());
+        System.out.println(ois.readBoolean());
+        System.out.println(ois.readChar());
+        System.out.println(ois.readDouble());
+        System.out.println(ois.readUTF());
+        Object dog = ois.readObject();  // 这里的dog编译类型是Object，运行类型是Dog
+        System.out.println(dog);
+        
+        // 如果我们希望调用Dog的方法，需要向下转型，同时需要将Dog类的定义，放在可以引用的位置，一般是同文件下（序列化文件和反序列化文件在同一个包下），或者将Dog类做成公用的，单独放在一个文件中，使用的时候去引入即可（可以用于序列化文件和反序列化文件在不同的包下）
+        Dog dog2 = (Dog)dog; 
+        dog2.cry();   // 不会报错
+        
+        // 关闭流，关闭外层流即可，底层会自动关闭FileInputStream流
+        ois.close();
+        System.out.println("数据读取完毕，以反序列化的形式读取");
+    }
+}
+
+// 在反序列化时，要将具体的类写回来，否则会出现无效的类型异常
+class Dog implements Serializable {
+    private String name;
+    private int age;
+    
+    public Dog(String name, int age) {
+        this.name = name;
+        this.age = age;
+    }
+    
+    @Override
+    public String toString() {  // 重写toString方法，用于反序列化展示
+        return "Dog{" + "name='" + name + '\'' + "age='" + age + '}';
+    }
+    
+    public void cry() {
+        ...
+    }
+}
+```
+
+> 读取（反序列化）的顺序要和保存的数据（序列化）的数据顺序一致
+
+#### 标准输入输出流
+
+- `System.in`：标准输入，类型：`InputStream`，默认设备：键盘
+
+  ```java
+  // System.in 的编译类型是InputStream；运行类型是BufferedInputStream（按照包装流的方式进行输入）
+  System.out.println(System.in.getClass());  // 查看运行类型
+  ```
+
+  具体使用：
+
+  ```java
+  Scanner scanner = new Scanner(System.in);
+  String next = scanner.next();   // 获取键盘的输入
+  ```
+
+- `System.out`：标准输出，类型：`PrintStream`，默认设备：显示器
+
+  ```java
+  // System.out 的编译类型是PrintStream；运行类型也是PrintStream
+  System.out.println(System.out.getClass());  // 查看运行类型
+  ```
+
+  具体使用：
+
+  ```java
+  System.out.println("hello");   // 将输出显示在显示器上
+  ```
+
+#### 转换流
+
+我们有时会遇到文件乱码的问题，在默认情况下通过字符流读取的文件（包含中文的）应该是`UTF-8`字符集的文件，如果不是`UTF-8`编码的文件，就很有可能出现乱码问题（中文的部分显示乱码），如`gbk`编码，出现了乱码问题的根本是没有指定文件读取的编码方式，但是往往字节流是可以指定编码方式的，而字符流不支持指定编码方式，因此，需要使用转换流，将字节流转换成字符流
+
+转换流就是将一种字节流转换成字符流，常见的有两种方式的转换流：
+
+- `InputStreamReader`，对应着是`Reader`的子类，最重要的构造器方法为：`InputStreamReader(InputStream, Charset)`可以传入字节流的子类（`Charset`表示指定具体的编码）（可以将`InputStream`字节流通过指定的编码转换成（包装成）字符流`Reader`）
+
+- `OutputStreamWriter`，对应着是`Writer`的子类，最重要的构造器方法为：`OutputStreamWriter(OutputStream, Charset)`，可以将`OutputStream`字节流通过指定的编码转换成（包装成）字符流`Writer`
+
+注意事项：
+
+- 当处理纯文本数据时，如果使用字符流效率更高，并且可以有效的解决中文问题，所以建议将字节流转换成字符流
+- 可以在使用时指定编码格式，如：`utf-8`、`gbk`、`gb312`、`ISO8859-1`等
+
+```java
+// 使用InputStreamReader转换流解决中文乱码问题，将字节流转化成字符流，并指定编码方式
+public class InputStreamReader_ {
+    public static void main(String[] args) throws Exception {
+        String filePath = "d:\\new.txt";
+        // 将字节流FileInputStream转换成了字符流InputStreamReader，并指定gbk的编码方式
+        InputStreamReader isr = new InputStreamReader(new FileInputStream(filePath), "gbk");
+        // 将InputStreamReader传入BufferedReader
+        BufferedReader br = new BufferedReader(isr);
+        // 读取内容
+        String s = br.readLine();
+        System.out.println(s);
+        
+        // 关闭流，关闭外层流即可
+        br.close();
+    }
+}
+```
+
+> 大多数情况下会进行简写：
+>
+> `BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(filePath), "gbk"));`
+
+```java
+// 将字节流FileOutputStream转换成字符流OutputStreamWriter，对文件进行写入，编码方式为gbk
+public class OutputStreamReader_ {
+    public static void main(String[] args) throws Exception {
+        String filePath = "d:\\new.txt";
+        OutputStreamWriter  osw = new OutputStreamWriter(new FileOutputStream(filePath), "gbk");
+        osw.write("hi,写入内容");
+        
+        // 关闭流，关闭外层流即可
+        osw.close();
+    }
+}
+```
+
+#### 打印流
+
+打印流只有输出流，没有输入流，可以将我们指定的信息打印到指定的区域（不仅可以打印到显示上，也可以打印到指定的文件中）
+
+常见的打印流有两种，`PrintStream`和`PrintWriter`，分别对应字节打印流和字符打印流
+
+```java
+// 演示PrintStream字节打印流的常用方法
+public class PrintStream_ {
+    public static void main(String[] args) {
+        PrintStream out = System.out;
+        // 在默认的情况下，PrintStream 输出数据的位置是标准输出，即显示器
+        out.print("hello");
+        // 因为print底层使用的是write，所以我们可以直接调用write进行打印输出  out.write("hello");
+        
+        // 关闭流
+        out.close();
+        
+        // 我们可以去修改打印流输出的位置，将输出放到指定的文件中
+        System.setOut(new PrintStream("d:\\new.txt"));
+        System.out.println("hello");   // 这句话就会打印到文件中
+    }
+}
+```
+
+```java
+// 演示PrintWriter字符打印流的常用方法
+public class PrintWriter {
+    public static void main(String[] args) {
+        // PrintWriter printWriter = new PrintWriter(System.out); // 默认输出，打印到显示器
+        // 指定打印输出流输出的位置，将输出打印到指定的文件中
+        PrintWriter printWriter = new PrintWriter(new FileWriter("d:\\new.txt"));
+        printWriter.print("hi，这是一段文本");  
+        // 关闭流
+        printWriter.close();   // 关闭或者刷新了，才能将数据真正的写入
+    }
+}
+```
+
+***
+
+### 配置文件
+
+在开发中，我们一般会将重要的内容放到配置文件中，在程序运行的过程中去读取配置文件的内容
+
+如一个数据库的配置文件`mysql.properties`：
+
+```properties
+ip=192.168.0.96
+user=root
+pwd=admin
+```
+
+使用传统的方式进行读写，对于大量数据和文件的修改不是很方便，只读一个配置项内容也不是很方便，传统方式会进行循环遍历的读取内容
+
+通常使用`Properties`类进行配置文件的读取是比较方便的
+
+#### `Properties`类
+
+`Properties`类是`Hashtable`类下面的子类，专门用于读写配置文件的集合类，要求配置文件的格式为：`键=值`
+
+（键值对不需要有空格，值不需要用引号括起来，默认类型是`String`）
+
+`Properties`类的常用方法：
+
+- `load`：加载配置文件的键值对到`Properties`对象中
+- `list`：将数据显示到指定设备
+- `getProperty(key)`：根据键获取值
+- `setProperty(key, value)`：设置键值对到`Properties`对象
+- `store`：将`Properties`中的键值对存储到配置文件，在`IDEA`中，保存信息到配置文件，如果含有中文，会存储为`unicode`码
+
+##### 读取配置文件
+
+```java
+// 使用Properties类来读取mysql.properties文件的配置项
+public class Properties01 {
+    public static void main(String[] args) throws IOException {
+        // 创建Properties对象
+        Properties properties = new Properties();
+        // 加载配置文件，以字符流的方式进行读取
+        properties.load(new FileReader("src\\mysql.properties"));
+        // 把全部的键值对显示在控制台，做一个标准的输出
+        properties.list(System.out);
+        
+        // 根据key来获取对应的值
+        String user = properties.getProperty("user");   // 获取用户名
+        System.out.println(user);
+    }
+}
+```
+
+##### 修改/新建配置文件
+
+```java
+// 使用Properties类来创建新的配置文件
+public class Properties02 {
+    public static void main(String[] args) throws IOException {
+        // 创建Properties对象
+        Properties properties = new Properties();
+        // 设置键值对到Properties对象中  setProperty()设置键值对，如果key存在则修改值，不存在就创建
+        properties.setProperty("charset", "utf8");
+        properties.setProperty("user", "名称");   // 中文保存时，保存的是unicode码值
+        properties.setProperty("pwd", "123456");
+        // 将键值对存储到配置文件中，不存在则新建这个文件
+        // null表示不添加注释，如果添加了字符串注释，会将注释写在配置文件的最上面
+        properties.store(new FileOutputStream("src\\mysql2.properties"), null);
+    }
+}
+```
 
 
 
