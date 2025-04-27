@@ -10719,11 +10719,7 @@ public void readFile02() {
 
 ##### `FileWriter`
 
-`FileWriter`类是字符输出流，其类的继承关系图为：
-
-![image-20250426134538729](D:\Myproject\develop-study-notes\images\image-20250426134538729.png)
-
-`FileWriter`的常用方法：
+`FileWriter`类是字符输出流，其类的常用方法：
 
 - `new FileWriter(File/String)`：覆盖模式，相当于流的指针在首端
 - `new FileWriter(File/String, true)`：追加方式，相当于流的指针在尾端
@@ -11546,4 +11542,3 @@ public class BufferedReader_ extends Reader_ {
     }
 }
 ```
-
