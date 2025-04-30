@@ -64,46 +64,66 @@
 
 
 
-## 导入外部`SQL`文件
+## 数据库相关指令
 
-有时候，我们会把`sql`语句存储在一个`SQL`文件里面（一般是我们备份出来的`SQL`文件，`SQL`文件是以`.sql`后缀结尾的），如果恢复备份的时候，我们需要导入这些`SQL`文件，相当于把这些`sql`语句重新执行一遍
+- 创建数据库：`CREATE DATABASE 数据库的名称;`
 
-如我们有一个`mysql.sql`的`SQL`文件，其内容为：
-
-```sql
-create database article charset utf8;
-show databases;
-```
-
-在命令行进行数据库文件的导入：`mysql -uroot -p < mysql.sql`
-
-我们也可以先进入数据库，在通过`source mysql.sql`进行导入
-
-
-
-## 数据库管理操作
-
-### 数据库相关
-
-- 创建数据库：`create database 数据库的名称;`
-
-  > 在创建语句中，我们可以指定数据库的字符集，如`create database 数据库的名称 charset utf8;`
+  > - 在创建语句中，我们可以指定数据库的字符集，如：
   >
-  > `utf8`表示可以显示包括中文在内的多种编码格式
+  >   `CREATE DATABASE 数据库的名称 CHARACTER SET utf8;`
+  >
+  >   `utf8`表示可以显示包括中文在内的多种编码格式（如果不指定字符集，默认是`utf8`）
+  >
+  > - 创建数据库时，还可以指定校验规则，常用的有`utf8_bin`（区分大小写）、`utf8_general_ci`（不区分大小写，如果创建的时候不指定，默认是该情况的校验规则）
+  >
+  >   `CREATE DATABASE 数据库的名称 COLLATE utf8_bin;`
+  >
+  > 在创建数据库的时候，尽可能规避关键字，但是有时不得不使用关键字作为数据库的名称，我们可以使用反引号对数据库的名称进行包裹
+  >
+  > 数据库的字符集和校验规则会被后续创建的数据表继承，前提是创建的数据表没有指定字符集和校验规则
 
-- 查看创建数据库的结构：`show create database 数据库名称;`
+- 查看所有数据库：`SHOW DATABASES;`
+
+- 查看数据库的创建语句：`SHOW CREATE DATABASE 数据库名称;`
 
   > 可以看到我们创建对应的数据库和及其结构和字符编码等信息
 
-- 查看所有数据库：`show databases;`
 - 使用/进入数据库：`use 数据库的名称;`
-- 删除指定数据库：`drop database if exits 数据库名称;`
 
-***
+- 删除指定数据库：`DROP DATABASE if exits 数据库名称;`
 
-### 表相关
 
-#### 创建表和插入数据
+
+## 备份和恢复数据库
+
+有时候，我们会把`sql`语句存储在一个`SQL`文件里面（一般是我们备份出来的`SQL`文件，`SQL`文件是以`.sql`后缀结尾的），如果恢复备份的时候，我们需要导入这些`SQL`文件，相当于把这些`sql`语句重新执行一遍
+
+- 备份数据库：在`DOS`（命令行终端）上执行
+
+  `mysqldump -u 用户名 -p -B 数据库1 数据库2 数据库n > 文件名.sql`
+
+  如果我们只是想要备份某个数据库中的某几张表，我们可以通过如下的方式进行备份：
+
+  `mysqldump -u 用户名 -p -B 数据库1 表1 表2 表n > 文件名.sql`
+
+- 恢复数据库：
+
+  如我们有一个备份后的`mysql.sql`文件，其内容为为一系列的`SQL`语句（恢复的时候，就是将文件中的`SQL`语句重新的执行了一遍）：
+
+  ```sql
+  create database article charset utf8;
+  show databases;
+  ```
+
+  - 在命令行进行数据库文件的导入：`mysql -uroot -p < mysql.sql`
+
+  - 我们也可以先进入数据库，在通过`source mysql.sql`进行数据库的恢复
+
+
+
+## 数据表相关指令
+
+### 创建表和插入数据
 
 - 创建表：`CREATE TABLE 数据表的名称 (id int PRIMARY KEY AUTO_INCREMENT, cname varchar(30) not null, description varchar(100) null);`
 
@@ -133,7 +153,9 @@ show databases;
 
 > 当然，我们也可以直接在图形化界面中为数据表插入一条数据，在单元格中输入数据，最后点击保存
 
-#### 根据其他表来快速的生成一张表
+***
+
+### 根据其他表来快速的生成一张表
 
 - 首先要创建一张表，同时说明这个新表的表结构来源于哪张旧表
 
@@ -163,7 +185,9 @@ show databases;
 
   `CREATE TABLE 创建的新数据表名称 (id int PRIMARY KEY AUTO_INCREMENT, name varchar(30)) select cname as name from 旧数据表的名称;`
 
-#### 查询表
+***
+
+### 查询表
 
 查询表通过`SELECT`方式进行查询，具体的方式如下所示：
 
@@ -207,7 +231,7 @@ show databases;
 
   > 一般情况下，我们需要为其起别名，不然返回的字段是这整个连接函数的内容，会过于长了
 
-##### 关键字查询
+#### 关键字查询
 
 关键字查询中的关键字包括：`between`，`like`，`in`等等
 
@@ -235,7 +259,9 @@ show databases;
 
   `SELECT * FROM stu WHERE class_id in(1, 2);`
 
-#### `Mysql`对`NULL`的处理技巧
+***
+
+### `Mysql`对`NULL`的处理技巧
 
 空不能和任何的值相比较，如`stu`数据表单，我们通过`SELECT * FROM stu WHERE class_id = null;`是查询不到内容的（虽然在插入语句中有一条数据的`class_id`的内容为`null`）
 
@@ -250,7 +276,9 @@ SELECT sname, if(class_id, class_id, '未分配')，age from stu;
 SELECT sname, ifnull(class_id, '未分配'), age from stu;
 ```
 
-#### 排序操作
+***
+
+### 排序操作
 
 我们可以对数据表中的某个字段进行排序操作：
 
@@ -276,7 +304,9 @@ SELECT * FROM stu order by class_id asc, age asc;
 >
 > `limit`也可以接收两个参数，第一个表示从哪一个开始，第二个表示取几条数据，如`limit 0, 2`表示取第一条和第二条数据（从第一条数据开始取，取两个）
 
-#### 更新表数据
+***
+
+### 更新表数据
 
 我们更新表数据一般使用`UPDATE`关键字，更新一般是需要加上条件的，不然就会将这张表中要更新的字段内容全部修改了
 
@@ -288,14 +318,18 @@ SELECT * FROM stu order by class_id asc, age asc;
 
   `UPDATE stu SET class_id = 1 WHERE age < 22;`
 
-#### 删除表数据
+***
+
+### 删除表数据
 
 我们删除表中的数据一般使用`DELETE`关键字，删除条目一般也是需要加上条件的
 
 - 删除班级为`null`的这条数据：`DELETE FROM stu WHERE class_id is NULL;`
 - 删除最后报名的两个学生：`DELETE FROM stu order by id desc limit 2;`
 
-#### 修改数据表的结构
+***
+
+### 修改数据表的结构
 
 修改数据表的结构是一个相对低频的操作，一般在确定表后，都很少进行其结构的修改，但是也需要了解一下表结构修改的`SQL`语句
 
@@ -313,7 +347,9 @@ SELECT * FROM stu order by class_id asc, age asc;
   
 - 清空表数据：`DELETE FROM stu;`   将`stu`表的数据全部清空，有些数据库管理软件会进行二级确认，这样的删除方式是一条一条进行删除，删除的速度是比较慢的，如果想要快速的进行清空表中的数据，可以使用：`TRUNCATE stu;`
 
-#### 表字段的维护
+***
+
+### 表字段的维护
 
 有时候我们可能需要对数据表中字段进行维护操作，如修改表字段的名称、类型等等
 
@@ -337,7 +373,9 @@ SELECT * FROM stu order by class_id asc, age asc;
 
 - 删除字段：`ALTER table stu drop qq;`    删除`qq`字段
 
-#### 对表中主键的维护
+***
+
+### 对表中主键的维护
 
 对表中主键的维护是一个非常低频的操作
 
@@ -355,23 +393,6 @@ SELECT * FROM stu order by class_id asc, age asc;
 - 添加主键和添加自增属性可以一起执行：
 
   `ALTER table stu modify id int not null AUTO_INCREMENT, add PRIMARY key (id);`
-
-
-
-## 导入外部的`SQL`文件
-
-有的时候，我们会把`sql`语句存储在一个`SQL`文件里面（一般是我们备份出来的`SQL`文件，`SQL`文件是以`.sql`后缀结尾的），如果恢复备份的时候，我们需要导入这些`SQL`文件，相当于把这些`sql`语句重新执行一遍
-
-如我们有一个`mysql.sql`的`SQL`文件，其内容为：
-
-```sql
-create database article charset utf8;
-show databases;
-```
-
-在命令行进行数据库文件的导入：`mysql -uroot -p < mysql.sql`
-
-我们也可以先进入数据库，在通过`source mysql.sql`进行导入
 
 
 
