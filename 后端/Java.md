@@ -1741,13 +1741,13 @@ class Cat {
 >   public double f1() {
 >       return 1.1;
 >   }
->                                                                       
+>                                                                         
 >   // 兼容（可以自动转换），编译通过
 >   public double f1() {
 >       int n = 1;
 >       return n;
 >   }
->                                                                       
+>                                                                         
 >   // 类型不一致，且不能自动转换，编译不通过
 >   public int f1() {
 >       return 1.1;
@@ -12407,3 +12407,38 @@ public class BufferedReader_ extends Reader_ {
     }
 }
 ```
+
+
+
+## 数据库相关
+
+对于对数据库的操作，我们可以通过命令行终端（`Dos`）、可视化数据库软件进行操作，同时我们也可以通过`Java`进行对数据库的操作
+
+### 通过`Java`操作`Mysql`
+
+要求：    目的是为了体会通过`Java`发生`SQL`操作数据库、表
+
+1. 创建一个商品表（`goods`），选用适当的数据类型
+2. 添加1条数据
+3. 删除`goods`表
+
+```java
+public class JavaMysql {
+    public static void main(String[] args) throws Exception {
+        // 加载类，得到mysql连接
+        Class.forName("com.mysql.jdbc.Driver");
+        Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/mysql_db01");
+        // 编写sql语句  执行一条注释一条
+        // String sql = "create table goods (id int, name varchar(32), price double)";
+        // String sql = "insert into goods values(1, "西瓜", 10)";
+        String sql = "drop table goods";
+        // 得到statement对象，把sql语句发送给mysql执行
+        Statement statement = connection.createStatement();
+        statement.executeUpdate(sql);
+        // 关闭连接
+        statement.close();
+        connection.close();
+    }
+}
+```
+
