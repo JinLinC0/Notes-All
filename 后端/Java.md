@@ -1741,13 +1741,13 @@ class Cat {
 >   public double f1() {
 >       return 1.1;
 >   }
->                                                                     
+>                                                                       
 >   // 兼容（可以自动转换），编译通过
 >   public double f1() {
 >       int n = 1;
 >       return n;
 >   }
->                                                                     
+>                                                                       
 >   // 类型不一致，且不能自动转换，编译不通过
 >   public int f1() {
 >       return 1.1;
@@ -11995,8 +11995,180 @@ class Person extends A implements IA, IB {
   - `getConstructor(Class...clazz)`：根据参数列表，获取对应的`public`构造器对象
   - `getDecalaredConstructor(Class...clazz)`：根据参数列表，获取对应构造器（所有的构造器对象都可以获取，根据参数列表获取即可）对象
 - `Constructor`类相关方法：
-  - `setAccessible`：暴破
+  - `setAccessible`：暴破（使用反射可以访问`private`的构造器或其他的私有方法和属性）
   - `newInstance(Object...obj)`：调用构造器
+
+示例演示：
+
+```java
+public class ReflecCreateInstance {
+    public static void main(String[] args) throws Exception {
+        // 获取到User类的Class对象
+        Class<?> userClass = Class.forName("com.test.reflection.User");
+        // 通过public的无参构造器创建实例
+        Object o = userClass.newInstance();
+        System.out.println(o);   // User {age=25, name=jlc}
+        // 通过public的有参构造器创建实例
+        Constructor<?> constructor = userClass.getConstructor(String.class);
+        /*
+        	constructor对象就是
+        	public User(String name) {  // public有参构造器
+                this.name = name;
+            }
+        */
+        Object o2 = constructor.newInstance("JLC");
+        System.out.println(o2);   // User {age=25, name=JLC}
+        // 通过private的有参构造器创建实例
+        Constructor<?> constructor2 = userClass.getDecalaredConstructor(int.class, String.class);
+        constructor2.setAccessible(true);
+        // 这时会出现一个非法的访问异常，因为构造器是私有的，我们需要在前面加上暴破的声明
+        Object o3 = constructor2.newInstance(18, "JLC");  
+        System.out.println(o3);   // User {age=18, name=JLC}
+    }
+}
+
+class User {
+    private int age = 25;
+    private String name = "jlc";
+    // 构造器
+    public User() {}
+    public User(String name) {
+        this.name = name;
+    }
+    private User(int age, String name) {
+        this.age = age;
+        this.name = name;
+    }
+    
+    public String toString() {
+        return "User {age=" + age + ", name=" + name + "}";
+    }
+}
+```
+
+***
+
+### 通过反射访问类中的属性
+
+- 通过反射访问类中的属性（公有的）
+
+  1. 根据属性名获取`Field`对象：`Field f = class对象.getField("属性名);`
+
+  2. 访问属性
+
+     - 获取属性值：`f.get(o)`
+     - 设置（修改）属性值：`f.set(o, 值);`
+
+     如果是静态属性，则`set`和`get`中的参数`o`，可以写为`null`
+
+- 通过反射访问类中的属性（私有的）
+
+  1. 根据属性名获取`Field`对象：`Field f = class对象.(属性名);`
+
+  2. 暴破：`f.setAccessible(true);`   其中`f`是`Field`（使用了暴破。私有的成员也可以访问到）
+
+  3. 访问成员
+
+     - 获取属性值：`f.get(o)`
+     - 设置（修改）属性：`f.set(o, 值);` 
+
+     如果是静态属性，则`set`和`get`中的参数`o`，可以写为`null`
+
+案例演示：
+
+```java
+public class ReflecCreateProperty {
+    public static void main(String[] args) throws Exception {
+		// 得到Student类对应的Class对象
+        Class<?> stuClass = Class.forName("com.test.reflection.Student");
+        // 创建对象
+        Object o = stuClass.newInstance();  // o的运行类型就是Student
+        
+        // 使用反射得到age属性(公有的)象
+        Field age = stuClass.getField("age");
+        age.set(o, 88);  // 通过反射来操作属性（设置属性值）
+        System.out.println(o);   // Student {age=88, name=null}
+        System.out.println(age.get(o));   // 88  直接返回age属性的值
+        
+        // 使用反射得到name属性(私有的)象
+        Field name = stuClass.getDeclaredField("name");
+        name.setAccessible(true);  // 暴破操作
+        name.set(o, "jlc");  // 设置属性值  name是静态方法，可以简写为 name.set(null, "jlc");
+        System.out.println(o);   // Student {age=88, name=jlc}
+    }
+}
+
+class Student {
+    public int age = 25;
+    private static String name = "jlc";
+    public Student() {}
+
+    public String toString() {
+        return "Student {age=" + age + ", name=" + name + "}";
+    }
+}
+```
+
+***
+
+### 通过反射访问类中的方法
+
+通过反射访问类中的方法
+
+1. 根据方法名和参数列表获取`Method`方法对象：
+
+   - 私有方法的获取：`Method m = class对象.getDeclaredMethod(方法名, XX.class);`
+
+   - 公有方法的获取：`Method m = class对象.getMethod(方法名, XX.class);`
+
+     私有方法的获取是获取所有的方法，当然也可以获取公有的方法；但是公有方法的获取不能获取私有方法
+
+2. 获取对象：`Object o = class对象.newInstance();`
+
+   在反射中，如果方法有返回值，统一返回`Object`类型（编译类型），但运行类型还是对应函数的返回值类型
+
+3. 暴破（访问私有的方法需要进行暴破）：`m.setAccessible(true);`
+
+4. 访问：`Object returnValue = m.invoke(o, 实参列表);`
+
+   注意：如果是静态方法，则`invoke`的参数`o`，可以写为`null`
+
+案例演示：
+
+```java
+public class ReflecCreateMethod {
+    public static void main(String[] args) throws Exception {
+		// 得到Student类对应的Class对象
+        Class<?> bossClass = Class.forName("com.test.reflection.Boss");
+        // 创建对象
+        Object o = bossClass.newInstance();
+        
+        // 调用public的hi方法
+        Method hi = bossClass.getMethod("hi", String.class);
+        hi.invoke(o, "jlc");   // jlc
+        
+        // 调用private的say方法
+        Method say = bossClass.getDeclaredMethod("say", int.class, String.class, char.class);
+        say.setAccessible(true);
+        System.out.println(say.invoke(o, 25, "jlc", '男'));   // 25 jlc 男
+        // say方法是静态方法，还可以简化的调用 say.invoke(null, 25, "jlc", '男');
+    }
+}
+
+class Boss {
+    public int age;
+    private static String name;
+    public Boss() {}
+	// 静态方法
+    private static String say(int n, String s, char c) {
+        return n + " " + s + " " + c;
+    }
+    // 普通公有方法
+    public void hi(String s) {
+        System.out.println(s);
+    }
+}
+```
 
 
 
