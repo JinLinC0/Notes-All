@@ -123,21 +123,29 @@
 
 ## 数据表相关指令
 
-### 创建表和插入数据
+- 创建表：`CREATE TABLE 数据表的名称 (id int PRIMARY KEY AUTO_INCREMENT, cname varchar(30) not null, description varchar(100) null) CHARACTER SET 字符集 COLLATE 校对规则 ENGINE 存储引擎;`
 
-- 创建表：`CREATE TABLE 数据表的名称 (id int PRIMARY KEY AUTO_INCREMENT, cname varchar(30) not null, description varchar(100) null);`
-
+  > 对于数据表创建时，如果数据表长度较长，推荐使用下划线进行分隔
+  >
   > 上述创建的数据表有3个表字段，`id`、`cname`和`description`
   >
   > - `id`是`int`数字类型；同时是一个主键（主键查找的速度比较快），通过`PRIMARY KEY`声明；`AUTO_INCREMENT`表示设置数据自增（随着数据条目的增加，`id`的值是自增的，保证`id`值的唯一性）主键在添加数据的时候我们一般不用管，它会自己进行维护，来一条数据自增一下（但是删除完对应的数据，`id`不会在后续继续使用，为了保证唯一性）
   > - `varchar`表示字符串类型的数据结构，30和100表示设置字符串的最大长度
   > - `not null`表示设置输入的内容不能为空（字段是必填项），`null`表示输入的内容可以为空
+  > - `AUTO_INCREMENT`自增长的使用细节：
+  >   - 一般来说，自增长是和主键进行配合使用的
+  >   - 自增长也可以单独使用，但是要配合`unique`
+  >   - 自增长修饰的字段一般为整数型
+  >   - 自增长默认从1开始，也可以通过命令去修改初始值：`ALTER TABLE 表名 AUTO_INCREMENT = 新的开始值;`
+  >   - 如果添加数据时，给自增长字段（列）指定值，则以指定的值为准，如果没有指定值，或者指定的为`null`，那么设置自增长约束的字段就会根据之前的值进行自增长填入
+  >
+  > 对于字符集和校对规则，我们可以不进行指定，这样的话创建的数据表就会继承所在数据库的字符集和校对规则
 
-- 查看当前数据库中的表：`desc 数据表的名称`
+- 查看当前数据库中的表：`DESC 数据表的名称`
 
-  ![image-20241128171201609](..\images\image-20241128171201609.png)
+  ![image-20241128171201609](D:\Myproject\develop-study-notes\images\image-20241128171201609.png)
 
-  删除表：`drop table if EXISTS 数据表的名称`
+- 删除表：`DROP TABLE if EXISTS 数据表的名称`
 
   > `if EXISTS`这条语句建议加上，如果数据表不存在时，有这条语句后台是不会报错的
 
@@ -151,6 +159,24 @@
 
   `INSERT INTO class (cname, description) VALUES('Linux', '服务器知识'), ('git', null);`
 
+> 插入语句的注意事项：
+>
+> - 插入的数据应与对应字段的数据类型相同
+>
+>   但是对于字符串`'30'`，`mysql`的底层会尝试着将其转化成`int`
+>
+> - 数据的长度应该在列的规定范围内（长度不能溢出数据类型设置的范围）
+>
+> - 在`valuse`中列出的数据位置必须与被加入的列的排列位置相对应
+>
+> - 字符和日期数据应该使用单引号来包裹
+>
+> - 列可以插入空值`NULL`（前提是该字符允许为空，在创建表示对字符不做约束，则默认时可以为空的，如果设置了`NOT NULL`，则表示该字段的值不能为空）
+>
+> - 如果是给表中的所有字段添加数据，可以不写前面的字段名称
+>
+> - 当不给某个字段添值时，如果有设置了默认值就可以正常添加，否则报错
+>
 > 当然，我们也可以直接在图形化界面中为数据表插入一条数据，在单元格中输入数据，最后点击保存
 
 ***
@@ -172,6 +198,8 @@
   > 有时候我们可能不想要所有的字段，我们只想要其中一个字段的数据，可以将代码进行以下的修改：
   >
   > - `insert into 创建的新数据表名称(cname) select cname from 旧数据表的名称;`
+  >
+  > 表数据的自我复制：`INSERT INTO table1 SELECT * FROM table1;`
 
 - 我们也可以将上述两个步骤合成一个，在创建的表的时候，使数据连同一起过来
 
@@ -191,8 +219,10 @@
 
 查询表通过`SELECT`方式进行查询，具体的方式如下所示：
 
-- `SELECT * FROM 要查询的数据表;`
+- `SELECT DISTINCT * FROM 要查询的数据表;`
 
+  > `DISTINCT`是一个可选项，指在显示结果时，是否去掉重复的数据（每个字段的值都相同，才算是相同项）
+  >
   > `*`表示查询所有的字段
 
 - 根据需要查询数据表中指定的字段：`SELECT cname, id FROM 要查询的数据表;`
@@ -230,8 +260,14 @@
   `SELECT CONCAT(cname, description) as class_info from 数据表的名称;`
 
   > 一般情况下，我们需要为其起别名，不然返回的字段是这整个连接函数的内容，会过于长了
+  
+  查询的时候，进行统计运算：
+  
+  `SELECT name, (chinese+english+math) AS total_score FROM stu;`
 
 #### 关键字查询
+
+![image-20250503115517696](..\images\image-20250503115517696.png)
 
 关键字查询中的关键字包括：`between`，`like`，`in`等等
 
@@ -251,7 +287,7 @@
 
   `SELECT * FROM stu WHERE age >= 18 AND age <= 23;`
 
-  `SELECT * FROM stu WHERE age BETWEEN 18 AND 23;`
+  `SELECT * FROM stu WHERE age BETWEEN 18 AND 23;` （`BERWEEN.AND`是两边闭区间）
 
 - 查询学生班级在1班或者2班的数据，有以下的两种写法：
 
@@ -303,6 +339,8 @@ SELECT * FROM stu order by class_id asc, age asc;
 > 也可以用如下的方式进行写：`SELECT * FROM stu order by class_id asc limit 0,1;`
 >
 > `limit`也可以接收两个参数，第一个表示从哪一个开始，第二个表示取几条数据，如`limit 0, 2`表示取第一条和第二条数据（从第一条数据开始取，取两个）
+>
+> `LIMIT 每页显示记录数 * (第几页 - 1), 每页显示记录数`
 
 ***
 
@@ -314,9 +352,17 @@ SELECT * FROM stu order by class_id asc, age asc;
 
   `UPDATE stu SET class_id = 2 WHERE class_id is NULL;`
 
+  如果没有加`WHERE`，会修改该字段的所有记录
+
 - 将年龄小于22岁的人员班级设置为班级1：
 
   `UPDATE stu SET class_id = 1 WHERE age < 22;`
+
+注意事项：
+
+- `UPDATE`语句可以用新值更新原有表行中的各列
+- `SET`子句指示要修改哪些列和要设置哪些值
+- `WHERE`子句指定应更新哪些行，如果没有该子句，则更新所有行
 
 ***
 
@@ -326,6 +372,9 @@ SELECT * FROM stu order by class_id asc, age asc;
 
 - 删除班级为`null`的这条数据：`DELETE FROM stu WHERE class_id is NULL;`
 - 删除最后报名的两个学生：`DELETE FROM stu order by id desc limit 2;`
+- 将表中的所有记录都删除：`DELETE * FROM stu;`
+
+删除数据是对行进行操作的（整条数据），不能对某一列进行删除操作（只能使用`UPDATE`将某一列的值设置为`null`或者`''`）
 
 ***
 
@@ -337,7 +386,7 @@ SELECT * FROM stu order by class_id asc, age asc;
 
   - `ALTER TABLE stu RENAME stus;` 
 
-  - `RENAME TABLE stu to stus;`
+  - `RENAME TABLE stu TO stus;`
 
 - 创建一个备份表，将一张数据表进行备份：`CREATE TABLE stu_bak SELECT * FROM stu;`
 
@@ -355,23 +404,25 @@ SELECT * FROM stu order by class_id asc, age asc;
 
 - 修改表字段名称，同时修改数据类型和设置必填：
 
-  `ALTER table stu CHANGE sname name varchar(50) not null;`
+  `ALTER Table stu CHANGE sname name varchar(50) not null;`
 
-- 只是修改数据类型和是否必填：`ALTER table stu MODIFY sname varchar(50) not null;`
+- 修改数据类型和是否必填：`ALTER Table stu MODIFY sname varchar(50) not null;`
 
-- 添加一个新的字段：`ALTER table stu ADD sex smallint default null;`
+- 添加一个新的字段（列）：`ALTER Table stu ADD sex smallint default null;`
 
   > 添加一个新的性别字段，字段名称为`sex`，字段类型为`smallint`，字段的默认值为`null`
+  >
+  > 可以在添加语句的最后加上要添加的字段在哪个字段的后面`AFTER name`（在`name`字段的后面添加新的字段）
 
 - 想让指定字段在某个位置进行存放，创建一个新字段，并且使这个新字段在`id`字段的后面：
 
-  `ALTER table stu ADD email varchar(50) default null AFTER id;`
+  `ALTER Table stu ADD email varchar(50) default null AFTER id;`
 
   让一个新字段出现在所有字段的最前面：
 
-  `ALTER table stu ADD qq varchar(50) default null first;`
+  `ALTER Table stu ADD qq varchar(50) default null first;`
 
-- 删除字段：`ALTER table stu drop qq;`    删除`qq`字段
+- 删除字段：`ALTER Table stu Drop sex;`    删除`sex`字段
 
 ***
 
@@ -394,19 +445,60 @@ SELECT * FROM stu order by class_id asc, age asc;
 
   `ALTER table stu modify id int not null AUTO_INCREMENT, add PRIMARY key (id);`
 
+***
+
+### 数据表内容的去重
+
+对于数据表中重复的内容进行去重，是一个非常经典的面试题，基本的思路如下：
+
+1. 先创建一张临时表`temp`，该表的表结构和需要去重的表`table`一样
+
+   ```mysql
+   CREATE TABLE temp LIKE table;
+   ```
+
+2. 通过`DISTINCT`关键字处理后，从表`table`中复制记录到`temp`表中
+
+   ```mysql
+   INSERT INTO temp SELECT DISTINCT * FROM table;
+   ```
+
+3. 清除掉`table`表的记录
+
+   ```mysql
+   DELETE FROM table;
+   ```
+
+4. 把`temp`临时表的记录复制到`table`
+
+   ```mysql
+   INSERT INTO table SELECT DISTINCT * FROM temp;
+   ```
+
+5. 删除掉临时表`temp`
+
+   ```mysql
+   DROP TABLE temp;
+   ```
+
 
 
 ## 数据类型
+
+`Mysql`中的数据类型，实际上是列类型，或者又叫字段类型
+
+***
+
 ### 字符串类型
 
 在数据库的所有类型中，字符串类型是使用最频繁的，数据库中字符串类型下有非常多种类的类型，如下表所示：
 
 |     类型     |       大小        |              用途               |
 | :----------: | :---------------: | :-----------------------------: |
-|    `CHAR`    |    0-255 字节     |           定长字符串            |
+|    `CHAR`    |    0-255 字符     |           定长字符串            |
 |  `VARCHAR`   |   0-65535 字节    |           变长字符串            |
-|  `TINYBLOB`  |    0-255 字节     | 不超过 255 个字符的二进制字符串 |
-|  `TINYTEXT`  |    0-255 字节     |          短文本字符串           |
+|  `TINYBLOB`  |    0-255 字符     | 不超过 255 个字符的二进制字符串 |
+|  `TINYTEXT`  |    0-255 字符     |          短文本字符串           |
 |    `BLOB`    |   0-65535 字节    |     二进制形式的长文本数据      |
 |    `TEXT`    |   0-65535 字节    |           长文本数据            |
 | `MEDIUMBLOB` |  0-16777215 字节  |  二进制形式的中等长度文本数据   |
@@ -422,13 +514,27 @@ SELECT * FROM stu order by class_id asc, age asc;
 >
 > - `char` 类型是定长类型，比如定义了 20 长度的`char`类型，只存一个字符也占用 20 个长度，`char` 好处是处理速度快，缺点是空间占用大（空间换取速度，检索这一类字符的时候速度非常快），把手机号、邮箱、密码等长度相对固定的设置为 `char` 类型是不错的选择，或者牵扯到排序的字符串数据也可以设置为`char`类型
 >
-> - `varchar `类型与 `char` 相反，点用空间受内容影响，可以把文章标题、介绍等设置为` varchar `类型更合适
+> - `varchar `类型与 `char` 相反，点用空间受内容影响，可以把文章标题、介绍等设置为` varchar `类型更合适，同时，在存放文本时，也可用使用`TEXT`数据类型进行替换，将`TEXT`列视为`VARCHER`列，但是要注意`TEXT`不能有默认值，大小为`0-65535`字节
+>
+> - `CHAR`类型是固定长度字符串，最大存放255个字符；`VARCHAR`类型是可变长度字符串，最大存放65535个字节，其中有3个字节被系统用于记录大小的，所以可用最大字节为65532，字符和字节是有区别的，在不同的编码下，存放的字符数量是不同的，如在`utf8`编码下，最大存放的字符为：`(65535-3)/3=21844`；如果表的编码是`gbk`，那么最大存放的字符为：`(65535-3)/2=32766`
+>
+> - 使用细节1：
+>
+>   - `char(4)`：其中4表示字符数（最大是255），不管是中文还是字母都是放四个，按字符计算
+>   - `varchar(4)`：其中4也表示字符数，不管是字母还是中文都以定义好的编码来存放数据，但是这4个字符占据多少个字节，还是要取决于具体的字符集
+>
+>   不管是中文还是英文字母，都是最多存放4个，是按照字符来存放的
+>
+> - 使用细节2：
+>
+>   - `char(4)`是定长（固定的大小），即使插入`aa`内容，也会占用分配的4个字符空间
+>   - `varchar(4)`是变长（变化的大小），如果插入了`aa`，实际占用空间大小并不是4个字符，而是按照实际占用空间来分配（其中，`varchar`本身还需占用1-3个字节来记录存放的内容长度）
 
 #### 字符集
 
 字符集决定了我们在字段中能存储那类的字符，不符合字符集的文字可能会在存储的时候出现乱码
 
-查看系统都支持哪些字符集：`show CHARACTER set;`
+查看系统都支持哪些字符集：`SHOW CHARACTER SET;`
 
 当使用到字符串，就一定会使用到字符集，在现实当中的字符集就是字典，字符集的种类是非常多的，有些字符集是比较全面的，包含了大多数语言，如`UTF8`字符集，在创建数据库的时候可以进行设置字符集，在建表的时候也可以设置字符集，表中的字段也有字符集，最终的数据是存储在字段中的，所以字符集以字段的为准
 
@@ -446,34 +552,15 @@ SELECT * FROM stu order by class_id asc, age asc;
 
 总之：字符串校对规则是影响字符串比较和排序的一种算法
 
-#### 字符串函数
-
-字符串函数可以方便我们快速的解决一些字符串拆分和合并相关的一些问题
-
-常见的字符串函数：
-
-|           函数           |                             描述                             |
-| :----------------------: | :----------------------------------------------------------: |
-|    `left(字段名, i)`     |      从给定字段内容的从左边进行取i个字符串（包括第i个）      |
-|    `right(字段名, i)`    |      从给定字段内容的从右边进行取i个字符串（包括第i个）      |
-|   `mid(字段名, i, n)`    | 从给定字段内容的任何位置的第i个位置取n个字符串，如果没有输入n，表示从第i个位置进行取后面所有字符串 |
-|  `substring(字段名, i)`  | 对于表中的给定字段名，从该字段内容的第i个开始取（包括第i个），一直取到最后 |
-|  `char_length(字段名)`   |                  获取给定字段中字符串的长度                  |
-| `concat("前缀", 字段名)` |         给选定的字符串的所有内容都连接一个字符串前缀         |
-
-小案例：如果字段内容的长度大于8个，我们在8位之后使用`...`进行连接：
-
-```mysql
-select if (char_length(cname)>8,concat(left(cname,8),'...'),cname) as cname from class;
-```
-
-> 如果长度大于8位，8位后面使用`...`进行连接；如果长短小于8位，不做任何处理
-
 ***
 
 ### 数值类型
 
-数值类型就是用于存储我们的数字的，常见的数值类型有以下的几个类型：
+数值类型就是用于存储我们的数字的，常见的数值类型有整型、小数类型
+
+#### 整型
+
+整型有以下的几个类型：
 
 |    数据类型    |       范围（有符号）（默认情况）       |      范围（无符号）       |
 | :------------: | :------------------------------------: | :-----------------------: |
@@ -495,7 +582,7 @@ alter table class add status TINYINT;
 alter table class add status TINYINT UNSIGNED;
 ```
 
-#### n和`ZEROFILL`
+##### `n`和`ZEROFILL`
 
 数值类型后面跟着的(n)表示设置我们数值的显示位数，并不是说只能输入n个数字字符
 
@@ -505,7 +592,26 @@ alter table class add state int(5) ZEROFILL;
 
 `int(5)`只控制显示长度，如果添加了前导零填充这个关键字`ZEROFILL`后，如果长度不够5位，会在数值前面进行补0，使其长度控制在5位，但是前导零在数据库图形化界面中有时难以显示，在命令行终端中可以正常显示
 
-#### 浮点数和定点数
+#### 位类型
+
+位类型：`bit(M)`类型，具体细节：
+
+- `bit`字段显示时，按照位的方式显示（二进制的）
+- 查询时，仍然可以使用添加的数组
+- 如果一个值只有0，1，那么可以考虑使用`bit(1)`，可以节省空间
+- 位类型中的`M`指定位数，默认值为1，范围为1-64，如果指定为64位，就相当于8个字节，就等价于`bigint()`类型，但是数据的显示还是按照位的方式进行显示 
+- 位类型的使用情况不多，了解即可
+
+```mysql
+CREATE TABLE t (num BIT(8));  -- 给定8位
+INSERT INTO t VALUES(3);  -- 插入的值超过255，会抛出异常 255对应的二进制是11111111
+SELECT * FROM t;  
+-- 显示的是 11
+-- 但是查询的时候，仍然可以根据数值来查询
+SELECT * FROM t WHERE num = 3;
+```
+
+#### 浮点数和定点数类型
 
 浮点数和定点数可以理解数值类型带小数的数据类型
 
@@ -513,8 +619,8 @@ alter table class add state int(5) ZEROFILL;
 
 |   类型    |                             精度                             |
 | :-------: | :----------------------------------------------------------: |
-|  `FLOAT`  |                     7位，能保证6位不损耗                     |
-| `DOUBLE`  |                    16位，能保证15位不损耗                    |
+|  `FLOAT`  |             单精度4个字节，7位，能保证6位不损耗              |
+| `DOUBLE`  |            双精度8个字节，16位，能保证15位不损耗             |
 | `DECIMAL` | `DECIMAL(M,D) `，M表示总位数（包括小数点前和后），D表示小数的位数 |
 
 选择的时候根据需要进行选择，在够用的情况下选择最小的即可
@@ -523,7 +629,7 @@ alter table class add state int(5) ZEROFILL;
 
 - `FLOAT`：一共7位（包括小数点的前和后），意味着最多有7位有效数字，在7位以上会有精度的损耗（数值就会与我们添加的不一致，可能给你四舍五入了），但绝对能保证6位，即`FLOAT`的精度为6-7位有效数字
 - `DOUBLE`：一共16位，`double`数据类型的精度为15-16位
-- 对于货币之类的数据，推荐使用`DECIMAL`数据类型，通过设定`M`和`D`可以精准的显示，不损耗
+- 对于货币之类的数据，推荐使用`DECIMAL`数据类型，通过设定`M`和`D`可以精准的显示，不损耗，如果`D`为0，则值没有小数点或分数部分，`M`最大值为65，`D`最大值为30，如果`D`被省略，默认值为0，如果`M`被省略，默认值为10
 
 ```mysql
 alter table class add a FLOAT(10,2);
@@ -617,7 +723,9 @@ SELECT * FROM stu WHERE flag & 6;
 >     >
 >     > - 上面设置的更新时间，修改当前数据的其他字段的内容，更新时间字段的数据不会发生改变，对于更新时间这个字段来说，这是不合理的，我们需要当该数据有任何的字段内容发生变化后，就要触发更新时间的更新，需要做以下的修改：（当有内容更新的时候，设置更新时间也为当前时间）
 >     >
->     >   `ALTER TABLE stu ADD updated_at timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE;`
+>     >   `ALTER TABLE stu ADD updated_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;`
+>     >   
+>     >   其中：`DEFAULT CURRENT_TIMESTAMP`表示默认为当前时间；`NOT NULL`表示不能为空；`ON UPDATE CURRENT_TIMESTAMP`表示在修改的时候，自动以当前的时间更新
 >
 > - `Mysql `保存日期格式使用` YYYY-MM-DD HH:MM:SS `的` ISO 8601 `标准，向数据表储存日期与时间必须使用` ISO` 格式
 
@@ -683,175 +791,6 @@ SELECT * FROM stu WHERE flag & 6;
 
 `SELECT TIME_FORMAT(birthday, '%h:%i:%s') from stu;`
 
-***
-
-### 时间处理的函数
-
-`Mysql`提供了非常丰富的时间处理函数，具体如下所示：
-
-|       函数       |                          说明                          |
-| :--------------: | :----------------------------------------------------: |
-|      `HOUR`      |                  时（范围从 0 到 23）                  |
-|     `MINUTE`     |                  分（范围从 0 到 59）                  |
-|     `SECOND`     |                  秒（范围从 0 到 59）                  |
-|      `YEAR`      |               年（范围从 1000 到 9999）                |
-|     `MONTH`      |                  月（范围从 1 到 12）                  |
-|      `DAY`       |                  日（范围从 1 开始）                   |
-|      `TIME`      |                        获取时间                        |
-|      `WEEK`      |             一年中的第几周，从 1 开始计数              |
-|    `QUARTER`     |              一年中的季度，从 1 开始计数               |
-|  `CURRENT_DATE`  |                        当前日期                        |
-|  `CURRENT_TIME`  |                        当前时间                        |
-|      `NOW`       |                        当前时间                        |
-|   `DAYOFYEAR`    |              一年中的第几天（从 1 开始）               |
-|   `DAYOFMONTH`   |                月份中天数（从 1 开始）                 |
-|   `DAYOFWEEK`    |                星期天（1）到星期六（7）                |
-|    `WEEKDAY`     |                星期一（0）到星期天（6）                |
-|    `TO_DAYS`     |           从元年到现在的天数（忽略时间部分）           |
-|   `FROM_DAYS`    |       根据距离元年的天数得到日期（忽略时间部分）       |
-|  `TIME_TO_SEC`   |              时间转为秒数（忽略日期部分）              |
-|  `SEC_TO_TIME`   |            根据秒数转为时间（忽略日期部分）            |
-| `UNIX_TIMESTAMP` |           根据日期返回秒数（包括日期与时间）           |
-| `FROM_UNIXTIME`  |        根据秒数返回日期与时间（包括日期与时间）        |
-|    `DATEDIFF`    | 两个日期相差的天数（忽略时间部分，前面日期减后面日期） |
-|    `TIMEDIFF`    |           计算两个时间的间隔（忽略日期部分）           |
-| `TIMESTAMPDIFF`  |  根据指定单位计算两个日期时间的间隔（包括日期与时间）  |
-|    `LAST_DAY`    |                     该月的最后一天                     |
-
-基本使用：使用频率比较高的时间处理函数
-
-- 获取时间日期数据的年月日：`SELECT YEAR(birthday), MONTH(birthday), DAY(birthday) from stu;`
-
-  > 通过时间处理函数，可以把时间中的时间信息进行独立和局部的获取
-
-- 获取当前时刻的日期和时间：`SELECT NOW();`
-
-  > 我们也可以进行当前日期和时间的分开获取：`SELECT CURRENT_DATE();`和 `SELECT CURRENT_TIME();`
-
-- 查看给定的日期时间是一年当中的第几天：`SELECT DAYOFYEAR(NOW());`
-
-  > 同理，也可以查看给定的时间是当前月的第几天`DAYOFMONTH`；是当前周的第几天`DAYOFWEEK`（星期六是7，星期天是1）或者使用`WEEKDAY`（星期一是0，星期天是6）
-
-小案例：如果当前时间大于更新时间`publish_time`时，所属条目的状态字段`status`就由0更新到1：
-
-```sql
-update 数据表名称 set status = 1 WHERE status = 0 and publish_time < now();
-```
-
-- 定义变量获取当前的时间：`set @time = time(now());`        输出变量：`select @time;`
-
-- 将时间转化成秒数：`select TIME_TO_SEC(@time);`        `00:00:00`为第0秒
-
-- 也可以将秒数转化回时间：`select SEC_TO_TIME(TIME_TO_SEC(@time));`
-
-- 将当前时间转化为从元年到现在所经过的天数：`select TO_DAYS(now());`
-
-- 查看出生到现在所经过的天数：`select DATEDIFF(now(), birthday) from stu;`
-
-- 根据单位来获取时间差：`select TIMESTAMPDIFF(day, birthday, now()) from stu;`
-
-  > 按天来进行比较，比较两段时间之间相差多少天；也可以按照月来进行比较`month`；可以按照周数`week`；可以按照分钟数据来进行比较`minute`；可以按照秒数来进行比较`second`
-
-- 查找出生年月在某个范围内：
-
-  `SELECT  * from stu WHERE birthday BETWEEN '1995-01-01' AND '2005-01-01';`
-
-- 查找年龄最小的（先降序排列，再取第一个）：
-
-  `SELECT * from stu order by birthday desc limit 1;`
-
-- 查找在2000年出生的学生：`SELECT * from stu WHERE YEAR(birthday) = '2000';`
-
-- 查找20岁以上的学生：`SELECT * from stu WHERE TIMESTAMPDIFF(YEAR, birthday, NOW()) > 20;`
-
-***
-
-### 日期时间的计算
-
-#### 日期时间的提前和推迟
-
-在有的时候，我们需要对日期和时间进行计算，如：在某个时间后面再加几个小时
-
-- 在当前的时间上再加8个小时：
-
-  `SELECT addtime(now(), '08:00:00');`或`SELECT timestamp(now(), '08:00:00');`
-
-- 得到当前日期时间7天之后的日期时间：`SELECT date_add(now(), INTERVAL 7 DAY);`
-
-  > 如果7前面加个负号，就表示获取7天之前的日期时间，也可以使用`date_add`的反函数`date_sub`
-  >
-  > 对于日期时间的提前和推迟，我们不仅可以使用天，也可以使用年月日，时分秒等等
-  >
-  > - 提前或推迟10个小时30分钟：`SELECT date_add(now(), INTERVAL "10:30" HOUR_MINUTE);`
-  > - 提前或推迟3天8小时：`SELECT date_add(now(), INTERVAL "3 8" DAY_HOUR);`
-
-#### 月初月末的计算
-
-- 获得当前日期时间在当前月月末的日期：`SELECT last_day(now());`
-
-- 获取当前日期时间上个月的最后一天的日期时间：`SELECT last_day(date_sub(now(), INTERVAL 1 MONTH));`
-
-- 获取当前日期时间下个月的最后一天的日期时间：`SELECT date_add(last_day(now()), INTERVAL 1 DAY);`
-
-- 获取当前日期时间在当前月月初的日期：`SELECT date_sub(now(), INTERVAL DAYOFMONTH(now())-1 DAY);`
-
-  > `DAYOFMONTH(now())`表示当前日期时间是这个月的第几天
-
-小案例：获取本月发表文章条目：文章的数据表为`article`，包括字段发布时间：`publish_time`
-
-```sql
-SELECT * FROM article
-WHERE publish_time <= last_day(now())
-ADD publish_time >= date_sub(now(), INTERVAL DAYOFMONTH(now())-1 day);
-```
-
-#### 日期对周的控制
-
-在`mysql`中，系统提供了两个常用的函数来实现日期对周的控制：`DAYOFWEEK`（星期天（1）到星期六（7））和`WEEKDAY`（星期一（0）到星期天（6））
-
-获取当前日期所在周星期二的日期：`SELECT date_add(now(), INTERVAL 3-DAYOFWEEK(now()) DAY);`
-
-> 如果想要获得星期三的日期，就使用4减去`DAYOFWEEK(now())`即可
->
-> 如果使用`WEEKDAY`的方法获得当前日期所在周星期二的日期：`SELECT date_add(now(), INTERVAL 1-WEEKDAY(now()) DAY);`
-
-获取当前日期三周之前星期二的日期：
-
-`SELECT date_sub(date_add(now(), INTERVAL 1-WEEKDAY(now()) DAY), INTERVAL 21 Day);`
-
-***
-
-### 日期时间常见案例
-
-#### 月考勤
-
-查找本月迟到的学生：创建一张考情表`attendance`，包含字段表示打卡时间`created_at`
-
-```sql
-SELECT * FROM attendance WHERE time(created_at) > '08:30:00'
-AND date(created_at) > date(date_sub(now(), INTERVAL DAYOFMONTH(now())-1 DAY));
-```
-
-查找本月迟到超过两次的学生：
-
-```sql
-SELECT stu_id, count(id) FROM attendance WHERE time(created_at) > '08:30:00'
-AND date(created_at) > date(date_sub(now(), INTERVAL DAYOFMONTH(now())-1 DAY))
-GROUP by stu_id
-HAVING count(id) >=2;
-```
-
-#### 周考勤
-
-查找本周迟到的学生：创建一张考情表`attendance`，包含字段表示打卡时间`created_at`
-
-```sql
-SELECT * FROM attendance WHERE time(created_at) > '08:30:00'
-AND date(created_at) > date(date_add(now(), INTERVAL 0-WEEKDAY(NOW()) DAY));
-```
-
-在计算日期时间时，会使用大量的函数，函数在数据库中进行操作时，会为每一条数据都执行函数，比较消耗性能，一般后续都在后端得到具体的日期，再在数据库中进行比对，这样比较高效
-
 
 
 ## 排序和统计
@@ -860,7 +799,7 @@ AND date(created_at) > date(date_add(now(), INTERVAL 0-WEEKDAY(NOW()) DAY));
 
 排序可以对枚举类型，数值类型等进行排序；排序是先拿数据，再对数据做排序处理（因此条件`WHERE`是在排序`ORDER`之前的）
 
-排序是我们对查询到的结果进行排序，排序分为降序（从大到小`DESC`）和升序（从小到大`ASC`）
+排序是我们对查询到的结果进行排序，排序分为降序（从大到小`DESC`）和升序（从小到大`ASC`，排序默认是升序的）
 
 - 对年龄进行升序排序：`SELECT * FROM stu ORDER BY age ASC;`
 - 对性别进行降序排序，之后再对年龄进行升序排序：`SELECT * FROM stu ORDER BY sex DESC, age ASC;`
@@ -903,7 +842,17 @@ AND date(created_at) > date(date_add(now(), INTERVAL 0-WEEKDAY(NOW()) DAY));
 
 - 查询学生表中所有男同学的数量：`SELECT COUNT(*) FROM stu WHERE sex = '男';`
 
-> *表示对所有的记录进行统计
+> *表示对所有的记录进行统计，`COUNT(*)`表示满足条件的记录的行数；`COUNT(列)`表示统计某列满足条件的有多少个，但是会排除为`null`的
+>
+> ```mysql
+> CREATE TABLE t (name VARCHAR(20));
+> INSERT INTO t VALUES('jlc');
+> INSERT INTO t VALUES('tom');
+> INSERT INTO t VALUES(NULL);
+> 
+> SELECT COUNT(*) FROM t;  -- 3
+> SELECT COUNT(name) FROM t;  -- 2
+> ```
 >
 > 我们可以进行有条件的统计，学生表中有的学生分配了班级，有的学生没有分配班级，我们需要统计分配了班级的学生数量：
 >
@@ -926,7 +875,7 @@ AND date(created_at) > date(date_add(now(), INTERVAL 0-WEEKDAY(NOW()) DAY));
 
 #### 求和和平均
 
-求和和平均在`mysql`中提供了两个系统函数：`SUM`和`AVG`
+求和和平均在`mysql`中提供了两个系统函数：`SUM`和`AVG`（上述两种函数，只对数值有用）
 
 - 获取文章总的点击次数：`SELECT SUM(click) FROM article;`
 - 获取文章平均的点击次数：`SELECT AVG(click) FROM article;`
@@ -943,6 +892,8 @@ AND date(created_at) > date(date_add(now(), INTERVAL 0-WEEKDAY(NOW()) DAY));
 `SELECT DISTINCT class_id,name FROM stu WHERE class_id is not null;`表示将两个字段（`class_id`和`name`）的内容放到一起进行过滤去重，只有同一个班级和同一个姓名的内容将会被去重，即将两个重复的归类到一组
 
 #### 分组统计
+
+使用`group by`子句对列进行分组；使用`having`子句对分组后的结果进行过滤
 
 比如我们要统计每个班级有多少个学生，这个时候就需要使用到分组统计的方式：先使用班级编号进行分组，再进行统计，具体语句如下：
 
@@ -969,7 +920,7 @@ SELECT count(class_id),class_id from stu WHERE sex = '男' GROUP BY class_id;
 多字段的分组表示分组的条件不单单只有一个，如在按照班级分组的同时，又要按照性别进行分组，如：
 
 ```sql
-SELECT count(*),class_id,sex from stu GROUP BY class_id,sex;
+SELECT count(*), class_id, sex from stu GROUP BY class_id, sex;
 ```
 
 > 统计每个班男生有几个，女生有几个
@@ -986,7 +937,7 @@ SELECT count(*),class_id,sex from stu GROUP BY class_id,sex ORDER BY class_id de
 
 ##### 筛选分组
 
-对分组的结果进行筛选，要使用`HAVING`方法，原先的`WHERE`条件是对查询到的结果进行筛选
+对分组的结果进行筛选（过滤），要使用`HAVING`方法，原先的`WHERE`条件是对查询到的结果进行筛选
 
 ```sql
 SELECT count(*),class_id from stu GROUP BY class_id HAVING count(*)>=2;
@@ -1038,6 +989,252 @@ GROUP BY s ORDER BY count(*) desc limit 1;
 SELECT left(sname, 1) as s from stu
 GROUP BY s HAVING count(*)>=2;
 ```
+
+如果`SELECT`语句同时包含`group by`，`having`，`limit`，`order by`，那么他们的顺序是（由先到后）`group by`、`having`、`order by`、`limit`，如果顺序不对，语法是不会通过的
+
+
+
+## 函数相关
+
+### 数学函数
+
+数学运算相关的常见函数有：
+
+![image-20250503131947746](..\images\image-20250503131947746.png)
+
+> `SELECT CONV(8, 10, 2) FROM DUAL;`  将数值8从10进制转化为2进制
+>
+> `FORMAT()`保留小数位数，是通过四舍五入的方式进行保存的
+
+***
+
+### 字符串函数
+
+字符串函数可以方便我们快速的解决一些字符串拆分和合并相关的一些问题
+
+常见的字符串函数：
+
+|                    函数                    |                             描述                             |
+| :----------------------------------------: | :----------------------------------------------------------: |
+|             `charset(字段名)`              |                      返回字符串的字符集                      |
+|             `left(字段名, i)`              |      从给定字段内容的从左边进行取i个字符串（包括第i个）      |
+|             `right(字段名, i)`             |      从给定字段内容的从右边进行取i个字符串（包括第i个）      |
+|            `mid(字段名, i, n)`             | 从给定字段内容的任何位置的第i个位置取n个字符串，如果没有输入n，表示从第i个位置进行取后面所有字符串 |
+|       `substring(字段名, i, length)`       | 对于表中的给定字段名，从该字段内容的第i个开始取（包括第i个），截取`length`个字符串，如果没有`length`，则一直取到最后 |
+|    `char_length(字段名)/LENGTH(字段名)`    | 获取给定字段中字符串的长度，如果是汉字，且字符集为`utf8`，一个汉字的长度为3 |
+|          `concat("前缀", 字段名)`          |   连接字符串，给选定的字符串的所有内容都连接一个字符串前缀   |
+|         `INSTR(string, substring)`         |      返回`substring`在`string`中出现的位置，没有则返回0      |
+|              `UCASE(字段名)`               |          将指定字段名列中的所有内容字母都转换成大写          |
+|              `LCASE(字段名)`               |          将指定字段名列中的所有内容字母都转换成小写          |
+| `REPLACE(字段名, search_str, replace_str)` |      在对应字段中的内容用`replace_str`替换`search_str`       |
+|            `STRCMP(str1, str2)`            | 逐字符比较两个字符串的大小 （字符串相同，返回0，前面的字符串小，返回-1，前面的字符串大，返回1） |
+|                `LTRIM(str)`                |                     去掉字符串的前端空格                     |
+|                `RTRIM(str)`                |                     去掉字符串的后端空格                     |
+|                `TRIM(str)`                 |                   去掉字符串左右两边的空格                   |
+
+> `SELECT INSTR('mynameisjlc', 'jlc') FROM DUAL;`   返回9，`DUAL`是亚元表，是一个系统表，可以作为测试使用
+
+小案例：如果字段内容的长度大于8个，我们在8位之后使用`...`进行连接：
+
+```mysql
+select if (char_length(cname)>8,concat(left(cname,8),'...'),cname) as cname from class;
+```
+
+> 如果长度大于8位，8位后面使用`...`进行连接；如果长短小于8位，不做任何处理
+
+### 时间处理的函数
+
+`Mysql`提供了非常丰富的时间处理函数，具体如下所示：
+
+|                   函数                    |                             说明                             |
+| :---------------------------------------: | :----------------------------------------------------------: |
+|                  `HOUR`                   |                     时（范围从 0 到 23）                     |
+|                 `MINUTE`                  |                     分（范围从 0 到 59）                     |
+|                 `SECOND`                  |                     秒（范围从 0 到 59）                     |
+|                  `YEAR`                   |                  年（范围从 1000 到 9999）                   |
+|                  `MONTH`                  |                     月（范围从 1 到 12）                     |
+|                   `DAY`                   |                     日（范围从 1 开始）                      |
+|                  `TIME`                   |                           获取时间                           |
+|                  `WEEK`                   |                一年中的第几周，从 1 开始计数                 |
+|                 `QUARTER`                 |                 一年中的季度，从 1 开始计数                  |
+|              `CURRENT_DATE`               |                           当前日期                           |
+|              `CURRENT_TIME`               |                           当前时间                           |
+|            `CURRENT_TIMESTAMP`            |               获取当前的时间（年月日，时分秒）               |
+|                   `NOW`                   |                  当前时间（年月日，时分秒）                  |
+|                `DAYOFYEAR`                |                 一年中的第几天（从 1 开始）                  |
+|               `DAYOFMONTH`                |                   月份中天数（从 1 开始）                    |
+|                `DAYOFWEEK`                |                   星期天（1）到星期六（7）                   |
+|                 `WEEKDAY`                 |                   星期一（0）到星期天（6）                   |
+|                 `TO_DAYS`                 |              从元年到现在的天数（忽略时间部分）              |
+|                `FROM_DAYS`                |          根据距离元年的天数得到日期（忽略时间部分）          |
+|               `TIME_TO_SEC`               |                 时间转为秒数（忽略日期部分）                 |
+|               `SEC_TO_TIME`               |               根据秒数转为时间（忽略日期部分）               |
+|             `UNIX_TIMESTAMP`              | 根据日期返回秒数（包括日期与时间），返回的是1970-1-1到当前日期时间的毫秒数 |
+|              `FROM_UNIXTIME`              |           根据秒数返回日期与时间（包括日期与时间）           |
+|             `DATE(datetime)`              |                   返回`datetime`的日期部分                   |
+| `DATE_ADD(date, INTERVAL d_value d_type)` |                   在`date`中加上日期或时间                   |
+| `DATE_SUB(date, INTERVAL d_value d_type)` |                   在`date`中减去日期或时间                   |
+|                `DATEDIFF`                 |    两个日期相差的天数（忽略时间部分，前面日期减后面日期）    |
+|                `TIMEDIFF`                 |              计算两个时间的间隔（忽略日期部分）              |
+|              `TIMESTAMPDIFF`              |     根据指定单位计算两个日期时间的间隔（包括日期与时间）     |
+|                `LAST_DAY`                 |                        该月的最后一天                        |
+
+基本使用：使用频率比较高的时间处理函数
+
+- 获取时间日期数据的年月日：`SELECT YEAR(birthday), MONTH(birthday), DAY(birthday) from stu;`
+
+  > 通过时间处理函数，可以把时间中的时间信息进行独立和局部的获取
+
+- 获取当前时刻的日期和时间：`SELECT NOW();`
+
+  > 我们也可以进行当前日期和时间的分开获取：`SELECT CURRENT_DATE();`和 `SELECT CURRENT_TIME();`
+
+- 查看给定的日期时间是一年当中的第几天：`SELECT DAYOFYEAR(NOW());`
+
+  > 同理，也可以查看给定的时间是当前月的第几天`DAYOFMONTH`；是当前周的第几天`DAYOFWEEK`（星期六是7，星期天是1）或者使用`WEEKDAY`（星期一是0，星期天是6）
+
+小案例：如果当前时间大于更新时间`publish_time`时，所属条目的状态字段`status`就由0更新到1：
+
+```sql
+update 数据表名称 set status = 1 WHERE status = 0 and publish_time < now();
+```
+
+- 定义变量获取当前的时间：`set @time = time(now());`        输出变量：`select @time;`
+
+- 将时间转化成秒数：`select TIME_TO_SEC(@time);`        `00:00:00`为第0秒
+
+- 也可以将秒数转化回时间：`select SEC_TO_TIME(TIME_TO_SEC(@time));`
+
+- 将当前时间转化为从元年到现在所经过的天数：`select TO_DAYS(now());`
+
+- 查看出生到现在所经过的天数：`select DATEDIFF(now(), birthday) from stu;`
+
+- 根据单位来获取时间差：`select TIMESTAMPDIFF(day, birthday, now()) from stu;`
+
+  > 按天来进行比较，比较两段时间之间相差多少天；也可以按照月来进行比较`month`；可以按照周数`week`；可以按照分钟数据来进行比较`minute`；可以按照秒数来进行比较`second`
+
+- 查找出生年月在某个范围内：
+
+  `SELECT  * from stu WHERE birthday BETWEEN '1995-01-01' AND '2005-01-01';`
+
+- 查找年龄最小的（先降序排列，再取第一个）：
+
+  `SELECT * from stu order by birthday desc limit 1;`
+
+- 查找在2000年出生的学生：`SELECT * from stu WHERE YEAR(birthday) = '2000';`
+
+- 查找20岁以上的学生：`SELECT * from stu WHERE TIMESTAMPDIFF(YEAR, birthday, NOW()) > 20;`
+
+#### 日期时间的计算
+
+##### 日期时间的提前和推迟
+
+在有的时候，我们需要对日期和时间进行计算，如：在某个时间后面再加几个小时
+
+- 在当前的时间上再加8个小时：
+
+  `SELECT addtime(now(), '08:00:00');`或`SELECT timestamp(now(), '08:00:00');`
+
+- 得到当前日期时间7天之后的日期时间：`SELECT date_add(now(), INTERVAL 7 DAY);`
+
+  > 如果7前面加个负号，就表示获取7天之前的日期时间，也可以使用`date_add`的反函数`date_sub`
+  >
+  > 对于日期时间的提前和推迟，我们不仅可以使用天，也可以使用年月日，时分秒等等
+  >
+  > - 提前或推迟10个小时30分钟：`SELECT date_add(now(), INTERVAL "10:30" HOUR_MINUTE);`
+  > - 提前或推迟3天8小时：`SELECT date_add(now(), INTERVAL "3 8" DAY_HOUR);`
+
+##### 月初月末的计算
+
+- 获得当前日期时间在当前月月末的日期：`SELECT last_day(now());`
+
+- 获取当前日期时间上个月的最后一天的日期时间：`SELECT last_day(date_sub(now(), INTERVAL 1 MONTH));`
+
+- 获取当前日期时间下个月的最后一天的日期时间：`SELECT date_add(last_day(now()), INTERVAL 1 DAY);`
+
+- 获取当前日期时间在当前月月初的日期：`SELECT date_sub(now(), INTERVAL DAYOFMONTH(now())-1 DAY);`
+
+  > `DAYOFMONTH(now())`表示当前日期时间是这个月的第几天
+
+小案例：获取本月发表文章条目：文章的数据表为`article`，包括字段发布时间：`publish_time`
+
+```sql
+SELECT * FROM article
+WHERE publish_time <= last_day(now())
+ADD publish_time >= date_sub(now(), INTERVAL DAYOFMONTH(now())-1 day);
+```
+
+##### 日期对周的控制
+
+在`mysql`中，系统提供了两个常用的函数来实现日期对周的控制：`DAYOFWEEK`（星期天（1）到星期六（7））和`WEEKDAY`（星期一（0）到星期天（6））
+
+获取当前日期所在周星期二的日期：`SELECT date_add(now(), INTERVAL 3-DAYOFWEEK(now()) DAY);`
+
+> 如果想要获得星期三的日期，就使用4减去`DAYOFWEEK(now())`即可
+>
+> 如果使用`WEEKDAY`的方法获得当前日期所在周星期二的日期：`SELECT date_add(now(), INTERVAL 1-WEEKDAY(now()) DAY);`
+
+获取当前日期三周之前星期二的日期：
+
+`SELECT date_sub(date_add(now(), INTERVAL 1-WEEKDAY(now()) DAY), INTERVAL 21 Day);`
+
+#### 日期时间常见案例
+
+##### 月考勤
+
+查找本月迟到的学生：创建一张考情表`attendance`，包含字段表示打卡时间`created_at`
+
+```sql
+SELECT * FROM attendance WHERE time(created_at) > '08:30:00'
+AND date(created_at) > date(date_sub(now(), INTERVAL DAYOFMONTH(now())-1 DAY));
+```
+
+查找本月迟到超过两次的学生：
+
+```sql
+SELECT stu_id, count(id) FROM attendance WHERE time(created_at) > '08:30:00'
+AND date(created_at) > date(date_sub(now(), INTERVAL DAYOFMONTH(now())-1 DAY))
+GROUP by stu_id
+HAVING count(id) >=2;
+```
+
+##### 周考勤
+
+查找本周迟到的学生：创建一张考情表`attendance`，包含字段表示打卡时间`created_at`
+
+```sql
+SELECT * FROM attendance WHERE time(created_at) > '08:30:00'
+AND date(created_at) > date(date_add(now(), INTERVAL 0-WEEKDAY(NOW()) DAY));
+```
+
+在计算日期时间时，会使用大量的函数，函数在数据库中进行操作时，会为每一条数据都执行函数，比较消耗性能，一般后续都在后端得到具体的日期，再在数据库中进行比对，这样比较高效
+
+***
+
+### 加密和系统函数
+
+系统内置提供的加密和系统函数有：
+
+|      函数       |                             描述                             |
+| :-------------: | :----------------------------------------------------------: |
+|    `USER()`     | 查询用户（查询当前是哪个用户正在使用数据库，可以查看登录到`mysql`的有哪些用户，以及登录的`IP`） |
+|  `DATABASE()`   |                          数据库名称                          |
+|   `MDS(str)`    | 为字符串算出一个`MDS`32位（长度为32）的字符串（用户密码）加密计算，在数据库中存放的是加密后的密码 |
+| `PASSWORD(str)` | 从原文密码`str`计算并返回密码字符串，通常用于对`mysql`数据库的用户密码加密 |
+
+***
+
+### 流程控制函数
+
+|                             函数                             |                             描述                             |
+| :----------------------------------------------------------: | :----------------------------------------------------------: |
+|                  `IF(expr1, expr2, expr3)`                   |  如果表达式`expr1`为`True`，则返回`expr2`，否则返回`expr3`   |
+|                    `IFNULL(expr1, expr2)`                    |    如果`expr1`不为`NULL`，则返回`expr1`，否则返回`expr2`     |
+| `SELECT CASE WHEN expr1 THEN expr2 WHEN expr3 THEN expr4 ELSE expr5 END;` | 类似于多分支，如果`expr1`为`TRUE`，则返回`expr2`，如果`expr3`为`TRUE`，返回`expr4`，否则返回`expr5` |
+
+> `SELECT ename, IF(comm IS NULL, 0.0, comm) FROM emp;`  对于`comm`字段中，为空的数据，用`0.0`代替，原先有内容的数据，还是使用原先的内容
+>
+> 等价于：`SELECT ename, IFNULL(comm, 0.0)`
 
 
 
@@ -1120,7 +1317,7 @@ SELECT * FROM stu s WHERE s.sex='男' AND EXISTS(
 
 那`mysql`就会认为学生表中的一条记录和班级表中的所有记录都相匹配，就会产生50条记录
 
-为了解决这个情况，我们需要加上条件，让学生表中的班级编号与班级表中的主键相匹配：
+为了解决这个情况，我们需要加上条件，让学生表中的班级编号与班级表中的主键相匹配（也就是说，要通过正确的过滤条件进行过滤）（多表查询的条件不能少于表的个数-1，否则出现的是笛卡尔积）：
 
 ```sql
 SELECT * FROM stu,class WHERE stu.class_id = class.id;
@@ -1154,9 +1351,69 @@ SELECT s.sname,c.cname FROM stu as s,class as c WHERE s.class_id = c.id;
 
 ### 多表操作
 
+#### 子查询
+
+子查询是指嵌入在其他`SQL`语句中的`SELECT`语句，也叫嵌套查询
+
+- 单行子查询：返回一行数据的子查询语句（子查询返回的结果只有一行）
+- 多行子查询：返回多行数据的子查询（子查询返回的结果有多行），使用关键字`in`
+
+```mysql
+-- 显示与jlc同一个班级的学生  使用单行子查询来解决
+-- 思路：1.先查询到jlc的班级 2.将步骤1的语句当作一个子查询来使用
+SELECT * FROM stu WHRER class_id = {
+	SELECT class_id FROM stu WHERE name = 'jlc'
+};
+```
+
+可以将子查询当做一张临时表，可以解决很多复杂的查询，但是效率比较慢
+
+```mysql
+SELECT goods_id, ecs_goods.cat_id, goods_name, shop_price
+	FROM {
+		SELECT cat_id, MAX(shop_price) AS max_price
+		FROM ecs_goods
+		GROUP BY cat_id
+	} temp, ecs_goods
+	WHERE temp.cat_id = ecs_goods.cat_id
+	AND temp.max_price = ecs_goods.shop_price
+```
+
+##### `all`和`any`修饰符
+
+```mysql
+-- 显示工资比30号部门的所有员工工资都高的员工姓名、工资和部门号
+SELECT ename, sal, deptno
+	FROM emp
+	WHERE sal > ALL(   -- 这里的ALL可以使用MAX进行代替
+    	SELECT sal FROM emp WHERE deptno = 30
+    );
+    
+-- 显示工资比30号部门的其中一个员工工资高的员工姓名、工资和部门号
+SELECT ename, sal, deptno
+	FROM emp
+	WHERE sal > ANY(   -- 这里的ALL可以使用MIN进行代替
+    	SELECT sal FROM emp WHERE deptno = 30
+    );
+```
+
+##### 多列子查询
+
+多列子查询是指查询返回多个列数据的子查询语句（子查询返回的结果是多列）
+
+```mysql
+-- 查询与jlc数学、英语和语文成绩完全相同的学生
+SELECT * FROM stu
+	WHERE (math, english, chinese) = (
+    	SELECT math, english, chinese
+        FROM stu
+        WHERE name = 'jlc'
+    );
+```
+
 #### 分组查询
 
-对于上节中的学生表与班级表进行多表关联：
+对于学生表与班级表进行多表关联：
 
 ```sql
 SELECT * FROM stu as s,class as c WHERE s.class_id = c.id;
@@ -1228,7 +1485,7 @@ SELECT * FROM stu as s INNER JOIN stu_info as si ON s.id = si.stu_id;
 
 > 返回的结果数据条数是学生具体信息表的数据条数，对于没有学生具体信息的学生表中的学生，返回结果会将其过滤掉，只有完全匹配的会被拿出来
 
-对于学生具体信息没有设置的，其学生表中的学生基本信息也会被过滤掉，如果就需要找这些没有设计具体信息的学生，就需要使用到外链接，`LEFT JOIN`和`RIGHT JOIN`，左侧偏心（将左侧的表信息全部读取出来，无无论有没有匹配）和右侧偏心（将右侧的表信息全部读取出来，无论有没有匹配）
+对于学生具体信息没有设置的，其学生表中的学生基本信息也会被过滤掉，如果就需要找这些没有设计具体信息的学生，就需要使用到外链接，`LEFT JOIN`和`RIGHT JOIN`，左侧偏心（左外连接）（将左侧的表信息全部读取出来，无无论有没有匹配）和右侧偏心（右外连接）（将右侧的表信息全部读取出来，无论有没有匹配）
 
 ```sql
 SELECT * FROM stu as s LEFT JOIN stu_info as si ON s.id = si.stu_id;
@@ -1262,7 +1519,7 @@ RIGHT JOIN stu as s ON c.id = s.class_id;
 
 ### 自链接
 
-自链接就是自己链接自己，具体使用为：与小金同学在一个班级的同学：
+自链接就是自己链接自己（将同一张表看作两张表使用），具体使用为：与小金同学在一个班级的同学：
 
 第一种方式是使用子查询：
 
@@ -1271,7 +1528,7 @@ SELECT * FROM stu WHERE class_id = (SELECT class_id FROM stu WHERE sname = '小�
 AND sname != '小金';
 ```
 
-使用自链接的方法进行查询：自己关联自己，将一张表当作两张表进行关联使用
+使用自链接的方法进行查询：自己关联自己（需要使用别名），将一张表当作两张表进行关联使用
 
 ```sql
 SELECT s2.sname FROM stu as s1 INNER JOIN stu as s2
@@ -1408,13 +1665,183 @@ UNION ALL
 
 
 
+## 约束
+
+`mysql`约束用于确保数据库的数据满足特定的商业规则
+
+在`mysql`中，有五种常用的约束：
+
+- `not null`：非空，基本使用：`字段名 字段类型 not null`，如果在列上定义了非空，那么插入数据时，必须为该列提供数据
+
+- `unique`：唯一，基本使用：`字段名 字段类型 unique`，当定义了唯一约束后，该列的值是不能重复的，注意：如果没有指定`not null`，则声明了`unique`的字段可以有多个`null`；同时，一张表中可以有多个`unique`字段；如果一个列指定了非空和唯一，那么这个列的效果就类似于主键的效果
+
+- `primary key`：主键，基本使用：`字段名 字段类型 primary key`，用于唯一的标示表行的数据，当定义主键约束后，该列的值不能重复
+
+  使用细节：
+
+  - 主键的值不能重复，且不能为`null`
+  - 一张表中，只能有一个主键（在实际的开发中，一张表往往都会有一个主键），但可以是复合主键`primary key(列名1, 列名2)`（两个列的内容都相同才会违反主键的约束）
+  - 主键的指定方式有两种：
+    - 直接在字段名后面指定：`字段名 primary key`
+    - 在表定义最后面写：`primary key(列名)`
+  - 使用`DESC 表名`，可以查看主键的使用情况
+
+- `foreigin key`：外键，用于定义主表和从表之间的关系：外键约束要定义在从表上，主表则必须具有主键约束或者是`unique`约束。当定义外键约束后，要求外键列数据必须在主表的主键列存在或者是为`null`，否则从表的数据是添加不进去的，同理，如果主表于从表形成了外键约束，在从表对应数据存在时，主表对应的内容是不能进行删除的
+
+- `check`：用于强制行数据必须满足的条件，假定在`sal`列上定义了`check`约束，并要求`sal`列的值在1000~2000之间，如果不在范围内，就会提示出错
+
+  基本语法：`字段名 字段类型 check (check条件)`，如`sal DOUBLE CHECK (sal > 100 AND sal < 200)`
+
+  注意：`oracle`和`sql server`均支持`check`约束，但是`mysql5.7`目前还不支持`check`，只是作为语法校验
+
+
+
+## 外键约束
+
+外键约束是`Mysql`提供的一个特性，`Mysql`作为一个关系型的数据库，表之间都是有关系的
+
+对于几个表之间的关联，表之间会受影响，一张表发生变化，会影响另一张表（如班级表中的某个班级被删除了，对应学生表中对应这个被删除班级的学生是应该删除呢？还是这些学生的班级为`null`呢？这些变化都是关联的变化），这就需要各个表中的某一个字段来建立联系，对于不同表的这个字段，其字段类型要保持一致；一般情况下，与主键（主表的关联键）或者外键进行关联，关联约束的字段内部有一个检索的过程，所以这些关联字段都应该设置索引属性，我们可以不用特意的去设置，在做表关联的时候，`Mysql`会自动的给我们设置这些关联字段的索引属性
+
+注意事项：
+
+- `	Mysql`的默认引擎`InnoDB`支持外键关联/约束
+- 外键指向的主表则必须具有主键约束或者是`unique`约束
+- 外键字段的类型要和主键字段的类型一致
+- 外键字段的值，必须要在主键字段中出现过，或者为`null`（前提是外键字段允许为`null`）
+- 一旦建立了外键的关系，数据就不能随意删除了
+
+### 表中定义外键约束
+
+常用的外键约束关键词：
+
+|     选项      |         说明         |
+| :-----------: | :------------------: |
+| `CONSTRAINT`  |  为外键约束定义名称  |
+| `FOREIGN KEY` |  子表与父表关联的列  |
+| `REFERENCES`  |  子表关联的父表字段  |
+|  `ON DELETE`  | 父表删除时的处理方式 |
+|  `ON UPDATE`  | 父表更新时的处理方式 |
+
+#### 从新建表开始
+
+新建一张表（从表），并添加外键约束：
+
+```sql
+CREATE TABLE stu2(
+	id int PRIMARY KEY AUTO_INCREMENT,  # 设置id为主键，且自增
+    sname char(30) NOT NULL,
+    class_id int DEFAULT NULL,
+    # 声明外键和定义外键
+    CONSTRAINT stu2_class
+    FOREIGN KEY (class_id) REFERENCES class(id)
+    # 定义主表发生变化时，子表的动作
+    # 当班级某条数据执行删除的时候，对应班级的学生数据跟着删除
+    ON DELETE CASCADE
+)ENGINE=InnoDB DEFAULT CHARSET=utf8;   # 定义引擎和字符集
+```
+
+新键的学生表不单单只与班级表进行关联，还可以与其他的表进行关联，这样我们就要定义多个外键，为了区分，我们一般是给外键取一个别名，这个别名一定是要唯一的，一般情况下以当前表的名字-关联表的名字即可
+
+在哪个表中定义外键，哪个表就是子表，外键最好是要指向另一张表的主键，可以不指向主键，但是指向的这个字段必须有索引属性
+
+#### 基于修改表
+
+对于存在的表，如果后续我们想要添加外键约束，我们可以进行以下操作：
+
+```sql
+ALTER TABLE stu ADD
+# 声明外键和定义外键
+CONSTRAINT stu_class
+FOREIGN KEY (class_id)
+REFERENCES class(id)
+# 定义主表发生变化时，子表的动作
+# 当班级某条数据执行删除的时候，对应班级的学生数据跟着删除
+ON DELETE CASCADE;
+```
+
+***
+
+### 删除外键约束
+
+删除学生表`stu`中的外键约束：
+
+```sql
+ALTER TABLE stu DROP FOREIGN KEY stu_class;
+```
+
+***
+
+### 外键约束的关联动作
+
+#### `ON DELETE`
+
+`ON DELETE`是指在删除时的处理方式，常用的处理方式有：
+
+|         选项          |                             说明                             |
+| :-------------------: | :----------------------------------------------------------: |
+|  `ON DELETE CASCADE`  | 删除父表记录时，子表中关联这条父表记录的所有子表记录会同时删除 |
+| `ON DELETE SET NULL`  | 删除父表记录时，子表记录对应的外键变为为 NULL（子表字段要允许 NULL） |
+| `ON DELETE NO ACTION` | 不能直接删除父表记录，必须把子表外键处理（删除或修改）完才可以删除主表中对应的内容，具体来说，就是子表有数据，主表不能动 |
+| `ON DELETE RESTRICT`  |                 与`ON DELETE NO ACTION`一致                  |
+
+#### `ON UPDATE`
+
+`ON UPDATE`是指在更新时的处理方式，常用的处理方式有：
+
+|         选项          |                             说明                             |
+| :-------------------: | :----------------------------------------------------------: |
+|  `ON UPDATE CASCADE`  | 更新父表记录时，比如更改主表的主键时，子表对应的外键内容同时更新 |
+| `ON UPDATE SET NULL`  | 更新父表记录时，比如更改主表的主键时，子表对应的外键被设置为 NULL |
+| `ON UPDATE NO ACTION` | 不能直接更新父表记录，必须把子表外键处理（删除或修改）完才可以更新主表 |
+| `ON UPDATE RESTRICT`  |                 与`ON UPDATE NO ACTION`一致                  |
+
+父表更新时，子表对应的更新无非就是更新对应的外键内容，如更改主键的编号，改为6，那么对应匹配外键的编号也会变为6，这个就是`ON UPDATE CASCADE`更新的过程，关联受影响
+
+更新的应用场景相较于删除是很低的
+
+
+
 ## 事务处理
+
+事务用于保证数据的一致性，由一组相关的`dml`语句（修改、添加和删除语句）组成，该组的`dml`语句要么全部成功，要么全部失败
 
 事务可以理解为`mysql`所做的事情，通过`sql`语句进行控制
 
 有的简单事务通过一条`sql`语句就可以完成，该事务要么成功要么失败，但是有的复杂的事务，需要多条`sql`语句才能完成，如回复评论引发的其他内容的变化，这个是一条链的执行过程，如果在某个环节出现了问题，这个链就是缺损的，是不完整的。我们需要考虑，如果某个环节出现了问题，我们是否需要让这条链全部撤销掉重做？对于不同的情况，有不同的考虑方式，如回复评论引发的后续其他内容的变化，是不需要撤销重做的，我们可以不用保证每一块业务的完整性，因为后续更新的时候会保证修正操作，也就是说，某个环节的异常不会对整体产生严重影响，我们可以不需要进行撤销重做，可以进行宽松对待；对于要求比较严格的，如商城系统、库存系统等实时交易，我们必须要求该事务是一个整体，要么全部成功，要么全部失败。
 
+事务的操作语句：
+
+- 开启一个事务：`start transaction`
+- 设置保存点：`savepoint 保存点名`
+- 回退事务：`rollback to 保存点名`
+- 回退全部事务（回退到事务开始的状态）：`rollback`
+- 提交事务，所有的操作生效，不能再回退：`commit`
+
+保存点是事务中的点，用于取消部分事务，当事务结束时（即提交了事务），会自动的删除该事务中所定义的所有保存点，当执行回退事务时，通过指定的保存点可以回退到指定的点
+
+提交事务，使用`commit`语句可以进行事务的提交，当执行了该语句后，会确认事务的变化、结束事务、删除保存点、释放锁、数据生效。当使用`commit`语句结束事务后，其他会话可以查看到事务变化后的新数据
+
+注意事项：
+
+- 如果不开启事务，在默认情况下，`dml`操作是自动提交的，不能进行回滚
+- 如果开始一个事务，但是没有创建保存点，后续可以执行回滚操作，但是只能回滚到一开始开启事务的状态
+- 可以在事务没有提交之前，选择回退到哪个保存点
+- `mysql`的事务机制需要`innodb`的存储引擎
+
 ### 事务存储引擎的选择
+
+存储引擎的基本介绍：
+
+- `mysql`的表类型由存储引擎决定，主要包括`MyISAM`、`innoDB`（默认的引擎）、`	Memory`等
+
+- `mysql`数据表主要支持六种类型，分别是`CSV`、`Memory`、`ARCHIVE`、`MRG_MYISAM`、`MYISAM`、`InnoBDB`
+
+  六种类型又分为两类，一类是”事务安全型“，如`InnoBDB`，其余的都属于第二类，”非事务安全型“
+
+![image-20250503203102083](..\images\image-20250503203102083.png)
+
+常用引擎的主要区别：
+![image-20250503203231301](..\images\image-20250503203231301.png)
 
 事务的方式是受存储引擎影响的
 
@@ -1456,7 +1883,7 @@ ROLLBACK;
 每执行一个事务，我们都需要进行开启事务，如果要求全部的`sql`语句必须要全部使用事务的方式，我们可以开启全局事务，不用每一次提交后，再重新开启事务，全局事务开启的设置：
 
 ```sql
-SET autocommit = 0;
+SET autocommit = 0;   # 或者SET autocommit = off;
 INSERT INTO class(canme)VALUES('研究生');
 COMMIT;
 ```
@@ -1634,106 +2061,6 @@ UNLOCK TABLES;
 
 
 
-## 外键约束
-
-外键约束是`Mysql`提供的一个特性，`Mysql`作为一个关系型的数据库，表之间都是有关系的
-
-`	Mysql`的默认引擎`InnoDB`支持外键关联/约束
-
-对于几个表之间的关联，表之间会受影响，一张表发生变化，会影响另一张表（如班级表中的某个班级被删除了，对应学生表中对应这个被删除班级的学生是应该删除呢？还是这些学生的班级为`null`呢？这些变化都是关联的变化），这就需要各个表中的某一个字段来建立联系，对于不同表的这个字段，其字段类型要保持一致；一般情况下，与主键（主表的关联键）或者外键进行关联，关联约束的字段内部有一个检索的过程，所以这些关联字段都应该设置索引属性，我们可以不用特意的去设置，在做表关联的时候，`Mysql`会自动的给我们设置这些关联字段的索引属性
-
-### 表中定义外键约束
-
-常用的外键约束关键词：
-
-|     选项      |         说明         |
-| :-----------: | :------------------: |
-| `CONSTRAINT`  |  为外键约束定义名称  |
-| `FOREIGN KEY` |  子表与父表关联的列  |
-| `REFERENCES`  |  子表关联的父表字段  |
-|  `ON DELETE`  | 父表删除时的处理方式 |
-|  `ON UPDATE`  | 父表更新时的处理方式 |
-
-#### 从新建表开始
-
-新建一张表，并添加外键约束：
-
-```sql
-CREATE TABLE stu2(
-	id int PRIMARY KEY AUTO_INCREMENT,  # 设置id为主键，且自增
-    sname char(30) NOT NULL,
-    class_id int DEFAULT NULL,
-    # 声明外键和定义外键
-    CONSTRAINT stu2_class
-    FOREIGN KEY (class_id)
-    REFERENCES class(id)
-    # 定义主表发生变化时，子表的动作
-    # 当班级某条数据执行删除的时候，对应班级的学生数据跟着删除
-    ON DELETE CASCADE
-)ENGINE=InnoDB DEFAULT CHARSET=utf8;   # 定义引擎和字符集
-```
-
-新键的学生表不单单只与班级表进行关联，还可以与其他的表进行关联，这样我们就要定义多个外键，为了区分，我们一般是给外键取一个别名，这个别名一定是要唯一的，一般情况下以当前表的名字-关联表的名字即可
-
-在哪个表中定义外键，哪个表就是子表，外键最好是要指向另一张表的主键，可以不指向主键，但是指向的这个字段必须有索引属性
-
-#### 基于修改表
-
-对于存在的表，如果后续我们想要添加外键约束，我们可以进行以下操作：
-
-```sql
-ALTER TABLE stu ADD
-# 声明外键和定义外键
-CONSTRAINT stu_class
-FOREIGN KEY (class_id)
-REFERENCES class(id)
-# 定义主表发生变化时，子表的动作
-# 当班级某条数据执行删除的时候，对应班级的学生数据跟着删除
-ON DELETE CASCADE;
-```
-
-***
-
-### 删除外键约束
-
-删除学生表`stu`中的外键约束：
-
-```sql
-ALTER TABLE stu DROP FOREIGN KEY stu_class;
-```
-
-***
-
-### 外键约束的关联动作
-
-#### `ON DELETE`
-
-`ON DELETE`是指在删除时的处理方式，常用的处理方式有：
-
-|         选项          |                             说明                             |
-| :-------------------: | :----------------------------------------------------------: |
-|  `ON DELETE CASCADE`  | 删除父表记录时，子表中关联这条父表记录的所有子表记录会同时删除 |
-| `ON DELETE SET NULL`  | 删除父表记录时，子表记录对应的外键变为为 NULL（子表字段要允许 NULL） |
-| `ON DELETE NO ACTION` | 不能直接删除父表记录，必须把子表外键处理（删除或修改）完才可以删除主表中对应的内容，具体来说，就是子表有数据，主表不能动 |
-| `ON DELETE RESTRICT`  |                 与`ON DELETE NO ACTION`一致                  |
-
-#### `ON UPDATE`
-
-`ON UPDATE`是指在更新时的处理方式，常用的处理方式有：
-
-|         选项          |                             说明                             |
-| :-------------------: | :----------------------------------------------------------: |
-|  `ON UPDATE CASCADE`  | 更新父表记录时，比如更改主表的主键时，子表对应的外键内容同时更新 |
-| `ON UPDATE SET NULL`  | 更新父表记录时，比如更改主表的主键时，子表对应的外键被设置为 NULL |
-| `ON UPDATE NO ACTION` | 不能直接更新父表记录，必须把子表外键处理（删除或修改）完才可以更新主表 |
-| `ON UPDATE RESTRICT`  |                 与`ON UPDATE NO ACTION`一致                  |
-
-父表更新时，子表对应的更新无非就是更新对应的外键内容，如更改主键的编号，改为6，那么对应匹配外键的编号也会变为6，这个就是`ON UPDATE CASCADE`更新的过程，关联受影响
-
-更新的应用场景相较于删除是很低的
-
-
-
 ## 索引优化
 
 ### 性能优化思路
@@ -1820,27 +2147,47 @@ ALTER TABLE stu DROP FOREIGN KEY stu_class;
 
 合适的索引优化可以大幅度的提高`Mysql`的检索速度，索引就像书中的目录一样让我们更快的寻找到自己想要的数据，但是我们也不能过多的创建目录页（索引），原因是如果某一篇文章删除或修改将发变所有页码的顺序，就需要重新创建目录
 
-索引优化是针对于海量数据的数据库，优化其数据的查找速度，增强其性能，减少开销
+索引优化是针对于海量数据的数据库，优化其数据的查找速度，增强其性能，减少开销（注意：创建索引后，只对创建了索引的列有提高查询速度的效果，如果换一个字段进行条件查询，是没有效果的）
+
+索引机制：
+
+![image-20250503192943947](..\images\image-20250503192943947.png)
+
+> 我们将`id`设置了索引后，我们去查找`id`为9的具体内容，我们只需要查找4次就可以找到，比没有设置索引快很多
 
 索引的弊端：
 
-- 创建索引会使查询操作变得更加快速，但是会降低增加、删除、更新操作的速度，因为执行这些操作的同时会对索引文件进行重新排序或更新
-- 创建过多列的索引会大大增加磁盘空间开销
+- 创建索引会使查询操作变得更加快速，但是会降低增加、删除、更新操作的速度，因为执行这些操作的同时会对索引文件进行重新排序或更新（二叉树的数据结构会改变，对修改、删除等操作的速度有影响）
+- 创建过多列的索引会大大增加磁盘空间开销（索引本身也会占据空间）
 - 不要盲目的创建索引，只为查询操作频繁的列创建索引
+
+索引的使用经验：
+
+- 较频繁的作为查询条件字符的列应该创建索引
+- 唯一性太差的字段不适合单独创建索引，即使使用频繁作为查询条件
+- 更新非常频繁的字段不适合创建索引
+- 不会出现在`WHERE`子句中的字段不应该创建索引
 
 #### 索引类型
 
-|          索引          |                 说明                 |
-| :--------------------: | :----------------------------------: |
-|   `UNIQUE` 唯一索引    |  不可以出现相同的值，可以有 NULL 值  |
-|    `INDEX` 普通索引    |        允许出现相同的索引内容        |
-| `PRIMARY KEY` 主键索引 | 不允许出现相同的值，且不能为 NULL 值 |
+|          索引          |                             说明                             |
+| :--------------------: | :----------------------------------------------------------: |
+|   `UNIQUE` 唯一索引    |             不可以出现相同的值，可以有 `NULL` 值             |
+|    `INDEX` 普通索引    |                    允许出现相同的索引内容                    |
+| `PRIMARY KEY` 主键索引 |            不允许出现相同的值，且不能为` NULL` 值            |
+|  `FULLTEXT` 全文索引   | 适用于`MyISAM`，一般用于搜索文章中的关键字，`FULLTEXT`的全文索引方式用的比较少，在开发中一般使用`Solr`和`ElasticSearch` |
+
+选择规则：如果某列的值是不会重复的，则优先考虑使用`unique`索引，否则使用普通索引
 
 #### 索引维护
 
 - 设置索引：`ALTER TABLE stu ADD INDEX sname_index(sname)`
 
   为 `stu` 学生表中的 `sname` 字段设置索引，`sname_index`为设置索引的别名
+
+  我们也可以在创建字段的时候添加索引：`CREATE INDEX sname_index ON stu (sname)`
+
+  设置主键索引：`ALTER TABLE stu ADD PRIMARY KEY (id)`
 
 - 删除索引：`ALTER TABLE stu DROP INDEX sname_index`
 
@@ -1851,7 +2198,11 @@ ALTER TABLE stu DROP FOREIGN KEY stu_class;
   > ALTER TABLE stu DROP PRIMARY KEY
   > ```
 
-- 查看索引：`show index from stu;`
+- 查看索引：
+
+  - 方式一：`SHOW INDEX FROM stu;`
+  - 方式二：`SHOW INDEXES FROM stu;`
+  - 方式三：`SHOW KEYS FROM stu;`
 
 ***
 
@@ -2085,6 +2436,157 @@ service mysqld restart
 查看开启慢查询状态：`show variables like 'slow_query%';`
 
 查看慢查询的设置时间：`show variables like "long_query_time";`
+
+
+
+## 视图
+
+视图是一个虚拟表，其内容由查询定义，与真实的表一样，视图包含列，其数据来自对应的真实表（基表）
+
+视图的基本原理：
+
+![image-20250503204432956](..\images\image-20250503204432956.png)
+
+视图的基本使用：
+
+- 创建视图：`create view 视图名 as select语句`
+
+  ```mysql
+  CREATE VIEW emp_view AS SELECT empno, ename, job, deptno FROM emp;
+  ```
+
+  `empno, ename, job, deptno`为获取基表中对应的字段
+
+  使用多张表来创建一个视图：
+
+  ```mysql
+  -- 先使用三表联合查询，得到结果
+  -- 再将得到的结果，构建视图
+  CREATE VIEW emp_view AS
+  	SELECT empno, ename, dname, grade FROM emp, dept, salgrade
+  	WHERE emp.deptno = dept.deptno 
+  	AND (sal BETWEEN losal AND hisal)
+  ```
+
+- 修改视图：`alter view 视图名 as select语句`
+
+- 查看视图的结构：`DESC 视图名`
+
+- 查看视图的内容：`SELECT * FROM 视图名`
+
+- 显示使用哪个指令来创建视图的：`show create view 视图名`
+
+- 删除视图：`drop view 视图名`
+
+注意事项：
+
+- 创建视图后，到数据库中查看，对应视图只有一个视图结构的文件（形式：视图名.frm）
+- 视图的数据变化会影响到基表，同理，基表的数据变化也会影响到视图
+- 视图中可以在使用视图，数据仍然来自基表
+
+视图的最佳实践：
+
+- 安全：一些数据表有着重要的信息，有些字段是保密的，不能让用户直接看到，这时可以创建一个视图，在视图中只保留一部分的字段。这样，用户就可以查询到自己需要的字段，同时，不能看到保密的字段
+- 性能：关系数据库的数据常常会分表存储，使用外键建立这些表的连接，这时数据库查询通常会用到`JOIN`连接。这样做不但麻烦，效率也相对低，如果建立一个视图，将相关的表和字段组合在一起，可以避免使用`JOIN`查询数据
+- 灵活：如果系统中有一种旧表，这张表由于设计的问题，即将被废弃。然而，很多应用都是基于这张表，不易修改。这时可以建立一张视图，视图中的数据直接映射到这张新建的表，这样，就可以少做很多改动，也达到了升级数据表的目的
+
+
+
+## `Mysql`管理
+
+当我们做项目开发时，可以根据不同的开发人员，赋给他们相应的`Mysql`操作权限，因此，我们需要进行用户管理和权限管理。`Mysql`数据库的管理人员（`root`），根据需要创建不同的用户，赋给相应的权限，供人员使用
+
+***
+
+### 用户管理
+
+`mysql`中的用户，都存储在系统数据库`mysql`中的`user`表中，该表中重要的字段说明：
+
+- `host`：允许登录的”位置“，`localhost`表示该用户只允许本机登录，也可以指定`ip`地址，如`192.168.1.96`
+- `user`：用户名
+- `authentication_string`：密码，是通过`mysql`的`password()`函数加密后的密码
+
+#### 创建用户
+
+创建用户的基本语法：`create user '用户名'@'允许登录的位置' identified by '密码'`
+
+创建用户，同时指定密码
+
+不同的数据库用户，登录到`DBMS`后，根据相应的权限，可以操作的数据库和数据对象（表，视图，触发器）都是不同的
+
+在创建用户时，如果不指定`Host`（允许登录的位置），则为`%`，表示所有的`IP`都有连接的权限
+
+可以指定具体的`IP`地址：`create user 'xxx'@'192.168.1.%'`，表示用户在`192.168.1.*`的`ip`段中，可以连接到该`mysql`
+
+#### 登录用户
+
+创建完用户之后，我们可以将其用户名和密码进行数据库的连接登录，登录成功后就可以看到对应数据库的内容了
+
+#### 用户修改密码
+
+- 修改自己的密码：`set password = password('新密码');`
+- 修改他人的密码（需要有修改用户密码的权限）`set password for '用户名'@'登录位置' = password('新密码');`
+
+#### 删除用户
+
+删除用户的基本语法：`drop user '用户名'@'允许登录的位置';`
+
+在删除用户时，如果`Host`不是`%`，需要明确指定`'用户名'@'允许登录的位置'`
+
+***
+
+### 权限管理
+
+我们可以通过`root`来给其他用户赋予相应的权限，从而进行权限的管理，`mysql`中常见的权限有：
+
+|           权限            |        权限级别        |                           权限说明                           |
+| :-----------------------: | :--------------------: | :----------------------------------------------------------: |
+|         `CREATE`          |    数据库、表或索引    |                   创建数据库、表或索引权限                   |
+|          `DROP`           |       数据库或表       |                      删除数据库或表权限                      |
+|      `GRANT OPTION`       | 数据库、表或保存的程序 |                         赋予权限选项                         |
+|       `REFERENCES`        |       数据库或表       |                           未被实施                           |
+|          `ALTER`          |           表           |                 更改表，比如添加字段、索引等                 |
+|         `DELETE`          |           表           |                         删除数据权限                         |
+|          `INDEX`          |           表           |                           索引权限                           |
+|         `INSERT`          |           表           |                           插入权限                           |
+|         `SELECT`          |           表           |                           查询权限                           |
+|         `UPDATE`          |           表           |                           更新权限                           |
+|       `CREATE VIEW`       |          视图          |                         创建视图权限                         |
+|        `SHOW VIEW`        |          视图          |                         查看视图权限                         |
+|      `ALTER ROUTINE`      |        存储过程        |                       更改存储过程权限                       |
+|     `CREATE ROUTINE`      |        存储过程        |                       创建存储过程权限                       |
+|         `EXECUTE`         |        存储过程        |                       执行存储过程权限                       |
+|          `FILE`           | 服务器主机上的文件访问 |                         文件访问权限                         |
+| `CREATE TEMPORARY TABLES` |       服务器管理       |                        创建临时表权限                        |
+|       `LOCK TABLES`       |       服务器管理       |                           锁表权限                           |
+|       `CREATE USER`       |       服务器管理       |                         创建用户权限                         |
+|         `RELOAD`          |       服务器管理       | 执行`flush-hosts`, `flush-logs`, `flush-privileges`, `flush-status`, `flush-tables`, `flush-threads`, `refresh`, `reload`等命令的权限 |
+|         `PROCESS`         |       服务器管理       |                         查看进程权限                         |
+|   `REPLICATION CLIENT`    |       服务器管理       |                           复制权限                           |
+|    `REPLICATION SLAVE`    |       服务器管理       |                           复制权限                           |
+|     `SHOW DATABASES`      |       服务器管理       |                        查看数据库权限                        |
+|        `SHUTDOWN`         |       服务器管理       |                        关闭数据库权限                        |
+|          `SUPER`          |       服务器管理       |                       执行kill线程权限                       |
+
+#### 给用户授权
+
+基本语法：`grant 权限列表 on 库.对象名 to '用户名'@'登录位置'`
+
+> 如果是创建用户的时候，还需要加上`identified by '密码'`
+>
+> 权限列表，多个权限用逗号分开，如：`select, delete, create on ...`
+>
+> 将所有的权限赋给用户：`grant all on ...`
+>
+> 库.对象名可以使用`*.*`表示本系统中的所有数据库的所有对象（表、视图、存储过程）
+>
+> `库.*`表示某个数据库中的所有数据对象（表、视图、存储过程）
+
+如果权限没有生效，可以执行权限生效指令：`FLUSH PRIVILEGES;`
+
+#### 回收用户权限
+
+基本语法：`revoke 权限列表 on 库.对象名 from '用户名'@'登录位置'`
 
 
 
