@@ -305,7 +305,7 @@
 
 小案例：对于查询`stu`表的所有数据，如果有班级就显示班级的编号，如果班级字段的内容为`null`，就显示班级未分配：
 
-```mysql
+```sql
 -- 方式一
 SELECT sname, if(class_id, class_id, '未分配')，age from stu;
 -- 方式二
@@ -326,7 +326,7 @@ SELECT sname, ifnull(class_id, '未分配'), age from stu;
 
 小案例：对于班级进行升序排序，如果班级相同则通过年龄进行升序排序：
 
-```mysql
+```sql
 SELECT * FROM stu order by class_id asc, age asc;
 ```
 
@@ -453,31 +453,31 @@ SELECT * FROM stu order by class_id asc, age asc;
 
 1. 先创建一张临时表`temp`，该表的表结构和需要去重的表`table`一样
 
-   ```mysql
+   ```sql
    CREATE TABLE temp LIKE table;
    ```
 
 2. 通过`DISTINCT`关键字处理后，从表`table`中复制记录到`temp`表中
 
-   ```mysql
+   ```sql
    INSERT INTO temp SELECT DISTINCT * FROM table;
    ```
 
 3. 清除掉`table`表的记录
 
-   ```mysql
+   ```sql
    DELETE FROM table;
    ```
 
 4. 把`temp`临时表的记录复制到`table`
 
-   ```mysql
+   ```sql
    INSERT INTO table SELECT DISTINCT * FROM temp;
    ```
 
 5. 删除掉临时表`temp`
 
-   ```mysql
+   ```sql
    DROP TABLE temp;
    ```
 
@@ -574,7 +574,7 @@ SELECT * FROM stu order by class_id asc, age asc;
 >
 > 越往下范围越大，所占用的磁盘空间就越大，实际中选则合适大小的即可，如果选则的类型占用磁盘过大，数据在检索的时候时间就越长，效率就低
 
-```mysql
+```sql
 -- 为class数据表中添加status字段，字段是数值类型的，具体为TINYINT
 alter table class add status TINYINT;
 
@@ -586,7 +586,7 @@ alter table class add status TINYINT UNSIGNED;
 
 数值类型后面跟着的(n)表示设置我们数值的显示位数，并不是说只能输入n个数字字符
 
-```mysql
+```sql
 alter table class add state int(5) ZEROFILL;
 ```
 
@@ -602,7 +602,7 @@ alter table class add state int(5) ZEROFILL;
 - 位类型中的`M`指定位数，默认值为1，范围为1-64，如果指定为64位，就相当于8个字节，就等价于`bigint()`类型，但是数据的显示还是按照位的方式进行显示 
 - 位类型的使用情况不多，了解即可
 
-```mysql
+```sql
 CREATE TABLE t (num BIT(8));  -- 给定8位
 INSERT INTO t VALUES(3);  -- 插入的值超过255，会抛出异常 255对应的二进制是11111111
 SELECT * FROM t;  
@@ -631,7 +631,7 @@ SELECT * FROM t WHERE num = 3;
 - `DOUBLE`：一共16位，`double`数据类型的精度为15-16位
 - 对于货币之类的数据，推荐使用`DECIMAL`数据类型，通过设定`M`和`D`可以精准的显示，不损耗，如果`D`为0，则值没有小数点或分数部分，`M`最大值为65，`D`最大值为30，如果`D`被省略，默认值为0，如果`M`被省略，默认值为10
 
-```mysql
+```sql
 alter table class add a FLOAT(10,2);
 update class set a = 12345678.66 where id=1;   -- 出现损耗
 alter table class add b DECIMAL(10,2);
@@ -644,13 +644,13 @@ update class set b = 12345678.66 where id=1;   -- 不会出现损耗
 
 对于有一些数据，有多个值，但是每次我们在设置的时候，只设置一个值，类似单选框的原理，这种数据类型，我们就可以使用`EMUM`枚举类型，如对于性别类型的数据，通常有：男、女类型，这种情况，就可以设置为枚举类型，我们将原先班级表的性别字段的类型修改为枚举类型：
 
-```mysql
+```sql
 ALTER TABLE stu MODIFY sex ENUM('男','女') DEFAULT NULL;
 ```
 
 系统在默认的情况下会将1当作男；将2当作女，所有插入一条数据时，可以有以下的两种方式：
 
-```mysql
+```sql
 INSERT INTO stu (sname, class_id, sex) VALUE('小明',1,'男');
 INSERT INTO stu (sname, class_id, sex) VALUE('小明',1,1);
 
@@ -664,7 +664,7 @@ SELECT * from stu WHERE sex = 2;
 
 对应枚举类型是一个单选的类型，`SET`类似是一个多选的类型，字段内容可以选择`SET`类型设定种的一个或多个，对应`SET`中多选内容的个数，在`mysql`中规定了最多添加64个
 
-```mysql
+```sql
 ALTER TABLE stu ADD flag SET('推荐','热门','图文');
 -- 添加数据
 INSERT INTI stu (sname, flag) VALUES('小明','推荐,图文')
@@ -680,7 +680,7 @@ SELECT * FROM stu WHERE flag LIKE '%推荐%';
 
 我们可以通过二进制的方式进行`SET`类型的模糊匹配：
 
-```mysql
+```sql
 -- 匹配flag字段内容包含推荐的数据条目
 SELECT * FROM stu WHERE flag & 1;
 
@@ -844,7 +844,7 @@ SELECT * FROM stu WHERE flag & 6;
 
 > *表示对所有的记录进行统计，`COUNT(*)`表示满足条件的记录的行数；`COUNT(列)`表示统计某列满足条件的有多少个，但是会排除为`null`的
 >
-> ```mysql
+> ```sql
 > CREATE TABLE t (name VARCHAR(20));
 > INSERT INTO t VALUES('jlc');
 > INSERT INTO t VALUES('tom');
@@ -1036,7 +1036,7 @@ GROUP BY s HAVING count(*)>=2;
 
 小案例：如果字段内容的长度大于8个，我们在8位之后使用`...`进行连接：
 
-```mysql
+```sql
 select if (char_length(cname)>8,concat(left(cname,8),'...'),cname) as cname from class;
 ```
 
@@ -1358,7 +1358,7 @@ SELECT s.sname,c.cname FROM stu as s,class as c WHERE s.class_id = c.id;
 - 单行子查询：返回一行数据的子查询语句（子查询返回的结果只有一行）
 - 多行子查询：返回多行数据的子查询（子查询返回的结果有多行），使用关键字`in`
 
-```mysql
+```sql
 -- 显示与jlc同一个班级的学生  使用单行子查询来解决
 -- 思路：1.先查询到jlc的班级 2.将步骤1的语句当作一个子查询来使用
 SELECT * FROM stu WHRER class_id = {
@@ -1368,7 +1368,7 @@ SELECT * FROM stu WHRER class_id = {
 
 可以将子查询当做一张临时表，可以解决很多复杂的查询，但是效率比较慢
 
-```mysql
+```sql
 SELECT goods_id, ecs_goods.cat_id, goods_name, shop_price
 	FROM {
 		SELECT cat_id, MAX(shop_price) AS max_price
@@ -1381,7 +1381,7 @@ SELECT goods_id, ecs_goods.cat_id, goods_name, shop_price
 
 ##### `all`和`any`修饰符
 
-```mysql
+```sql
 -- 显示工资比30号部门的所有员工工资都高的员工姓名、工资和部门号
 SELECT ename, sal, deptno
 	FROM emp
@@ -1401,7 +1401,7 @@ SELECT ename, sal, deptno
 
 多列子查询是指查询返回多个列数据的子查询语句（子查询返回的结果是多列）
 
-```mysql
+```sql
 -- 查询与jlc数学、英语和语文成绩完全相同的学生
 SELECT * FROM stu
 	WHERE (math, english, chinese) = (
@@ -2451,7 +2451,7 @@ service mysqld restart
 
 - 创建视图：`create view 视图名 as select语句`
 
-  ```mysql
+  ```sql
   CREATE VIEW emp_view AS SELECT empno, ename, job, deptno FROM emp;
   ```
 
@@ -2459,7 +2459,7 @@ service mysqld restart
 
   使用多张表来创建一个视图：
 
-  ```mysql
+  ```sql
   -- 先使用三表联合查询，得到结果
   -- 再将得到的结果，构建视图
   CREATE VIEW emp_view AS
@@ -2492,7 +2492,7 @@ service mysqld restart
 
 
 
-## `Mysql`管理
+## `MySQL`管理
 
 当我们做项目开发时，可以根据不同的开发人员，赋给他们相应的`Mysql`操作权限，因此，我们需要进行用户管理和权限管理。`Mysql`数据库的管理人员（`root`），根据需要创建不同的用户，赋给相应的权限，供人员使用
 
