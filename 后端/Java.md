@@ -1741,13 +1741,13 @@ class Cat {
 >   public double f1() {
 >       return 1.1;
 >   }
->                                                                         
+>                                                                             
 >   // 兼容（可以自动转换），编译通过
 >   public double f1() {
 >       int n = 1;
 >       return n;
 >   }
->                                                                         
+>                                                                             
 >   // 类型不一致，且不能自动转换，编译不通过
 >   public int f1() {
 >       return 1.1;
@@ -12441,4 +12441,690 @@ public class JavaMysql {
     }
 }
 ```
+
+***
+
+### `JDBC`
+
+`JDBC`为访问不同的数据库提供了统一的接口，为使用者屏蔽了细节问题。`Java`程序员使用`JDBC`，可以连接任何提供了`JDBC`驱动程序的数据库系统，从而完成对数据库的各种操作
+
+`JDBC`的基本原理图
+
+![image-20250504101850942](..\images\image-20250504101850942.png)
+
+> 这里的接口就是`JDBC`，是一组规范，用于数据库操作的接口`API`,`JAVA`程序员只需要面向这套接口编程即可，不同的数据库厂商，需要针对这套接口，提供不同的实现
+>
+> 相关的类和接口在`java.sql`和`javax.sql`包中
+
+`JDBC`程序编写的步骤：
+
+1. 注册驱动--加载`Driver`类
+2. 获取连接--得到`Connection`（客户端（`Java`程序）到数据库的连接）
+3. 执行增删改查--发送`SQL`命令让`mysql`执行
+4. 释放资源--关闭相关的连接
+
+```java
+// 一个简单的JDBC程序
+public class Jdbc01 {
+    public static void main(String[] args) {
+        // 前置工作：在项目下创建一个文件夹，如libs，将mysql.jar拷贝到目录下，点击右键，选择add as library，加入到文件中
+        // 1. 注册驱动
+        Driver driver = new Driver();  // 创建driver对象
+        // 2. 得到连接
+        // jdbc:mysql:// 表示协议，是系统规定好的，通过jdbc的方式连接mysql
+        // localhost表示主机，也可以是IP地址  3306表示mysql监听的端口  
+        // my_mysql表示连接到mysql的哪个数据库
+        String url = "jdbc:mysql://localhost:3306/my_mysql";
+        // 将用户名和密码放入到Properties对象中
+        Properties properties = new Properties();
+        // user和password是规定好的，后面的值根据实际的情况写入
+        properties.setProperty("user", "root");  // 指定用户名为root
+        properties.setProperty("password", "abc");  // 指定用户名为abc
+        // 得到连接
+        Connection connect = driver.connect(url, properties);
+        // 3. 执行sql语句
+        String sql = "insert into stu value(1, 'jlc', '男', '25')";
+        // statement用于执行静态的SQL语句并返回其生成的结果对象
+        Statement statement = connect.createStatement();
+        int rows = statement.executeUpdate(sql);  // 如果是dml语句，返回的是受到影响的行数
+        System.out.println(rows > 0 ? "成功" : "失败");
+        // 4. 关闭连接资源
+        statement.close();
+        connect.close();
+    }
+}
+```
+
+#### 连接数据库的方式
+
+`Java`程序获取数据库连接的五种方式：
+
+1. 先`new`一个`Driver`驱动对象，再通过`driver.connect`方法将`url`和用户信息传入，进行连接
+
+   ```java
+   Driver driver = new com.mysql.jdbc.Driver();  // 创建driver对象
+   String url = "jdbc:mysql://localhost:3306/my_mysql";
+   Properties properties = new Properties();
+   properties.setProperty("user", "root");
+   properties.setProperty("password", "abc");
+   Connection connect = driver.connect(url, properties);
+   ```
+
+   该方式直接`new`了一个`driver`对象，这里的`Driver`是第三方的，且是一个静态加载，灵活性不够强，依赖性比较高
+
+2. 通过反射机制，进行动态的加载，可以将信息放入到配置文件中，更加灵活，减少依赖性，更利于项目的控制
+
+   ```java
+   Class<?> aClass = Class.forName("com.mysql.jdbc.Driver");
+   Driver driver = (Driver)aClass.newInstance();
+   String url = "jdbc:mysql://localhost:3306/my_mysql";
+   Properties properties = new Properties();
+   properties.setProperty("user", "root");
+   properties.setProperty("password", "abc");
+   Connection connect = driver.connect(url, properties);
+   ```
+
+3. 使用`DriverManager`（用于管理一组`JDBC`驱动程序的基本服务）来替换`Driver`进行统一管理
+
+   ```java
+   Class<?> aClass = Class.forName("com.mysql.jdbc.Driver");
+   Driver driver = (Driver)aClass.newInstance();
+   String url = "jdbc:mysql://localhost:3306/my_mysql";
+   String user = "root";
+   String password = "abc";
+   // 注册Driver驱动
+   DriverManager.registerDriver(driver);
+   Connection connection = DriverManager.getConnection(url, user, password);
+   ```
+
+4. 使用`Class.forName`自动完成注册驱动，简化代码
+
+   ```java
+   Class.forName("com.mysql.jdbc.Driver");  // 在加载Driver类时，底层的静态代码块自动完成注册
+   String url = "jdbc:mysql://localhost:3306/my_mysql";
+   String user = "root";
+   String password = "abc";
+   Connection connection = DriverManager.getConnection(url, user, password);
+   ```
+
+   `mysql`驱动在5.1.6以后就无需使用`Class.forName("com.mysql.jdbc.Driver"); `，也可以完成连接
+
+   从`jdk1.5`以后使用了`jdbc4`，不再需要显示调用`Class.forName()`注册驱动而是自动调用驱动`jar`包下`META-INF\services\java.sql.Driver`文本中的类名称去注册
+
+   但是还是建议写上`Class.forName("com.mysql.jdbc.Driver");`，因为更加明确
+
+5. 在方式4的基础上，使用配置文件，连接数据库更加灵活（在开发的时候使用的最多）
+
+   ```java
+   // 通过Properties对象获取配置文件的信息
+   Properties properties = new Properties();
+   properties.load(new FileInputStream("src\\jdbc.properties"));
+   String user = properties.getProperty("user");
+   String password = properties.getProperty("password");
+   String url = properties.getProperty("url");
+   String driver = properties.getProperty("driver");
+   
+   Class.forName(driver);
+   Connection connection = DriverManager.getConnection(url, user, password);
+   ```
+
+   ```properties
+   # jdbc.properties 配置文件
+   user=root
+   password=abc
+   url=jdbc:mysql://localhost:3306/my_mysql
+   driver=com.mysql.jdbc.Driver
+   ```
+
+#### `ResultSet`
+
+`ResultSet`表示数据库结果集的数据表，通常通过执行查询数据库的语句生成
+
+`ResultSet`对象保持一个光标指向其当前的数据行。最初，光标位于第一行之前，`next`方法将光标移动到下一行，并且由于在`ResultSet`对象中没有更多行时返回`false`，因此可以在`while`循环中使用循环来遍历结果集
+
+使用演示：
+
+```java
+public class ResultSet01 {
+    public static void main(String[] args) throws Exception {
+        Properties properties = new Properties();
+        properties.load(new FileInputStream("src\\jdbc.properties"));
+        String user = properties.getProperty("user");
+        String password = properties.getProperty("password");
+        String url = properties.getProperty("url");
+        String driver = properties.getProperty("driver");
+		// 注册驱动
+        Class.forName(driver);
+        // 得到连接
+        Connection connection = DriverManager.getConnection(url, user, password);
+        // 得到Statement
+        Statement statement = connection.createStatement();
+        // 组织SQL语句
+        String sql = "select id, name, sex, age from stu";
+        // 执行给定的SQL语句，该语句返回单个的ResultSet对象
+        ResultSet resultSet = statement.executeQuery(sql);
+        // 使用while循环取出数据
+        while(resultSet.next()) {  // 让光标向后移动，如果没有更多行，则返回false
+            int id = resultSet.getInt(1);   // 获取该行的第一列
+            // 也可以通过对应的列名获取 int id = resultSet.getInt("id");  
+            String name = resultSet.getString(2);  // 获取该行的第二列
+            String sex = resultSet.getString(3);
+            int age = resultSet.getInt(4);
+            System.out.println(id + "\t" + name + "\t" + sex + "\t" + age);
+        }
+        // 关闭连接
+        resultSet.close();
+        statement.close();
+        connection.close();
+    }
+}
+```
+
+底层数据存储位置示意图：
+
+![image-20250504132649886](..\images\image-20250504132649886.png)
+
+#### 执行`SQL`语句
+
+在连接建立后，需要对数据库进行访问，执行`SQL`语句，可以通过以下的方式：
+
+- `Statement`：`Statement`是一个接口，其对象用于执行静态的`SQL`语句，并返回其生成的结果的对象
+
+  存在`SQL`注入的问题，在实际的开发中使用的很少
+
+  `Statement`对象执行`SQL`语句，存在`SQL`注入的风险（`SQL`注入是利用某些系统没有对用户输入的数据进行充分的检查，而在用户输入数据中注入非法的`SQL`语句段或命令，恶意攻击数据库）
+
+  ```sql
+  # 非法的SQL语句
+  SELECT * FROM admin WHERE NAME = '1' OR' AND pwd = 'OR '1'='1'
+  # 这时就会将用户信息查询出来，但是显然是非法的，通过OR，只要一个条件成立，就将用户信息数据返回
+  ```
+
+  要防范`SQL`注入的问题，只需要使用`PreparedStatement`（从`Statement`拓展而来）取代`Statement`即可
+
+- `PreparedStatement`：是`Statement`接口的子接口，可以使用`Statement`的方法，同时特有的预处理方式，可以有效的解决`SQL`注入风险的问题
+
+  ![image-20250504135525004](..\images\image-20250504135525004.png)
+
+  预处理方式，`PreparedStatement`执行的`SQL`语句中的参数用`(?)`来表示
+
+  ```java
+  String sql = "SELECT COUNT(*) FROM admin WHERE username = ? AND PASSWORD = ?";
+  ```
+
+  调用`PreparedStatement`对象的`setXxx()`方法来设置这些参数。`setXxx()`方法有两个参数，第一个参数是要设置`SQL`语句中的参数索引（从1开始），第二个参数是设置的`SQL`语句中的参数值
+
+  预处理的好处：
+
+  1. 不再使用+来拼接`sql`语句，减少语法错误
+  2. 有效的解决了`sql`注入问题
+  3. 大大减少了编译次数，效率提高
+
+  调用`executeQuery()`，返回`ResultSet`对象：
+
+  ```java
+  // 组织sql语句   语句中的?就相当于占位符
+  String sql = "SELECT name, pwd FROM admin WHERE name = ? AND pwd = ?";
+  PreparedStatement preparedStatement = connection.preparedStatement(sql);
+  // 给sql语句中的?赋值
+  preparedStatement.setString(1, "root");
+  preparedStatement.setString(2, "abc");
+  // 执行select语句使用executeQuery方法
+  // 这里执行的时候，不能在写sql了，因为原先的sql已经被重置过了
+  ResultSet resultSet = preparedStatement.executeQuery();  
+  ```
+
+  调用`executeUpdate()`，执行更新，包括增、删、修改：
+
+  ```java
+  // 添加记录
+  String sql = "insert into admin values(?, ?)";
+  PreparedStatement preparedStatement = connection.preparedStatement(sql);
+  preparedStatement.setString(1, "jlc");
+  preparedStatement.setString(2, "123");
+  int rows = preparedStatement.executeUpdate();  // 如果是dml语句，返回的是受到影响的行数
+  System.out.println(rows > 0 ? "成功" : "失败");
+  
+  // 修改记录
+  String sql = "update admin set pwd = ? where name = ?";
+  PreparedStatement preparedStatement = connection.preparedStatement(sql);
+  preparedStatement.setString(1, "789");
+  preparedStatement.setString(2, "jlc");
+  int rows = preparedStatement.executeUpdate();  // 如果是dml语句，返回的是受到影响的行数
+  System.out.println(rows > 0 ? "成功" : "失败");
+  
+  // 删除记录
+  String sql = "delete from admin where name = ?";
+  PreparedStatement preparedStatement = connection.preparedStatement(sql);
+  preparedStatement.setString(1, "jlc");
+  int rows = preparedStatement.executeUpdate();  // 如果是dml语句，返回的是受到影响的行数
+  System.out.println(rows > 0 ? "成功" : "失败");
+  ```
+
+- `CallableStatement`：主要用于存储过程
+
+#### `JDBC`常用`API`小结
+
+![image-20250504142409023](..\images\image-20250504142409023.png)
+
+![image-20250504142443782](..\images\image-20250504142443782.png)
+
+***
+
+### 封装`JDBCUtils`类
+
+在`JDBC`操作中，获取连接和释放资源是经常被使用到的，因此，我们可以将其封装成`JDBC`连接的工具类`JDBCUtils`
+
+![image-20250504143605556](..\images\image-20250504143605556.png)
+
+封装代码实现：
+
+```java
+package com.test.jdbc.utils;
+
+public class JDBCUtils {
+    // 定义相关的属性（4个），因为只需要一份，我们使用静态的即可
+    private static String user;  // 用户名
+    private static String password;  // 密码
+    private static String url;  // url
+    private static String driver;  // 驱动名
+    // 在static代码块中初始化
+    static {
+        try {
+            Properties properties = new Properties();
+            properties.load(new FileInputStream("src\\mysql.properties"));
+            // 获取相关的属性值
+            user =  properties.getProperty("user");
+            password =  properties.getProperty("password");
+            url =  properties.getProperty("url");
+            driver =  properties.getProperty("driver");
+        } catch (IOException e) {
+            // 在实际开发中，我们可以这样处理，将编译异常转换成运行异常进行抛出
+            // 调用者可以选择捕获该异常，或者选择默认处理该异常，比较方便
+            throw new RuntimeException(e);
+        }
+    }
+    // 连接数据库，返回Connection
+    public static Connection getConnection() {
+        try {
+            return DriverManager.getConnection(url, user, password);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    // 关闭相关资源
+    /*
+    	1. ResultSet 结果集
+    	2. Statement 或者 PreparedStatement
+    	3. Connection
+    	4. 如果需要关闭资源，就传入对象，否则传入null
+    */
+    public static void close(ResultSet set, Statement statement, Connection connection){
+        try {
+            if(set != null) {
+                set.close();
+            }
+            if(statement != null) {
+                statement.close();
+            }
+            if(connection != null) {
+                connection.close();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+}
+```
+
+封装代码的使用：
+
+```java
+public class JDBCUtils_Use {
+    public void testDML {  // insert, update, delete
+        // 得到连接
+        Connect connection = null;
+        // 组织sql语句
+        String sql = "insert into admin values(?, ?)";
+        PreparedStatement preparedStatement = null;
+        try {
+            connection = JDBCUtils.getConnection();
+			preparedStatement = connection.preparedStatement(sql);
+            preparedStatement.setString(1, "jlc");
+            preparedStatement.setString(2, "123");
+            int rows = preparedStatement.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            // 关闭资源
+            JDBCUtils.close(null, preparedStatement, connection);
+        }
+    }
+    
+    public void testSelect() {
+        // 得到连接
+        Connect connection = null;
+        // 组织sql语句
+        String sql = "select * from admin";
+        PreparedStatement preparedStatement = null;
+        ResultSet set = null;
+        try {
+            connection = JDBCUtils.getConnection();
+			preparedStatement = connection.preparedStatement(sql);
+            set = preparedStatement.executeQuery();
+            while(set.next()) {
+                String user = set.getString("user");
+                String pwd = set.getString("pwd");
+                System.out.println(user + "\t" + pwd);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            // 关闭资源
+            JDBCUtils.close(set, preparedStatement, connection);
+        }
+    }
+}
+```
+
+***
+
+### 事务
+
+基本介绍：
+
+- `JDBC`程序中当一个`Connection`对象创建时，默认情况下是自动提交事务的，即每次执行一个`SQL`语句时，如果执行成功，就会向数据库自动提交，而不能回滚
+- `JDBC`程序中为了让多个`SQL`语句作为一个整体执行，需要使用事务
+- 调用`Connection`的`setAutoCommit(false)`可以取消自动提交事务
+- 在所有的`SQL`语句都成功执行后，调用`Connection`的`commit()`方法进行提交
+- 在其中某个操作失败或出现异常时，调用`Connection`的`rollback()`方法回滚事务
+
+使用事务来解决经典的转账问题：
+
+```java
+public class Transaction_ {
+    public void Transaction() {
+        // 得到连接
+        Connect connection = null;
+        // 组织sql语句
+        String sql1 = "update account set balance = balance - 100 where id = 1";
+        String sql2 = "update account set balance = balance + 100 where id = 2";
+        PreparedStatement preparedStatement = null;
+        ResultSet set = null;
+        try {
+            connection = JDBCUtils.getConnection();
+            // 将connection设置为不自动提交
+            connection.setAutoCommit(false);  // 开启事务
+			preparedStatement = connection.preparedStatement(sql1);
+            preparedStatement.executeUpdate();  // 执行第一条sql语句
+            preparedStatement = connection.preparedStatement(sql2);
+            preparedStatement.executeUpdate();  // 执行第二条sql语句
+            // 提交事务
+            connection.commit();
+        } catch (SQLException e) {
+            System.out.println("执行发生了异常，撤销执行的sql");
+            try {
+                // 出现异常，我们进行回滚，即撤销执行之前运行的sql语句
+            	connection.rollback();  // 回滚到事务开启的时候
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
+            e.printStackTrace();
+        } finally {
+            // 关闭资源
+            JDBCUtils.close(null, preparedStatement, connection);
+        }
+    }
+}
+```
+
+***
+
+### 批处理
+
+基本介绍：
+
+- 当需要成批插入或者更新记录时，可以采用`Java`的批量更新机制，允许多条语句一次性提交给数据库批量处理，比单独提交处理更有效率
+- `JDBC`的批量处理语句包括：
+  - `addBatch()`：添加需要批量处理的`SQL`语句或参数
+  - `executeBatch()`：执行批量处理语句
+  - `clearBatch()`：清空批处理包的语句（对于数据量特别大的情况，需要运送一批，清空后再运输）
+- `JDBC`连接`mysql`时，如果要使用批处理功能，请在`url`中加参数`?rewritBatchedStatements=true`
+- 批处理往往和`PreparedStatement`一起搭配使用，既可以减少编译次数，又减少运行次数，效率大大提高
+
+演示案例：向`admin`表中使用批处理的方式添加5000条数据
+
+```properties
+# jdbc.properties 配置文件  要使用批处理的方式，要加上?rewritBatchedStatements=true
+user=root
+password=abc
+url=jdbc:mysql://localhost:3306/my_mysql?rewritBatchedStatements=true
+driver=com.mysql.jdbc.Driver
+```
+
+```java
+public class Batch_ {
+    public void Batch() throws Exception {
+        Connect connection = JDBCUtils.getConnection();
+        String sql = "insert into admin values(?, ?)";
+        PreparedStatement preparedStatement = connection.preparedStatement(sql);
+        for(int i = 0; i < 5000; i++) {
+            preparedStatement.setString(1, "jlc" + i);
+            preparedStatement.setString(2, "666");
+            // 将sql语句加入到批处理包中
+            preparedStatement.addBatch();
+           	// 当有1000条记录时，批量执行
+            if((i + 1) % 1000 == 0) {
+                preparedStatement.executeBatch();
+                // 清空处理包语句
+                preparedStatement.clearBatch();
+            }
+        }
+        // 关闭连接
+        JDBCUtils.close(null, preparedStatement, connection);
+    }
+}
+```
+
+`addBatch()`的源码解析：
+
+```java
+public void addBatch() throws SQLException {
+    synchronized(this,checkClosed().getConnectionMutex()) {\
+        // 第一次创建ArrayList了的对象数组elementData（Object[]）来存放预处理的sql语句
+        // elementData数组的默认大小是10，当其满后，就按照1.5倍进行扩容
+        // 当添加到指定数量的值后，就executeBatch
+        // 批量处理会减小我们发送sql语句的网络开销，且减少编译次数，因此效率比较高
+        if (this.batchedArgs == null) {
+            this.batchedArgs = new ArrayList();
+        }
+        for (int i = 0; i < this.parameterValues.length; ++i) {
+            this.checkAllParametersSet(this.parameterValues[i], this.parameterStreams[i], i);
+        }
+        this.batchedArgs.add(new PrepardStatement.BatchParams(this.parameterValues, this.parameterStreams))
+    }
+}
+```
+
+***
+
+### 数据库连接池
+
+使用传统方式进行获取连接的问题分析：
+
+- 对于传统的方式来获取连接，使用的是`JDBC`中的`DriverManager`来获取，每次向数据库建立连接的时候都要将`Connection`加载到内存中，再验证`IP`地址、用户名和密码（耗时0.05s~1s时间）。需要数据库连接的时候，就向数据库要求一个，频繁的进行数据库连接操作将占用很多的系统资源，容易造成服务器奔溃
+- 每一次数据量的连接，使用完后都得断开，如果程序出现异常而未能关闭，将导致数据库的内存泄漏，最终将导致重启数据库
+- 传统获取连接的方式，不能控制创建的连接数量，如果连接过多，可能会导致内存泄漏，导致`mysql`奔溃
+
+解决传统开发中的数据库连接问题，可以采用数据库连接池技术
+
+数据库连接池的基本介绍：
+
+1. 预先在缓冲池中放入一定数量的连接，当需要建立数据连接时，只需从“缓冲池”中取出一个，使用完毕之后再放回去
+2. 数据库连接池负责分配、管理和释放数据库连接，它允许应用程序重复使用一个现有的数据库连接，而不是重新建立一个
+3. 当应用程序向连接池请求的连接数量超过最大连接数量时，这些请求将被加入到等待队列中
+
+数据库连接池示意图：
+
+![image-20250504223648848](..\images\image-20250504223648848.png)
+
+数据库连接池的种类：
+
+- `JDBC`的数据库连接池使用`javax.sql.DataSource`来表示，`DataSource`只是一个接口，该接口通常由第三方提供实现
+- `C3P0`数据库连接池，速度相对较慢，稳定性不错（用的比较多）
+- `DBCP`数据库连接池，速度相对`C3P0`较快，但不稳定
+- `Proxool`数据库连接池，有监控连接池状态的功能，稳定性较`C3P0`差一点
+- `BoneCP`数据库连接池，速度快
+- `Druid`（德鲁伊）是阿里提供的数据库连接池，集`DBCP`、`C3P0`、`Proxool`优点于一身的数据库连接池（用的最多）
+
+#### `C3P0`
+
+使用`C3P0`时，我们先要加载`C3P0`对应的`jar`包，将包引入到我们的项目中
+
+`C3P0`的使用演示：
+
+方式一：相关参数`user`、`url`、`password`等，在程序中指定
+
+```java
+public class C3P0_ {
+    public void testC3P0_01() {
+        // 1. 创建一个数据源对象
+        ComboPooledDataSource comboPooledDataSource = new ComboPooledDataSource();
+        // 2. 通过mysql.properties 获取相关的配置信息
+        // 通过Properties对象获取配置文件的信息
+        Properties properties = new Properties();
+        properties.load(new FileInputStream("src\\mysql.properties"));
+        String user = properties.getProperty("user");
+        String password = properties.getProperty("password");
+        String url = properties.getProperty("url");
+        String driver = properties.getProperty("driver");
+        // 给数据源设置相关的参数  连接的管理是由comboPooledDataSource来管理的
+        comboPooledDataSource.setDriverClass(driver);
+        comboPooledDataSource.setJdbcUrl(url);
+        comboPooledDataSource.setUser(user);
+        comboPooledDataSource.setPassword(password);
+        // 设置初始化的连接数，程序运行时，连接池中会存放设置数量的已经与数据库连接好的连接
+        comboPooledDataSource.setInitialPoolSize(10);
+        // 设置连接池的最大连接数，如果最大连接数的连接都被使用了，那么后续的连接请求会进入到等待队列中
+        comboPooledDataSource.setMaxPoolSize(50);
+        // 测试连接池的效率，对mysql连接500000次操作
+        long start = System.currentTimeMillis();
+        for(int i = 0; i < 500000; i++) {
+            // 获取连接  对应方法是从DataSource接口实现的
+            Connect connection = comboPooledDataSource.getConnection();
+            // 3. 关闭连接
+            connection.close();
+        }
+        long end = System.currentTimeMillis();
+        System.out.println("耗时" + (end - start));
+    }
+}
+```
+
+```properties
+# mysql.properties 配置文件
+user=root
+password=abc
+url=jdbc:mysql://localhost:3306/my_mysql
+driver=com.mysql.jdbc.Driver
+```
+
+方式二：使用配置文件模板来完成（推荐使用），将`C3P0`提供的`c3p0.config.xml`配置文件模板（该文件指定了连接数据库和连接池的相关参数）拷贝到`src`目录下，`c3p0.config.xml`配置文件模板的基本内容如下：
+
+```xml
+<c3p0-config>
+    <!--使用默认的配置读取数据库连接池对象 -->
+    <default-config name="hello">
+        <!--  连接参数 -->
+        <property name="driverClass">com.mysql.jdbc.Driver</property>
+        <property name="jdbcUrl">jdbc:mysql://localhost:3306/my_mysql?useServerPrepStmts=true</property>
+        <property name="user">root</property>
+        <property name="password">abc</property>
+
+        <!-- 连接池参数 -->
+        <!--每次增长的连接数-->
+        <property name="acquireIncrement">5</property>
+        <!--初始化申请的连接数量-->
+        <property name="initialPoolSize">10</property>
+        <!--最小的连接数量  如果在一定时间内几乎没有程序进行连接，那么就会关闭连接数到最小的数量-->
+        <property name="minPoolSize">5</property>
+        <!--最大的连接数量-->
+        <property name="maxPoolSize">50</property>
+        
+        <!--可连接的最多的命令对象数-->
+        <property name="maxStatements">5</property>
+        <!--每个连接对象可连接的最多的命令对象数-->
+        <property name="maxStatementsPerConnection">2</property>
+    </default-config>
+</c3p0-config>	
+```
+
+```java
+public class C3P0_ {
+    public void testC3P0_02() {
+        // 1. 创建一个数据源对象，读取c3p0.config.xml配置文件，其name为hello的配置信息
+        ComboPooledDataSource comboPooledDataSource = new ComboPooledDataSource("hello");
+        // 测试连接池的效率，对mysql连接500000次操作
+        long start = System.currentTimeMillis();
+        for(int i = 0; i < 500000; i++) {
+            // 2. 获取连接  对应方法是从DataSource接口实现的
+            Connect connection = comboPooledDataSource.getConnection();
+            // 3. 关闭连接
+            connection.close();
+        }
+        long end = System.currentTimeMillis();
+        System.out.println("耗时" + (end - start));
+    }
+}
+```
+
+#### `Druid`
+
+使用`Druid`数据库连接池，也是遵守连接池的基本原理的，该方式的连接池获取连接和关闭连接的效率是最高的
+
+演示`Druid`连接池的使用：使用`Druid`时，我们先要加载`Druid`对应的`jar`包，将包引入到我们的项目中，同时加入`Druid`连接池的配置文件（拷贝到`src`目录即可，名称可以自定义，这里命名为`druid.properties`），该配置文件内容如下：
+
+```properties
+#key=value
+driverClassName=com.mysql.jdbc.Driver
+#URL连接数据库的URL
+url=jdbc:mysql://localhost:3306/my_mysql?rewriteBatchedStatements=true
+username=root
+password=abc
+#初始化物理连接的个数
+initialSize=10
+#最小连接池数量
+minIdle=5
+#最大连接池数量
+maxActive=50
+#获取连接时最大等待时间（在等待队列中最长等待的时间，如果超过这个时间，就放弃这次连接）
+maxWait=5000
+```
+
+```java
+public class Druid_ {
+    public void testDruid() throws Exception {
+        // 创建Properties对象，读取配置文件
+        Properties properties = new Properties();
+        properties.load(new FileInputStream("src\\druid.properties"));
+        // 创建一个指定参数的数据库连接池
+        DataSource dataSource = DruidDataSourceFactory.createDataSource(properties);
+        
+        // 测试连接池的效率，对mysql连接500000次操作
+        long start = System.currentTimeMillis();
+        for(int i = 0; i < 500000; i++) {
+            // 获取连接
+       		Connection connection = dataSource.getConnection();
+            // 关闭连接
+            connection.close();
+        }
+        long end = System.currentTimeMillis();
+        System.out.println("耗时" + (end - start));
+    }
+}
+```
+
+
+
+
 
