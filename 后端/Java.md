@@ -1741,13 +1741,13 @@ class Cat {
 >   public double f1() {
 >       return 1.1;
 >   }
->                                                                             
+>                                                                               
 >   // 兼容（可以自动转换），编译通过
 >   public double f1() {
 >       int n = 1;
 >       return n;
 >   }
->                                                                             
+>                                                                               
 >   // 类型不一致，且不能自动转换，编译不通过
 >   public int f1() {
 >       return 1.1;
@@ -13124,7 +13124,427 @@ public class Druid_ {
 }
 ```
 
+##### `Druid`工具类
 
+我们一般也要将`Druid`进行封装（将获取连接和关闭连接作为方法封装起来），变成一个工具类
 
+```java
+public class JDBCUtilsByDruid {
+    private static DataSource ds;
+    // 在静态代码块中完成初始化(只在加载类的时候，会初始化一次)
+    static {
+        Properties properties = new Properties();
+        try {
+            properties.load(new FileInputStream("src\\druid.properties"));
+            ds = DruidDataSourceFactory.createDataSource(properties);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    // 编写getConnection方法
+    public static Connection getConnection() throws SQLException {
+        return ds.getConnection();
+    }
+    // 关闭连接，在数据库连接池中，close不是断掉与数据库的连接，而是把使用的Connection对象放回连接池中
+    /*
+    	1. ResultSet 结果集
+    	2. Statement 或者 PreparedStatement
+    	3. Connection
+    	4. 如果需要关闭资源，就传入对象，否则传入null
+    */
+    public static void close(ResultSet set, Statement statement, Connection connection){
+        try {
+            if(set != null) {
+                set.close();
+            }
+            if(statement != null) {
+                statement.close();
+            }
+            if(connection != null) {
+                connection.close();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+}
+```
 
+封装工具类的测试：
 
+```java
+public class Druid_ {
+    public void testDruid() throws Exception {
+        // 测试连接池的效率，对mysql连接500000次操作
+        long start = System.currentTimeMillis();
+        for(int i = 0; i < 500000; i++) {
+            // 获取连接
+       		Connection connection = JDBCUtilsByDruid.getConnection();
+            // 关闭连接
+            JDBCUtilsByDruid.close();
+        }
+        long end = System.currentTimeMillis(null, null, connection);
+        System.out.println("耗时" + (end - start));
+    }
+}
+```
+
+***
+
+### `ApDBUtils`
+
+`ApDBUtils`的基本引出和具体实现示意图：
+
+![image-20250505102906733](..\images\image-20250505102906733.png)
+
+> 最后将数据保存到了`ArrayList<Actor>`实例化出的集合中，后续断掉连接与数据库的连接，数据还是存在的（`ArrayList`和`connection`没有任何关联），还是可以进行复用
+>
+
+基本介绍：
+
+- `commons-dbutils`是`Apache`组织提供的一个开源`JDBC`工具类库，它是针对`JDBC`的封装，使用`dbutils`能极大的简化`jdbc`编码的工作量
+
+`DBUtils`类：
+
+- `QueryRunner`类：封装了`SQL`的执行，是线程安全的，可以实现增删改查，批处理
+
+- `ResultSetHandler`接口：用于处理`java.sql.ResultSet`，将数据按照要求转为另一种形式，常用的有：
+
+  ![image-20250505104210955](..\images\image-20250505104210955.png)
+
+![image-20250505113457179](..\images\image-20250505113457179.png)
+
+#### 基本使用
+
+案例演示：使用`DBUtils`+数据连接池（德鲁伊）方式，完成对表`actor`的增删改查：
+
+使用`DBUtils`前需要引入相关的`jar`包，在加入到本项目中
+
+##### 多行查询
+
+```java
+public class DBUtils_USE {
+    // 查询，返回的结果是多行的情况
+    public void testQueryMany() throws SQLException {
+        // 通过封装的德鲁伊方法，得到连接
+        Connection connection = JDBCUtilsByDruid.getConnection();
+        // 创建一个QueryRunner
+        QueryRunner queryRunner = new QueryRunner();
+        // 执行相关方法，返回ArrayList结果集
+        // query方法就是执行sql语句，得到resultset结果集，将其封装到ArrayList集合中，再返回
+        // connection：连接；sql：执行的sql语句；
+        // new BeanListHandler<>(Actor.class)：将结果集取出Actor对象，封装到ArrayList中，底层使用了反射机制，去获取Actor类的属性，然后再进行封装
+        // 最后的1，是传递给sql语句中的?赋值，可以有多个值，因为是可变参数
+        String sql = "select * from actor where id >= ?";
+        List<Actor> list = queryRunner.query(connection, sql, new BeanListHandler<>(Actor.class), 1);
+        // 输出集合的信息
+        for(Actor actor: list) {
+            System.out.print(actor);
+        }
+        // 释放资源  底层得到的resultset和PreparedStatment，会在query中关闭
+        JDBCUtilsByDruid.close(null, null, connection);
+    }
+}
+```
+
+> `sql`语句也可以查询部分列
+>
+> `select id, name from actor where id >= ?`
+>
+> 那么，返回的结果对于没有指定查询的字段返回的内容是`null`
+
+##### 单行查询
+
+```java
+public class DBUtils_USE {
+    // 查询，返回的结果是单行的情况
+    public void testQuerySingle() throws SQLException {
+        // 通过封装的德鲁伊方法，得到连接
+        Connection connection = JDBCUtilsByDruid.getConnection();
+        // 创建一个QueryRunner
+        QueryRunner queryRunner = new QueryRunner();
+        // 执行相关方法，返回单个对象
+        // 因为返回的是单行记录，即单个对象，使用的Hander是BeanHandler
+        String sql = "select * from actor where id = ?";
+        Actor actor = queryRunner.query(connection, sql, new BeanHandler<>(Actor.class), 1);
+        // 输出信息
+        System.out.print(actor);
+        // 释放资源  底层得到的resultset和PreparedStatment，会在query中关闭
+        JDBCUtilsByDruid.close(null, null, connection);
+    }
+}
+```
+
+> 如果查询的结果不存在，返回的内容是`null`
+
+如果要查询的结果是单行单列的情况，返回的就是一个`Object`对象的形式
+
+```java
+public class DBUtils_USE {
+    // 查询，返回的结果是单行的情况
+    public void testQueryScalar() throws SQLException {
+        // 通过封装的德鲁伊方法，得到连接
+        Connection connection = JDBCUtilsByDruid.getConnection();
+        // 创建一个QueryRunner
+        QueryRunner queryRunner = new QueryRunner();
+        // 执行相关方法，返回单个对象
+        // 因为返回的是单行记录，即单个对象，使用的Hander是BeanHandler
+        String sql = "select name from actor where id = ?";
+        Object obj = queryRunner.query(connection, sql, new ScalarHandler(), 1);
+        // 输出信息
+        System.out.print(obj);
+        // 释放资源  底层得到的resultset和PreparedStatment，会在query中关闭
+        JDBCUtilsByDruid.close(null, null, connection);
+    }
+}
+```
+
+> 如果查询的结果不存在，返回的内容是`null`
+
+##### 增删改操作
+
+```java
+public class DBUtils_USE {
+    // dml操作
+    public void testDML() throws SQLException {
+        // 通过封装的德鲁伊方法，得到连接
+        Connection connection = JDBCUtilsByDruid.getConnection();
+        // 创建一个QueryRunner
+        QueryRunner queryRunner = new QueryRunner();
+        // 组织sql语句，完成update、insert和delete
+        // 返回的affectedRow是受影响的行数，1表示sql语句执行成功，0表示执行失败
+        
+        // 增
+        String sql = "insert into actor values(null, ?, ?)";
+        int affectedRow = queryRunner.update(connection, sql, "jlc", "男"); 
+        
+        // 删
+        String sql = "delete from actor where id = ?";
+        int affectedRow = queryRunner.update(connection, sql, 1); 
+        
+        // 改
+        String sql = "update actor set name = ? where id = ?";
+        int affectedRow = queryRunner.update(connection, sql, "jlc", 1); 
+        
+        
+        System.out.print(affectedRow > 0 ? "执行成功" : "执行失败");
+        // 释放资源  底层得到的resultset和PreparedStatment，会在query中关闭
+        JDBCUtilsByDruid.close(null, null, connection);
+    }
+}
+```
+
+***
+
+### `BasicDao`
+
+`apache-dbutils`+`Druid`简化了`JDBC`的开发，但是还有不足：
+
+- `SQL`语句固定（如，所查的表固定），不能通过参数传入，通用性不好，需要进行改进，使执行更方便
+- 对于`select`操作，如果有返回值，返回值类型不能固定，需要使用泛型
+- 将来的表很多，业务需求复杂，不可能只靠一个`Java`类完成
+
+在实际的开发中，一般需要使用`BasicDao`进行优化，体现了各司其职的思想
+
+![image-20250505124519515](..\images\image-20250505124519515.png)
+
+> 在实际开发中，一张数据表对应一个`DAO`，该`DAO`完成对这张表的增删改查操作，对应共有的操作，我们将其放到`BasicDao`中，简化代码，提高了代码的维护性和可读性，同时每一张数据表与`Java`中的某一个类有映射关系
+
+基本说明：
+
+1. `DAO`：`data access object`数据访问对象
+2. 这样的通用类，称为`BasicDao`，是专门和数据库交互的，即完成对数据库（表）的`crud`操作
+3. 在`BasicDao`基础上，实现一张表对应一个`Dao`，更好的完成功能，如`Customer`表--`Customer.java`类（`javabean`）--`CustomerDao.java`
+
+设计实例：演示一套`Actor`的流程，其他数据表类似
+
+- `com.test.dao_.utils`：相关工具类
+
+  ```java
+  package com.test.dao_.utils;
+  
+  public class JDBCUtilsByDruid {
+      private static DataSource ds;
+      // 在静态代码块中完成初始化(只在加载类的时候，会初始化一次)
+      static {
+          Properties properties = new Properties();
+          try {
+              properties.load(new FileInputStream("src\\druid.properties"));
+              ds = DruidDataSourceFactory.createDataSource(properties);
+          } catch (Exception e) {
+              e.printStackTrace();
+          }
+      }
+      // 编写getConnection方法
+      public static Connection getConnection() throws SQLException {
+          return ds.getConnection();
+      }
+      // 关闭连接，在数据库连接池中，close不是断掉与数据库的连接，而是把使用的Connection对象放回连接池中
+      /*
+      	1. ResultSet 结果集
+      	2. Statement 或者 PreparedStatement
+      	3. Connection
+      	4. 如果需要关闭资源，就传入对象，否则传入null
+      */
+      public static void close(ResultSet set, Statement statement, Connection connection){
+          try {
+              if(set != null) {
+                  set.close();
+              }
+              if(statement != null) {
+                  statement.close();
+              }
+              if(connection != null) {
+                  connection.close();
+              }
+          } catch (SQLException e) {
+              throw new RuntimeException(e);
+          }
+      }
+  }
+
+- `com.test.dao_.domain`：`Javabean`具体对应数据表的`Java`类
+
+  ```java
+  package com.test.dao_.domain;
+  import java.util.Date;
+  
+  public class Actor {
+      private Integer id;
+      private String name;
+      private String sex;
+      private Date borndate;
+      private String phone;
+      // 一定要给一个无参构造器，用于反射
+      public Actor() {}
+      public Actor(Integer id, String name, String sex, Date borndate, String phone) {
+          this.id = id;
+          this.name = name;
+          this.sex = sex;
+          this.borndate = borndate;
+          this.phone = phone;
+      }
+      fuction getName() {
+          return name;
+      }
+      ...
+  }
+  ```
+
+- `com.test.dao_.dao`：存放`XxxDAO`和`BasicDAO`
+
+  先开发`BasicDAO`（是其他`DAO`的一个父类）
+
+  ```java
+  package com.test.dao_.dao;
+  import org.apache.commons.dbutils.QueryRunner;
+  
+  public class BasicDAO<T> {  // 通过泛型指定类型
+      private QueryRunner qr = new QueryRunner();
+      // 开发通用的dml方法，针对任意的表
+      public int update(String sql, Object... parameters) { // parameters是可变参数
+          Connection connection = null;
+          try {
+              // 获取连接
+              connection = JDBCUtilsByDruid.getConnection();
+              // sql语句
+              int update = qr.update(connection, sql, parameters);
+          } catch (SQLException e) {
+              throw new RuntimeException(e);
+          } finally {
+              // 关闭连接
+              JDBCUtilsByDruid.close(null, null, connection);
+          }
+      }
+      // 开发返回多行的查询结果，针对任意表
+      // sql是SQL语句，可以有?  clazz传入一个Class对象，比如Actor.class
+      // parameters传入?的具体的值，可以传入多个，是一个可变参数
+      // 最后返回根据Actor.class对应的ArrayList集合
+      public List<T> queryMulti(String sql, Class<T> clazz, Object... parameters) {
+          Connection connection = null;
+          try {
+              // 获取连接
+              connection = JDBCUtilsByDruid.getConnection();
+              // sql语句
+              return qr.query(connection, sql, new BeanListHandler<T>(clazz), parameters);
+          } catch (SQLException e) {
+              throw new RuntimeException(e);
+          } finally {
+              // 关闭连接
+              JDBCUtilsByDruid.close(null, null, connection);
+          }
+      }
+      // 开发查询单行的结果，针对任意表
+      public T querySingle(String sql, Class<T> clazz, Object... parameters) {
+          Connection connection = null;
+          try {
+              // 获取连接
+              connection = JDBCUtilsByDruid.getConnection();
+              // sql语句
+              return qr.query(connection, sql, new BeanHandler<T>(clazz), parameters);
+          } catch (SQLException e) {
+              throw new RuntimeException(e);
+          } finally {
+              // 关闭连接
+              JDBCUtilsByDruid.close(null, null, connection);
+          }
+      }
+      // 查询单行单列的方法，即返回单值的方法
+      public Object queryScalar(String sql, Object... parameters) {
+          Connection connection = null;
+          try {
+              // 获取连接
+              connection = JDBCUtilsByDruid.getConnection();
+              // sql语句
+              return qr.query(connection, sql, new ScalarHandler(), parameters);
+          } catch (SQLException e) {
+              throw new RuntimeException(e);
+          } finally {
+              // 关闭连接
+              JDBCUtilsByDruid.close(null, null, connection);
+          }
+      }
+  }
+  ```
+
+  开发`ActorDAO`：继承`BasicDAO`
+
+  ```java
+  package com.test.dao_.dao;
+  import com.test.dao_.domain.Actor;
+  
+  public class ActorDAO extends BasicDAO<Actor> {
+      // 有BasicDAO所有的方法
+      // 还可以根据需求，写特有的方法
+  }
+  ```
+
+- `com.test.dao_.test`：存放测试类
+
+  ```java
+  package com.test.dao_.test;
+  
+  public class TestDAO {
+      // 测试ActorDAO 对 actor 表的crud操作
+      public void testActorDAO() {
+          ActorDAO actorDAO = new ActorDAO();
+          // 查询多行
+          List<Actor> actors = actorDAO.queryMulti("select * from actor where id >= ?", Actor.class, 1);
+          for (Actor actor: actors) {
+              System.out.println(actor);
+          }
+          // 查询单行
+          Actor actor = actorDAO.querySingle("select * from actor where id = ?", Actor.class, 1);
+          System.out.println(actor);
+          // 查询单行单列
+          Object o actorDAO.querySingle("select name from actor where id = ?", 1);
+          System.out.println(o);
+          // dml操作
+          String sql = "update actor set name = ? where id = ?";
+          int update = actorDAO.update(connection, sql, "jlc", 1); 
+          System.out.print(affectedRow > 0 ? "执行成功" : "执行失败");
+      }
+  }
+  ```
+
+  
