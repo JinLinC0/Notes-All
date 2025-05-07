@@ -1,6 +1,6 @@
-## `Axios`
+# `Axios`
 
-### `axios`请求工具
+## 基本概念
 
 `axios`是通过`promise`实现对`ajax`技术的封装；`ajax`技术实现了网页的局部数据刷新，`axios`实现了对`ajax`的封装，[`axios`官方文档](https://axios-http.com/zh/docs/intro)
 
@@ -36,7 +36,9 @@ axios({
     })
 ```
 
-#### 在`Vue3`项目使用`Axios`
+
+
+## 在`Vue3`中的使用
 
 首先需要在`main.js`或者`main.ts`文件中加载`axios`组件和请求`request`
 
@@ -79,8 +81,6 @@ export class Request {
     //     return this.axiosInstance;
     // }
  
- 
- 
     // 初始化拦截器
     public static initInterceptors() {
         // 设置post请求头
@@ -112,7 +112,6 @@ export class Request {
                 console.log(error);
             },
         );
- 
  
         // 响应拦截器
         this.axiosInstance.interceptors.response.use(
@@ -152,7 +151,6 @@ export class Request {
             });
     }
  
- 
     /**
      * http握手错误
      * @param res 响应回调,根据不同响应进行不同操作
@@ -188,7 +186,9 @@ export function login (parameter: any)  {
 }
 ```
 
-##### `Axios` 请求
+***
+
+### `Axios` 请求
 
 发起一个 `GET` 请求：
 
@@ -225,6 +225,8 @@ axios.post('/user', {
   });
 ```
 
-##### `axios` 封装
+***
+
+### `Axios` 封装
 
 项目中会有很多的模块都需要发送网络请求，常见的比如登录模块，首页模块等，如果我们项目中直接使用诸如`axios.get()`, `axios.post()`，会存在很多弊端，所以我们需要对`axios`进行封装

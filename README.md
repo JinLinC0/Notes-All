@@ -5,9 +5,9 @@
 项目学习记录文件编写时间线：
 
 - 截至2024/07/09 之前完成了`Markdown`、`Docker`、`Gojs`、`Hadoop`、`HTML`笔记的整理
-- 2024/07/20 完成了`Git`、`VSCode`笔记的整理
+- 2024/07/20 完成了`Git`、`VSCode`、`CSS`、`JavaScript`笔记的整理
 - 2024/07/28 完成了`Web`开发环境搭建、`Vue`项目配置问题笔记的整理
-- 2024/08/10 完成了`Blender`、`Ubuntu`、`Vim`笔记的整理
+- 2024/08/10 完成了`Blender`、`Ubuntu`、`Vim`、`Axios`笔记的整理
 - 2024/08/28 完成了`FastCrud`、`GoJs`、开发积累-`RBM`项目、`CesiumJs`笔记的整理
 - 2024/09/13 完成了`Python`、`Django`、`Hadoop`、`ThingsBoard`笔记的整理
 - 2024/10/13 完成了`Vue3`、`Pinia`、`ECharts`、`Element Plus`笔记的整理
