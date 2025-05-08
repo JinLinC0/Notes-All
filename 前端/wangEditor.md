@@ -14,7 +14,7 @@
 
 
 
-## 基本配置
+## 安装配置
 
 引入方式：
 
@@ -27,21 +27,37 @@
   <link href="https://cdn.bootcdn.net/ajax/libs/wangEditor/10.0.13/wangEditor.min.css" rel="stylesheet">
   ```
 
-基本搭建：
+
+
+## 基本使用和个性化
 
 ```vue
 <template>
-    <div id="editor">
-        <p>wangEditor</p>
-    </div>
+    <div id="editor"></div>
 </template>
 
 <script setup lang="ts">
 import { nextTick } from 'vue';
 import wangEditor from './wangEditor';
 
+interface Props {
+    height?: number
+    modelValue?: string
+    uploadImgServer?: string  // 上传图片的服务器地址
+}
+
+const props = withDefaults(defineProps<Props>(), {
+    height: 100,
+    modelValue: '',  // 父组件传递进来的值
+    uploadImgServer: '/api/upload/image'
+})
+
+const emit = defineEmits(['update:modelValue'])
+
 nextTick(() => {
-    new wangEditor("#editor")
+    new wangEditor("#editor", (newHtml: string)=> {  // 回调函数，表单更新，将新值传递给父组件
+        emit('update:modelValue', newHtml)
+    }, props)
 })
 </script>
 
@@ -53,13 +69,31 @@ nextTick(() => {
 创建一个配置文件：`wangEditor.ts`
 
 ```ts
+import wangEditor from 'wangeditor'
 /**
  * 富文本编辑器组件的配置文件
  */
 export default class {
-    constructor(el: string) {
-        const editor = new wangEditor(el)
-        editor.create()
+    editor: wangEditor
+    constructor(el: string, callback: Function, config: {[key: string]: any}) {
+        this.editor = new wangEditor(el)
+        this.editor.config.height = config.height  // 设置编辑器高度
+        // 配置 onchange 回调
+        this.editor.config.onchange = callback  // 事件改变时（文本框中输入内容时），触发回调函数，执行回调函数的内容
+        Object.assign(this.editor.config, config)  // 合并配置
+        // 上传图片
+        this.editor.config.uploadImgHooks = this.uploadImg()
+        this.editor.create()
+        // 设置编辑器的内容，需要在创建编辑器之后进行设置
+        this.editor.txt.html(config.modelValue)
+    }
+    // 自定义上传图片
+    uploadImg() {
+        return {
+            customInsert: function(insertImgFn: Function, result: any) {
+                insertImgFn(result.data.url);
+            }
+        }
     }
 }
 ```
@@ -94,10 +128,4 @@ export default class {
 >     'redo'  // 重复
 > ]
 > ```
-
-
-
-## 自定义配置
-
-我们可以在系统配置的基础上进行自定义的个性化配置
 
