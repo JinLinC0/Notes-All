@@ -19,6 +19,8 @@
 
 可以在设计程序的时候一步到位导入代码：`from PyQt5.Qt import *`   但是这样是导入了所有的库，会占大量的内存
 
+文档中常见的案例积累参考：[Frame-Learn/pyqt5 at master · JinLinC0/Frame-Learn](https://github.com/JinLinC0/Frame-Learn/tree/master/pyqt5)或者[pyqt5 · JinLinC/Frame-Learn](https://gitee.com/JinLinC/frame-learn/tree/master/pyqt5)
+
 
 
 ## 环境搭建
