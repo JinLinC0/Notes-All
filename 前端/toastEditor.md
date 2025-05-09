@@ -1,8 +1,8 @@
-# `toastEditor`
+# `ToastEditor`
 
 ## 基本概念
 
-`toastEditor`是一款开源富文本编辑器（`WYSIWYG`），专为现代` Web `应用设计。它提供了 `Markdown` 和 `WYSIWYG` 两种编辑模式，适合需要灵活内容编辑的场景
+`ToastEditor`是一款开源富文本编辑器（`WYSIWYG`），专为现代` Web `应用设计。它提供了 `Markdown` 和 `WYSIWYG` 两种编辑模式，适合需要灵活内容编辑的场景
 
 主要特点：双模式编辑：
 
@@ -17,11 +17,11 @@
 
 - 通过包管理工具进行下载：`npm install @toast-ui/editor`
 
-- 在线`cdn`引入：不太推荐，`toastEditor`是国外的项目，通过在线引入的方式加载较慢
+- 在线`cdn`引入：不太推荐，`ToastEditor`是国外的项目，通过在线引入的方式加载较慢
 
-  ```htlm
+  ```html
   <script src="https://uicdn.toast.com/editor/latest/toastui-editor-all.min.js"></script>
-      <link rel="stylesheet" href="https://uicdn.toast.com/editor/latest/toastui-editor.min.css" />
+  <link rel="stylesheet" href="https://uicdn.toast.com/editor/latest/toastui-editor.min.css" />
   ```
 
 

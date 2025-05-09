@@ -22,7 +22,7 @@
 
 - 在线`cdn`引入：
 
-  ```htlm
+  ```html
   <script src="https://cdn.bootcdn.net/ajax/libs/wangEditor/10.0.13/wangEditor.min.js"></script>
   <link href="https://cdn.bootcdn.net/ajax/libs/wangEditor/10.0.13/wangEditor.min.css" rel="stylesheet">
   ```
