@@ -162,7 +162,7 @@
 
 在访问前需要更改在`D:\postgresql\data`中的`pg_hba`配置文件，在`# IPv4 local connections:`下面加上一行，允许所有`ip`访问的指令：`host all all 0.0.0.0/0 trust`，如下图所示：
 
-![image-20250221153342793](..\images\image-20250221153342793.png)
+![image-20250221153342793](../images/image-20250221153342793.png)
 
 ### 通过`python`远程访问
 

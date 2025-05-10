@@ -164,5 +164,5 @@ export default class {
 }
 ```
 
-![image-20250509185334421](..\images\image-20250509185334421.png)
+![image-20250509185334421](../images/image-20250509185334421.png)
 

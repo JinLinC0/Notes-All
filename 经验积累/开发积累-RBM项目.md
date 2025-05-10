@@ -64,7 +64,7 @@ const cascaderProps = {
 
 实现效果：（如果当前的选项没有子内容，这个父级的选项就被禁用，变成灰色，鼠标放上去显示无法点击）
 
-![image-20241114205710210](D:\Myproject\develop-study-notes\images\image-20241114205710210.png)
+![image-20241114205710210](../images/image-20241114205710210.png)
 
 
 

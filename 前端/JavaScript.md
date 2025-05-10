@@ -4684,7 +4684,7 @@ hd.show();
 
 对于`Object`对象，是没有父级原型的
 
-![image-20241004091959046](..\images\image-20241004091959046.png)
+![image-20241004091959046](../images/image-20241004091959046.png)
 
 ***
 
@@ -4732,7 +4732,7 @@ console.log(hd);
 hd.show()  // this始终是我们调用的对象
 ```
 
-![image-20241004093314748](..\images\image-20241004093314748.png)
+![image-20241004093314748](../images/image-20241004093314748.png)
 
 设置完自定义原型后，父级有什么方法，子级都可以进行继承使用
 
@@ -5112,7 +5112,7 @@ admin.name()  // show
 
 继承是指某人继承了财产后，自己的财产还是保留的，而不是自己的财产会消失，改变构造函数的原型的方法将本身的原型全部舍弃，就没有办法给其本身加上特有的方法了
 
-![image-20241007110223333](..\images\image-20241007110223333.png)
+![image-20241007110223333](../images/image-20241007110223333.png)
 
 ***
 
@@ -5142,7 +5142,7 @@ admin.name()  // show
 admin.role()  // role
 ```
 
-![image-20241007111251244](..\images\image-20241007111251244.png)
+![image-20241007111251244](../images/image-20241007111251244.png)
 
 使用`Admin.prototype.__proto__ = User.prototype`进行原型的继承，进行原型继承和进行自定义对象方法的顺序是任意的，哪一个在前都可以
 
@@ -5158,7 +5158,7 @@ Admin.prototype.role = function(){
 const admin = new Admin()
 ```
 
-![image-20241007111840502](..\images\image-20241007111840502.png)
+![image-20241007111840502](../images/image-20241007111840502.png)
 
 因此推荐使用第一种方式进行原型的继承
 
@@ -5170,7 +5170,7 @@ const admin = new Admin()
 
 对于定义的`hd`的构造函数：`function Hd() {}`，这个构造函数中会有一个原型`prototype`，这个原型中有`constructor`属性，该属性记录着这个构造函数：`f Hd()`
 
-![image-20241008221330064](..\images\image-20241008221330064.png)
+![image-20241008221330064](../images/image-20241008221330064.png)
 
 当我们使用这个构造函数创建一个新对象的时候：`let obj = new Hd;`，就会自动绑定到构造函数的原型：`Hd.prototype`，即：`obj.__proto__ == Hd.prototype`或者`obj.__proto__.constructor == Hd`
 
@@ -5195,7 +5195,7 @@ Admin.prototype.role = function() {
 console.dir(Admin)
 ```
 
-![image-20241009202335026](..\images\image-20241009202335026.png)
+![image-20241009202335026](../images/image-20241009202335026.png)
 
 会发现使用`Object.create()`实现继承会使`constructor`属性丢失
 
@@ -5213,7 +5213,7 @@ Admin.prototype.constructor = Admin;
 
 但是我们知道原型`Admin.prototype`也是一个对象，上述代码我们给对象压入`constructor`这个属性特征，压进去的属性特征是可以被遍历的，其`enumerable`的值为`true`
 
-![image-20241009203528907](..\images\image-20241009203528907.png)
+![image-20241009203528907](../images/image-20241009203528907.png)
 
 遍历对象的属性方法：
 
@@ -5263,7 +5263,7 @@ let hd = new Admin();
 hd.show();  // jlcadmin.show
 ```
 
-![image-20241009205356356](..\images\image-20241009205356356.png)
+![image-20241009205356356](../images/image-20241009205356356.png)
 
 ***
 
