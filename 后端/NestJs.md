@@ -4460,3 +4460,106 @@ export class CategoryController {
 如果用户的角色不是枚举中声明的类型，就不能使用添加栏目的接口，发送数据就会出现以下的报错：
 
 ![image-20250311143011749](../images/image-20250311143011749.png)
+
+
+
+## 序列化响应
+
+### 基本使用
+
+`NestJs`可以对数据进行序列化的设置，可以控制后端为前端返回什么内容的数据，或者为返回的数据设置特定的格式（进行数据的格式化处理）
+
+使用时我们需要在全局的文件中进行注册，在`main.ts`文件中加上：
+
+```ts
+// 使用拦截器进行序列化的定义
+app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
+```
+
+> 加上声明之后，我们就可以对我们的响应数据进行格式化处理
+>
+> 拦截器的注册，可以在全局进行注册，也可以在方法或控制器中进行注册
+>
+> ```java
+> import { UseInterceptors, ClassSerializerInterceptor } from '@nestjs/common';
+> @UseInterceptors(ClassSerializerInterceptor)  // 如果在全局注册了，可以不写
+> ```
+
+注册好拦截器的序列化后，我们可以在具体的方法中定义具体序列化的选项（对返回的结果进行处理）
+
+```ts
+@Get(':id')
+@SerializeOptions({ strategy: 'excludeAll' })  // 所有的结果都不要
+findOne(@Param('id') id: string) {
+    return this.articleService.findOne(+id);
+}
+```
+
+但是我们一般是声明一个类，在这个类中去定义具体的序列化选项，一般在该功能的`entities`文件夹下创建`***.entity.ts`文件夹：
+
+```ts
+import { article } from '@prisma/client'
+import { Exclude, Transform } from 'class-transformer'
+export class Article {
+    // 想要给前端返回什么数据，就在这个地方进行定义即可
+	@Exclude()  // 修饰下面的内容不进行返回，只生效下面的一个字段
+    title: string;  // 设置标题不给前端返回
+    
+    @Transform(({ value }) => {
+        return value + "abc";  // 对返回给前端的title内容都统一加上abc的后缀
+    })
+    title: string;
+    
+    // 构造函数传递返回的数据
+    constructor(options: Partial<article> | null) {  // 将数据都变成可选
+        // 将处理后的数据压入到当前对象中，后续返回给前端
+        Object.assign(this, options)
+    }    
+}
+```
+
+> 具体装饰器功能的说明：
+>
+> - `@Exclude()`：修饰下面字段的内容不返回
+> - `@Expose()`：修饰下面字段的内容返回
+> - `@Transform()`：对返回的内容进行转换
+
+这时具体的方法位置，我们也要做调整：
+
+```ts
+import { Article } from './entities/article.entity';
+
+@Get(':id')
+@SerializeOptions({ strategy: 'exposeAll' })  // 所有的结果都返回，默认情况，可以不写
+async findOne(@Param('id') id: string) {
+    const article = await this.articleService.findOne(+id);
+    return new Article(article);
+}
+```
+
+***
+
+### 对日期的格式进行序列化处理
+
+```ts
+import { article } from '@prisma/client' 
+import { Transform } from 'class-transformer'
+import dayjs from 'dayjs'  // 使用dayjs进行日期的格式处理
+
+export class Article {
+    @Transform(({ value }) => dayjs(value).format('YYYY-MM-DD'))
+    createAt: string   // 对创建时间进行格式化
+    
+    @Transform(({ value }) => dayjs(value).format('YYYY-MM-DD'))
+    updateAt: string   // 对创建时间进行格式化
+    
+    // 构造函数传递返回的数据
+    constructor(options: Partial<article> | null) {  // 将数据都变成可选
+        // 将处理后的数据压入到当前对象中，后续返回给前端
+        Object.assign(this, options)
+    }    
+}
+```
+
+
+
