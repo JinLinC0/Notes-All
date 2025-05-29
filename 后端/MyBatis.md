@@ -621,6 +621,27 @@ public class MyBatisTest {
 >
 > 对于`<configuration>`根标签的子标签的使用，必须要严格按照顺序进行使用，否则会报错，其顺序由前到后依次为：`properties`、`setting`、`typeAliases`、`typeHandlers`、`objectFactory`、`plugins`、`environments`、`databaseldProvider`、`mappers`
 
+***
+
+### 其他配置标签
+
+#### `<typeHandlers>`
+
+`<typeHandlers>`标签主要是用于类型重叠器的定义，无论是`MyBatis`在预处理语句（`PreparedStatement`）中设置一个参数时，还是从结果集中取出一个值时，都会用类型处理器将获取的值以合适的方式转换成`Java`类型，下表描述了一些默认的类型处理器：
+
+![image-20250529214701807](../images/image-20250529214701807.png)
+
+我们也可以重写类型处理器或创建自己的类型处理器来处理不支持的或非标准的类型。具体做法为：实现`org.apache.ibatis.type.TypeHandler`接口，或继承一个便利的类`org.apache.ibatis.type.BaseTypeHandler`，然后可以选择性的将它映射到一个`JDBC`类型
+
+需求：一个`Java`中的`Date`数据类型，我希望将其存储到数据库的时候存成一个1970年至今的毫秒数，取出来时又转换为`Java`的`Date`类型，即`Java`的`Date`与数据库的`varchar`毫秒值进行转换
+
+开发步骤：
+
+1. 定义转换类继承类`BaseTypeHandler<T>`
+2. 覆盖4个未实现的方法，其中`setNonNullParameter`为`Java`程序设置数据到数据库的回调方法，`getNullableResult`为查询时`mysql`的字符串类型转换成`Java`的`Type`类型的方法
+3. 在`MyBatis`核心配置文件中进行注册
+4. 测试转换
+
 
 
 ## 相应的`API`
