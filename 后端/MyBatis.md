@@ -637,10 +637,65 @@ public class MyBatisTest {
 
 开发步骤：
 
-1. 定义转换类继承类`BaseTypeHandler<T>`
-2. 覆盖4个未实现的方法，其中`setNonNullParameter`为`Java`程序设置数据到数据库的回调方法，`getNullableResult`为查询时`mysql`的字符串类型转换成`Java`的`Type`类型的方法
+1. 定义转换类继承类`BaseTypeHandler<T>`    泛型`T`就是我们要转换的`Java`类型
+
+2. 覆盖4个未实现的方法，其中`setNonNullParameter`为`Java`程序设置数据到数据库的回调方法（将`Java`类型的数据转换为数据库需要的类型数据），`getNullableResult`为查询时`mysql`的字符串类型转换成`Java`的`Type`类型的回调方法（`MyBatis`执行时，会自动的帮助我们执行这些回调方法）
+
+   ```java
+   package com.jlc.handler;
+   
+   import org.apache.ibatis.type.BaseTypeHandler;
+   import java.util.Date;
+   
+   public class DateTypeHandler extends BaseTypeHandler<Date> {
+       // 将Java类型转换成数据库需要的类型
+       public void setNonNullParameter(PreparedStatement preparedStatement, int i, Date date, JdbcType jdbcType) {
+           long time = date.getTime();  // 获取时间的毫秒值
+           preparedStatement.setLong(i, time);   // 设置参数 i表示当前的参数位置
+       }
+       
+       // 将数据库中的类型转换成Java类型  MyBatis底层会随机进行调用
+       // String参数表示要转换的字段名称；ResultSet表示查询出的结果集
+       public Date getNullableResult(ResultSet resultSet, String s) throws SQLException {
+           // 获得结果集中需要的数据（long）转换成Date类型进行返回
+           long aLong = resultSet.getLong(s);
+           Date date = new Date(aLong);
+           return date;
+       }
+       // 将数据库中的类型转换成Java类型  MyBatis底层会随机进行调用
+       // int参数表示字段的位置；ResultSet表示查询出的结果集
+       public Date getNullableResult(ResultSet resultSet, int i) throws SQLException {
+           long aLong = resultSet.getLong(i);
+           Date date = new Date(aLong);
+           return date;
+       }
+       // 将数据库中的类型转换成Java类型  MyBatis底层会随机进行调用
+       public Date getNullableResult(CallableStatement callableStatement, int i) throws SQLException {
+           long aLong = callableStatement.getLong(i);
+           Date date = new Date(aLong);
+           return date;
+       }
+   }
+   ```
+
 3. 在`MyBatis`核心配置文件中进行注册
-4. 测试转换
+
+   ```xml
+   <!--注册类型处理器-->
+   <typeHandlers>
+       <typeHandler handler="com.jlc.handler.DateTypeHandler"></typeHandler>
+   </typeHandlers>
+   ```
+
+#### `<plugins>`
+
+`MyBatis`可以使用第三方的插件来对功能进行拓展，分页助手`PageHelper`是将分页的复杂操作进行封装，使用简单的方式即可获得分页的相关数据
+
+开发步骤：
+
+1. 导入通用`PageHelper`的坐标
+2. 在`MyBatis`核心配置文件中配置`PageHelper`插件
+3. 测试分页数据获取
 
 
 
