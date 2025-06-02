@@ -689,15 +689,74 @@ public class MyBatisTest {
 
 #### `<plugins>`
 
-`MyBatis`可以使用第三方的插件来对功能进行拓展，分页助手`PageHelper`是将分页的复杂操作进行封装，使用简单的方式即可获得分页的相关数据
+`MyBatis`可以使用第三方的插件来对功能进行拓展，以分页助手`PageHelper`为例，其插件是将分页的复杂操作进行封装，使用简单的方式即可获得分页的相关数据（分页助手一般是将全部查询的数据进行以分页的方式返回）
 
 开发步骤：
 
-1. 导入通用`PageHelper`的坐标
+1. 在`pom.xml`导入通用`PageHelper`的坐标
+
+   ```xml
+   <!--分页助手插件-->
+   <dependency>
+       <groupId>com.github.pagehelper</groupId>
+       <artifactId>pagehelper</artifactId>
+       <version>3.7.5</version>
+   </dependency>
+   <dependency>  <!--导入相关的解析器-->
+       <groupId>com.github.jsqlparser</groupId>
+       <artifactId>jsqlparser</artifactId>
+       <version>0.9.1</version>
+   </dependency>
+   ```
+
 2. 在`MyBatis`核心配置文件中配置`PageHelper`插件
+
+   ```xml
+   <!--配置插件时，必须要配置的mapper标签之前-->
+   <plugins>
+       <plugin interceptor="com.github.pagehelper">
+           <!--指定方言-->
+           <property name="dialect" value="mysql" />
+       </plugin>
+   </plugins>
+   ```
+
 3. 测试分页数据获取
 
+   ```java
+   public void test() throws IOException {
+       // 加载核心配置文件  
+       InputStream resourceAsStream = Resources.getResourceAsStream("SqlMapConfig.xml"); 
+       // 获得 sqlSession 工厂对象（会话工厂对象）  
+       SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(resourceAsStream);  
+       // 获得 sqlSession 对象  （通过工厂对象获得会话对象）
+       SqlSession sqlSession = sqlSessionFactory.openSession(); 
+   
+       // 设置分页的相关参数
+       // 设置当前页和每页显式的条数
+       PageHelper.startPage(1, 3);  // 当前为第一页，，每页显式三条数据
+       
+       // 查询全部
+       UserMapper mapper = sqlSession.getMapper(UserMapper.class);
+       List<User> userList = userMapper.findAll();
+       for (User user : userList) {
+           System.out.println(user);
+       }
+       
+       // 获得与分页相关的参数
+       PageInfo<User> pageInfo = new PageInfo<User>(userList);
+       System.out.println("当前页:", pageInfo.getPageNum());
+       System.out.println("每页显式条数:", pageInfo.getPageSize());
+       System.out.println("总条数:", pageInfo.getTotal());
+       System.out.println("总页数:", pageInfo.getPages());
+       System.out.println("上一页:", pageInfo.getPrePage());
+       System.out.println("下一页:", pageInfo.getNextPage());
+       System.out.println("是否是第一个:", pageInfo.isIsFirstPage());
+       System.out.println("是否是最后一个:", pageInfo.isIsLastPage());
+   }
+   ```
 
+   
 
 ## 相应的`API`
 
@@ -892,3 +951,19 @@ public class ServiceDemo throws IOException {
 ```
 
 使用代理开发的方式，我们就不用进行接口的类实现，`MyBatis`会自动的帮助我们进行动态的代理实现
+
+
+
+## 多表操作
+
+随着业务复杂性的提高，单表操作往往满足不了我们的需求，我们需要进行多表操作
+
+***
+
+### 一对一查询
+
+如用户表和订单表的关系就是一对一查询，一个用户可以有多个订单，一个订单只从属于一个用户
+
+一对一查询的需求：查询一个订单，与此同时查询出该订单所属的用户
+
+![image-20250602212711298](../images/image-20250602212711298.png)
