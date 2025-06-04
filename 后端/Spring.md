@@ -648,7 +648,7 @@ userService.save();  // 调用save()方法
    在具体模块的`pom.xml`文件中导入基本的包坐标
 
    ```xml
-   <dependency>
+   <dependencies>
        <dependency>
            <groupId>mysql</groupId>
            <artifactId>mysql-connector-java</artifactId>
@@ -664,7 +664,7 @@ userService.save();  // 调用save()方法
            <artifactId>druid</artifactId>
            <version>1.1.10</version>
        </dependency>
-   </dependency>
+   </dependencies>
    ```
 
 2. 创建数据源对象
@@ -1928,7 +1928,7 @@ public class UserServlet extends HttpServlet {  // 继承HttpServlet类
 >
 >   ```java
 >   package com.jlc.proxy.cglib;
->     
+>       
 >   public class Target {
 >       public void save() {
 >           System.out.println("save running...");
@@ -1940,7 +1940,7 @@ public class UserServlet extends HttpServlet {  // 继承HttpServlet类
 >
 >   ```java
 >   package com.jlc.proxy.cglib;
->     
+>       
 >   public class Advice {
 >       // 前置增强（在目标对象之前进行增强）
 >       public void beforeReturning() {
@@ -1957,7 +1957,7 @@ public class UserServlet extends HttpServlet {  // 继承HttpServlet类
 >
 >   ```java
 >   package com.jlc.proxy.cglib;
->     
+>       
 >   public class ProxyTest {
 >       public static void main(Stringp[] args) {
 >           // 创建目标对象
