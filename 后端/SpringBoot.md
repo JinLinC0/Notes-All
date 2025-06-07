@@ -247,7 +247,7 @@ server:
 #### 基本语法
 
 - 大小写敏感
-- 数据值前面必须有空格，作为分隔符
+- 数据值前面必须有空格，作为分隔符（否则该配置不会被识别）
 - 使用缩进表示层级关系
 - 缩进时不允许使用`Tab`键，只允许使用空格（各个系统`Tab`对应的空格数可能不同，导致层级混乱）
 - 缩进的空格数目不重要，只要相同层级的元素左侧对齐即可
@@ -283,8 +283,659 @@ server:
   msg2: "hello \n world"   # 双引号识别转义字符  \n 被识别为换行  hello和world分两行输出
   ```
 
+
+#### 参数引用
+
+`YAML`文件中可以引用前面定义的参数，其引用方式为：
+
+```yaml
+name: lisi
+
+person:
+  name: ${name}   # 引用上边定义的name值
+```
+
+***
+
+### 读取配置文件内容
+
+给定一个配置文件：
+
+```yaml
+# 键值对
+name: jlc
+
+# 对象
+person:
+  name: xiaoming
+  age: 25
   
+# 数组
+address:
+  - beijing
+  - shanghai
+  
+# 纯量
+msg1: 'hello \n world'
+```
+
+`SpringBoot`为我们提供了三种读取配置文件的方式：
+
+- `@Value`（通过注解方式进行配置文件内容的读取）
+
+  ```java
+  package com.jlc.springbootinit;
+  
+  import org.springframework.web.bind.annotation.RequestMapping;
+  import org.springframework.web.bind.annotation.RestController;
+  
+  @RestController
+  public class HelloController {
+      // 读取配置文件内容
+      // 键值对
+      @Value("${name}")     // name要与配置文件中要读取内容的键一致
+      private String name1;    // name的名称和配置文件中读取内容的键可以不同
+      // 对象
+      @Value("${person.name}")
+      private String name2;
+      // 数组
+      @Value("${address[0]}")
+      private String address;
+      // 纯量
+      @Value("${msg1}")
+      private String msg1;
+      
+      @RequestMapping("/hello")
+      public String hello() {
+          System.out.println(name1);   // jlc
+          System.out.println(name2);   // xiaoming
+          System.out.println(address);   // beijing
+          System.out.println(msg1);   // hello \n world
+          return "Hello SpringBoot";
+      }
+  }
+  ```
+
+  使用`@Value`的方式获取配置文件的内容，还是比较繁琐的，不能一次性的获取所有配置信息（适合单个配置项内容的获取）
+
+- `Environment`（通过注入环境对象，通过该对象的方法进行配置文件内容的读取）
+
+  ```java
+  package com.jlc.springbootinit;
+  
+  import org.springframework.web.bind.annotation.RequestMapping;
+  import org.springframework.web.bind.annotation.RestController;
+  import org.springframework.core.env.Environment;
+  
+  @RestController
+  public class HelloController {
+      // 读取配置文件内容
+      @Autowired     // 在SpringBoot启动时，就会在Spring容器中初始化Environment环境对象
+      private Environment env;
+      
+      @RequestMapping("/hello")
+      public String hello() {
+          System.out.println(env.getProperty("name"));   // jlc
+          System.out.println(env.getProperty("person.name"));   // xiaoming
+          System.out.println(env.getProperty("address[0]"));   // beijing
+          System.out.println(env.getProperty("msg1"));   // hello \n world
+          return "Hello SpringBoot";
+      }
+  }
+  ```
+
+  该方式只需注入一个对象，即可获取配置文件中的所有内容，更加简洁
+
+- `@ConfigurationProperties`（通过注解，使配置文件的内容和对象进行一个绑定映射）
+
+  定义一个`Person`类：
+
+  ```java
+  package com.jlc.springbootinit;
+  
+  import org.springframework.stereotype.Component;
+  
+  
+  @Component    // 该注解表示下面的Person类可以被Spring识别，是一个Bean
+  @ConfigurationProperties(prefix = "person")   // 会将配置文件中person中对应的属性值注入到当前类中，实现绑定映射
+  public class Person {
+      private String name;
+      private int age;
+      
+      public String getName() { return name; }
+      public void setName(String name) { this.name = name; }
+      
+      public int getAge() { return age; }
+      public void setAge(int age) { this.age = age; }
+  }
+  ```
+
+  测试配置文件的读取：
+
+  ```java
+  package com.jlc.springbootinit;
+  
+  import org.springframework.web.bind.annotation.RequestMapping;
+  import org.springframework.web.bind.annotation.RestController;
+  import org.springframework.core.env.Environment;
+  
+  @RestController
+  public class HelloController {
+      // 读取配置文件内容
+      @Autowired
+      private Person person;   // 实例化person对象，该对象与配置文件实现了映射绑定
+      
+      @RequestMapping("/hello")
+      public String hello() {
+          System.out.println(person);   // Person{name='xiaoming', age=25}
+          return "Hello SpringBoot";
+      }
+  }
+  ```
+
+  使用``@ConfigurationProperties``注解如果出现：`Spring Boot Configuration Annotation Processor not fount in classpath`的警告，我们可以在`pom.xml`配置文件中加上：
+
+  ```xml
+  <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-configuration-processor</artifactId>
+      <optional>true</optional>
+  </dependency>
+  ```
+
+  加上上述配置，我们在配置文件中编写映射绑定的对象，会有属性的提示
+
+***
+
+### `profile`
+
+在我们开发`SpringBoot`应用时，通常同一套程序会被安装到不同的环境下，如：开发、测试和生产等。其中数据库地址、服务器端口等配置往往是不同的，如果每次打包时，都要修改配置文件，那么是比较麻烦的。
+
+`profile`功能就是来进行动态配置切换的
+
+#### 配置方式
+
+##### 多`profile`文件方式
+
+一般使用`application-dev.properties`表示开发环境下的配置文件：
+
+```properties
+server.port=8081
+```
+
+使用`application-test.properties`表示测试环境下的配置文件：
+
+```properties
+server.port=8082
+```
+
+使用`application-pro.properties`表示生产环境下的配置文件：
+
+```properties
+server.port=8083
+```
+
+当我们没有去激活任意一个配置文件的配置，系统使用的是默认的端口8080
+
+我们需要使用配置的方式去激活不同环境下的配置文件，在`application.properties`主配置文件中进行激活：
+
+```properties
+spring.profiles.active=dev    // 激活开发环境的配置文件
+```
+
+这时，运行程序，使用的端口就是在开发环境中配置的端口号8081
+
+##### `yml`多文档方式
+
+使用多`profile`文件方式进行配置的切换需要写不同的配置文件，使用`yml`多文档方式进行配置只需写一个配置文件，将不同环境的配置划分到不同的部分即可（使用`---`进行分割），创建`application.yml`配置文件
+
+```yaml
+---
+server:
+  port: 8081 
+spring:
+  profiles: dev
+---
+server:
+  port: 8082
+spring:
+  profiles: test
+---
+server:
+  port: 8083
+spring:
+  profiles: pro
+  
+---
+spring:
+  profiles:
+    active: pro    # 激活具体的环境配置
+```
+
+#### 激活方式
+
+##### 配置文件
+
+`.properties`配置文件的激活方式为：`spring.profiles.active=dev`
+
+`.yaml`配置文件的激活方式为：
+
+```yaml
+spring:
+  profiles:
+    active: pro    # 激活具体的环境配置
+```
+
+##### 虚拟机和命令行参数
+
+但是通过配置文件的方式进行激活，在部署的时候，还是需要对配置文件进行修改，也是不方便的
+
+我们可以通过虚拟机或者命令行参数来指定外部的参数
+
+点击`IDEA`左上角的`SpringbootProfilesApplication`，选择`Edit Configurations...`
+
+- `VM options`表示虚拟机参数，在虚拟机参数中指定：`-Dspring.profiles.active=test`（指定使用测试环境的配置）
+- `Program arguments`表示命令行参数，在命令行参数中指定：`--spring.profiles.active=test`（指定使用测试环境的配置）
+
+使用虚拟机或者命令行参数进行配置文件的生效，使用其一种方法即可
+
+使用命令行参数，我们可以在命令行中启动`SpringBoot`程序运行的时候，指定具体的配置环境，而不需要配置文件的激活方式，在命令行输入：
+
+```txt
+java -jar .\springboot-profiles-0.0.1-SNAPSHOT.jar --spring.profiles.active=test
+```
+
+***
+
+### 配置加载顺序
+
+`SpringBoot`允许我们在项目的内部进行配置文件的编写，也允许我们将配置内容写到项目的外边进行配置（如命令行参数进行配置）
+
+#### 内部配置的加载顺序
+
+`Springboot`程序启动时，会依次从以下位置加载配置文件（优先级从高到低为）：
+
+1. `file:./config/`：当前项目下的`/config`目录下
+2. `file:./`：当前项目的根目录
+3. `classpath:/config/`：`classpath`的`/config`目录
+4. `classpath:/`：`classpath`的根目录（`resources`和`java`文件夹在打包后会在`classpath`根目录下）
+
+高优先级配置的属性会覆盖低优先级配置的属性
+
+```java
+config
+    ├──application.properties  // 优先级1
+application.properties   // 优先级2
+springboot-config
+├──src
+│   ├── main
+│   │   └── java 
+│   │   └── resources
+│   │       ├── config  
+│   │       │   ├── application.properties   // 优先级3
+│   │       ├── application.properties  // 优先级4
+├──pom.xml
+```
+
+虽然相同的配置可能被覆盖，但是不同优先级的配置文件都会被加载
+
+方式1和方式2的配置文件在`SpringBoot`项目打包后，是不会打包到具体的`jar`包中的，运行`jar`包是不会识别上述两种配置的（如果需要识别，我们需要复制这个配置文件，放到与打包后的`springboot-profiles-0.0.1-SNAPSHOT.jar`文件的同级目录（或者在这个同级目录中创建一个`config`文件夹，在文件夹中放置配置文件），那么在运行的时候，就会自动的读取放入的配置文件的内容）
+
+#### 外部配置的加载顺序
+
+外部的配置和内部的配置之间形成了一种互补的关系：如当前的项目已经写完了，并且打包好了，但是我们发现有一个配置编写错了，这个时候，我们就可以通过外部的配置进行覆盖内部的某些配置
+
+加载外部配置的方式有很多，详细可以查看官网，常用的外部配置加载方式有（按照加载优先级从高到低为）：
+
+1. 通过命令行参数配置：通过命令行配置修改具体的端口
+
+   ```java
+   java -jar .\springboot-profiles-0.0.1-SNAPSHOT.jar --server.port=8082
+   ```
+
+   通过命令行配置可以一次性接着配置多个需要配置的内容，但是对于太多的配置内容，我们可以在外部写一个配置文件，通过命令行的方式指定这个配置文件的路径，从而读取文件中的配置信息
+
+   简单编写一个配置文件：一般使用`application.properties`：
+
+   ```properties
+   server.port=8081
+   ...
+   ```
+
+   通过命令行读取配置文件，并加载配置：
+
+   ```java
+   java -jar .\springboot-profiles-0.0.1-SNAPSHOT.jar --spring.config.location=d://application.properties
+   ```
+
+2. 内部配置文件读取的方式1在`SpringBoot`项目打包后，是不会打包到具体的`jar`包中的，运行`jar`包是不会识别配置的（如果需要识别，我们需要在打包后的`springboot-profiles-0.0.1-SNAPSHOT.jar`文件的同级目录中创建一个`config`文件夹，在文件夹中放置配置文件，那么在运行的时候，就会自动的读取放入的配置文件的内容）
+
+3. 内部配置文件读取的方式2在`SpringBoot`项目打包后，是不会打包到具体的`jar`包中的，运行`jar`包是不会识别配置的（如果需要识别，我们需要复制这个配置文件，放到与打包后的`springboot-profiles-0.0.1-SNAPSHOT.jar`文件的同级目录，那么在运行的时候，就会自动的读取放入的配置文件的内容）
 
 
+
+## 整合其他框架
+
+`SpringBoot`提供了起步依赖，方便导入坐标，因此能够非常方便的去整合其他的第三方框架
+
+#### 整合`Junit`
+
+`SpringBoot`整合`Junit`来提供单元测试，基本步骤：
+
+1. 搭建`SpringBoot`工程
+
+2. 引入`starter-test`起步依赖（创建`SpringBoot`工程会自动的写入该起步依赖）
+
+3. 编写测试类
+
+   在`src/main/java`文件夹中编写相关的测试类：
+
+   ```java
+   package com.jlc.springboottest;
+   
+   import org.springframework.stereotype.Service;
+   
+   @Service
+   public class UserService {
+       public void add() {
+           System.out.println("add...");
+       }
+   }
+   ```
+
+4. 编写测试方法
+
+5. 添加测试相关的注解
+
+   对于测试用例，我们在`src/test/java`文件中进行编写：
+
+   ```java
+   package com.jlc.test;
+   
+   import com.jlc.springboottest.SpringbootTestApplication;
+   import org.junit.runner.RunWith;
+   import org.springframework.boot.test.context.SpringBootTest;
+   import org.springframework.test.context.junit4.SpringRunner;
+   import com.jlc.springboottest.UserService;
+   
+   // UserService的测试类
+   @RunWith(SpringRunner.class)
+   @SpringBootTest(classes = SpringbootTestApplication.class)
+   public class UserServiceTest {
+       @Autowired
+       private UserService userService;
+       
+       @Test
+       public void testAdd() {
+           userService.add();
+       }
+   }
+   ```
+
+   > 如果当前测试用例所在的包，是其引导类`src/main/java/com.jlc.springboottest.SpringbootTestApplication`所在的包`com.jlc.springboottest`的子包（或者包名相同），那么测试用例的代码可以修改为：
+   >
+   > ```java
+   > package com.jlc.springboottest;
+   > 
+   > import org.junit.runner.RunWith;
+   > import org.springframework.boot.test.context.SpringBootTest;
+   > import org.springframework.test.context.junit4.SpringRunner;
+   > import com.jlc.springboottest.UserService;
+   > 
+   > // UserService的测试类
+   > @RunWith(SpringRunner.class)
+   > @SpringBootTest
+   > public class UserServiceTest {
+   >     @Autowired
+   >     private UserService userService;
+   >     
+   >     @Test
+   >     public void testAdd() {
+   >         userService.add();
+   >     }
+   > }
+   > ```
+
+#### 整合`Redis`
+
+`SpringBoot`整合`Redis`的基本步骤：
+
+1. 搭建`SpringBoot`工程
+
+   要勾选`NoSQL`中的`Spring Data Redis (Access+Driver)`
+
+2. 引入`redis`起步依赖（勾选`NoSQL`中的`Spring Data Redis (Access+Driver)`后会自动引入）
+
+   具体的引入内容为：
+
+   ```xml
+   <dependency>
+       <groupId>org.springframework.boot</groupId>
+       <artifactId>spring-boot-starter-data-redis</artifactId>
+   </dependency>
+   ```
+
+3. 配置`Redis`相关属性（只有本机的`Redis`才可以不进行配置（`Redis`的连接信息默认的就是本机的`Ip`））
+
+   在实际的开发中，一定时需要外置的`Redis`，因此，我们需要进行相应的配置
+
+   在配置文件`application.yml`文件中进行如下的配置：
+
+   ```yaml
+   spring:
+     redis:
+       host: 127.0.0.1   # redis的主机Ip，后续修改成对应的Ip即可
+       port: 6379   # redis的端口号，后续修改成对应的即可
+   ```
+
+4. 注入`RedisTemplate`模板
+
+5. 编写测试方法，测试
+
+   在`src/test/java`中创建一个测试类：
+
+   ```java
+   package com.jlc.springbootredis;
+   
+   import org.junit.runner.RunWith;
+   import org.springframework.boot.test.context.SpringBootTest;
+   
+   @RunWith(SpringRunner.class)
+   @SpringBootTest
+   public class SpringbootRedisApplicationTests {
+       @Autowired
+       private RedisTemplate redisTemplate;   // 注入RedisTemplate模板
+       
+       @Test
+       public void testSet() {
+           // 存入数据
+           redisTemplate.boundValueOps("name").set("jlc");
+       }
+       
+       @Test
+       public void getSet() {
+           // 获取数据
+           Object name = redisTemplate.boundValueOps("name").get();
+           System.out.println(name);
+       }
+   }
+   ```
+
+#### 整合`MyBatis`
+
+`SpringBoot`整合`MyBatis`的基本步骤：
+
+1. 搭建`SpringBoot`工程
+
+   勾选对应的依赖：`SQL`中的`MyBatis Framework`和`MySQL Driver`
+
+2. 引入`mybatis`起步依赖，添加`mysql`驱动（搭建`SpringBoot`工程勾选对应的依赖后就会自动创建）
+
+   `mybatis`起步依赖的内容为：
+
+   ```xml
+   <dependency>
+       <groupId>org.mybatis.spring.boot</groupId>
+       <artifactId>mybatis-spring-boot-starter</artifactId>
+       <version>2.1.0</version>
+   </dependency>
+   ```
+
+   `mysql`的驱动也会自动的添加，其内容为：
+
+   ```xml
+   <dependency>
+   	<groupId>mysql</groupId>
+       <artifactId>mysql-connector-java</artifactId>
+       <scope>runtime</scope>   <!--表示驱动在运行时生效，可以注释掉，使编译时也生效-->
+   </dependency>
+   ```
+
+3. 定义表和实体类
+
+   定义一张`User`数据表
+
+   编写实体类：
+
+   ```java
+   package com.jlc.springbootmybatis.domain;
+   
+   public class User {
+       private int id;
+       private String username;
+       private String password;
+       
+       public int getId() { return id; }
+       public void setId(int id) { this.id = id; }
+       
+       public String getUsername() { return username; }
+       public void setUsername(String username) { this.username = username; }
+       
+       public String getPassword() { return password; }
+       public void setPassword(String password) { this.password = password; }
+   }
+   ```
+
+4. 编写`DataSource`和`MyBatis`相关配置（使用注解开发就不需要配置`MyBatis`的相关配置）
+
+   在配置文件`application.yml`文件中进行如下的配置：
+
+   ```yaml
+   # DataSource的配置
+   spring:
+     datasource:
+       # ///表示省略了用户名，Ip和端口，因为是连接的本地的，myMysql表示数据库的名称，后面需要配置时区信息
+       url: jdbc:mysql:///myMysql?serverTimezone=UTC    
+       username: root
+       password: root
+       driver-class-name: com.mysql.cj.jdbc.Driver
+   ```
+
+5. 编写`dao`/`mapper`文件/纯注解开发
+
+   - 使用`xml`方式进行开发
+
+     编写`mapper`层内容（在`src/main/java`文件夹下）
+
+     ```java
+     package com.jlc.springbootmybatis.mapper;
+     
+     import com.jlc.springbootmybatis.domain.User;
+     import org.apache.ibatis.annotations.Mapper;
+     import org.springframework.sterotype.Repository;
+     import java.util.List;
+     
+     @Mapper
+     @Repository
+     public interface UserXmlMapper {
+         
+         public List<User> findAll();
+     }
+     ```
+
+     在`resources`中创建`mapper`文件夹，用于存放我们的映射文件，创建：`UserMapper.xml`
+
+     ```xml
+     <?xml version="1.0" encoding="UTF-8"?>
+     <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+     
+     <!--具体的配置-->
+     <mapper namespace="com.jlc.springbootmybatis.mapper.UserXmlMapper">   
+         <select id="findAll" resultType="user">
+         	select * from user
+         </select>
+     </mapper>
+     ```
+
+     使用`xml`方式开发，需要在配置文件中加入`MyBatis`的相关配置
+
+     ```yaml
+     # MyBatis的配置
+     mybatis:
+       mapper-location: classpath: classpath:mapper/*Mapper.xml  # 指定映射文件路径
+       type-aliases-package: com.jlc.springbootmybatis.domain.User  # 通过包扫描配置别名
+       # config-Location:    # 指定mybatis的核心配置文件
+     ```
+
+   - 使用注解开发
+
+     编写`mapper`层内容（在`src/main/java`文件夹下）
+
+     ```java
+     package com.jlc.springbootmybatis.mapper;
+     
+     import com.jlc.springbootmybatis.domain.User;
+     import org.apache.ibatis.annotations.Mapper;
+     import org.apache.ibatis.annotations.Select;
+     import org.springframework.sterotype.Repository;
+     import java.util.List;
+     
+     @Mapper
+     @Repository
+     public interface UserMapper {
+         @Select("select * from user")
+         public List<User> findAll();
+     }
+     ```
+
+6. 测试
+
+   注入对应的测试方法：
+
+   ```java
+   package com.jlc.springbootmybatis;
+   
+   import org.junit.runner.RunWith;
+   import org.springframework.boot.test.context.SpringBootTest;
+   import org.springframework.test.context.junit4.SpringRunner;
+   import com.jlc.springbootmybatis.mapper.UserMapper;
+   import com.jlc.springbootmybatis.domain.User;
+   import java.util.List;
+   
+   // UserMapper的测试类
+   @RunWith(SpringRunner.class)
+   @SpringBootTest
+   public class SpringbootMybatisApplicationTests {
+       @Autowired
+       private UserMapper userMapper;
+       
+       @Autowired
+       private UserXmlMapper userXmlMapper;
+       
+       @Test
+       public void testXmlFindAll() {
+           List<User> list = userXmlMapper.findAll();
+           System.out.println(list);
+       }
+       
+       @Test
+       public void testFindAll() {
+           List<User> list = userMapper.findAll();
+           System.out.println(list);
+       }
+   }
+   ```
+
+   
 
 实现自动配置，不需要我们进行手动的编写相应的`xml`配置文件
