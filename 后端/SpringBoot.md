@@ -936,6 +936,943 @@ springboot-config
    }
    ```
 
+
+
+
+## 自动配置原理分析
+
+`SpringBoot`就是对`Spring`的一种高度封装，我们也需要深入的学习其原理，方便后续的使用和拓展
+
+***
+
+### `Condition`
+
+`Condition`是在`Spring4.0`增加的条件判断功能，通过这个功能可以实现选择性的创建`Bean`操作（满足条件则创建，不满足则不创建）
+
+案例：在`Spring`的`IOC`容器中有一个`User`的`Bean`，导入`Jedis`坐标后，就加载该`Bean`，如果没有导入，则不加载
+
+- 在`domain`中创建一个实体类：
+
+  ```java
+  package com.jlc.springbootcondition.domain;
+  
+  public class User {}
+  ```
+
+- 再编写一个配置类：用于创建`User`相关的`Bean`
+
+  ```java
+  package com.jlc.springbootcondition.config;
+  
+  import org.springframework.context.annotation.Bean;
+  import org.springframework.context.annotation.Configuration;
+  import package com.jlc.springbootcondition.domain.User;
+  import org.springframework.context.annotation.Conditional;
+  import com.jlc.springbootcondition.condition.ClassCondition;
+  
+  @Configuration
+  public class UserConfig {
+      @Bean
+      @Conditional(ClassCondition.class)
+      public User user() {
+          return new User();
+      }
+  }
+  ```
+
+  > `@Conditional`是核心的条件注解（需要添加条件注解的实现类），其接口`Condition`中有一个方法`matches`，其返回值是一个布尔类型的值，如果返回的是`True`，那么被这个注解修饰的对象将会被`Spring`容器所创建，反之，不会创建
+
+  编写一个条件注解的实现类：
+
+  ```java
+  package com.jlc.springbootcondition.condition;
+  
+  import org.springframework.context.annotation.Condition;
+  import org.springframework.context.annotation.ConditionContext;
+  import org.springframework.core.type.AnnotatedTypeMetadata;
+  
+  public class ClassCondition implements Condition {
+      /**
+      	@param context 上下文对象，用于获取环境，IOC容器，ClassLoader
+      	@param metadata 注解元对象，可以用于获取注解定义的属性值
+      */
+      @Override
+      public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
+          // 导入Jedis坐标后，就加载该Bean，如果没有导入，则不加载
+          // 导入Jedis坐标后，redis.clients.jedis.Jedis文件就存在
+          boolean flag = true;
+          try {
+              Class<?> cls = Class.forName("redis.clients.jedis.Jedis");
+          } catch (ClassNotFoundException e) {
+              flag = false;
+          }
+          return false;
+      }
+  }
+  ```
+
+  `pom.xml`配置文件导入`jedis`坐标：
+
+  ```xml
+  <dependency>
+      <groupId>redis.clients</groupId>
+      <artifactId>jedis</artifactId>
+  </dependency>
+  ```
+
+- 获取`User`相关的`Bean`
+
+  ```java
+  package com.jlc.springbootcondition;
+  
+  import org.springframework.boot.autoconfigure.SpringBootApplication;
+  import org.springframework.boot.SpringApplication;
+  
+  @SpringBootApplication
+  public class SpringbootConditionApplication {
+      public static void main(String[] args) {
+          ConfigurableApplicationContext context = SpringApplication.run(SpringbootInitApplication.class, args);
+          
+          // 获取user相关的Bean
+          Object user = context.getBean("user");
+          System.out.println(user);
+      }
+  }
+  ```
+
+我们可以对上述的功能进行优化，将类的判断定义为动态的，判断哪个字节码文件存在可动态的指定
+
+我们需要定义一个注解`Annotation`
+
+```java
+package com.jlc.springbootcondition.condition;
+
+import org.springframework.context.annotation.Conditional;
+import java.lang.annotation.*;
+
+@Target({ElementType.TYPE, ElementType.METHOD})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented      // 引入Conditional中的三个源注解
+@Conditional(ClassCondition.class)
+public @interface ConditionOnClass {
+    String[] value();
+}
+```
+
+创建`User`相关的`Bean`，同时使用我们自己定义的条件注解
+
+```java
+package com.jlc.springbootcondition.config;
+
+import org.springframework.context.annotation.Bean;
+import com.jlc.springbootcondition.condition.ConditionOnClass;
+import package com.jlc.springbootcondition.domain.User;
+import com.jlc.springbootcondition.condition.ClassCondition;
+
+@Configuration
+public class UserConfig {
+    @Bean
+    @ConditionOnClass("redis.clients.jedis.Jedis")  // 可以动态的指定字节码文件
+    public User user() {
+        return new User();
+    }
+}
+```
+
+编写一个条件注解的实现类：
+
+```java
+package com.jlc.springbootcondition.condition;
+
+import org.springframework.context.annotation.Condition;
+import org.springframework.context.annotation.ConditionContext;
+import org.springframework.core.type.AnnotatedTypeMetadata;
+import com.jlc.springbootcondition.condition.ConditionOnClass;
+
+public class ClassCondition implements Condition {
+    /**
+    	@param context 上下文对象，用于获取环境，IOC容器，ClassLoader
+    	@param metadata 注解元对象，可以用于获取注解定义的属性值
+    */
+    @Override
+    public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
+        // 导入通过注解属性值value指定坐标，如果指定的坐标存在，则创建Bean，反之，不创建
+        // 获取注解属性值 value
+        Map<String, Object> map = metadata.getAnnotationAttributes(ConditionOnClass.class.getName());
+        String[] value = (String[]) map.get("value");
+        boolean flag = true;
+        try {
+            for (String className : value) {
+                Class<?> cls = Class.forName(className);
+            }
+        } catch (ClassNotFoundException e) {
+            flag = false;
+        }
+        return false;
+    }
+}
+```
+
+通过上述的两个案例，我们就可以知道`SpringBoot`是如何创建哪个具体的`Bean`的，如`SpringBoot`是如何知道要创建`RedisTemplate`的
+
+#### 系统提供的常用条件注解
+
+- `ConditionalOnProperty`：判断配置文件中是否有对应属性和值，如果有，初始化`Bean`
+
+  ```java
+  @Bean
+  @ConditionalOnProperty(name = "Jlc", havingValue = "jlc")
+  public User user() {
+      return new User();
+  }
+  ```
+
+  配置文件中有对应的值和键，才会去初始化对应的`Bean`
+
+  ```properties
+  Jlc=jlc
+  ```
+
+  配置完后，就可以初始化对应的`Bean`
+
+- `ConditionalOnClass`：判断环境中是否有对应的字节码文件，如果有，初始化`Bean`
+
+- `ConditionalOnMissingBean`：判断环境中没有对应的`Bean`才初始化`Bean`
+
+***
+
+### 切换内置`web`服务器
+
+`SpringBoot`的`Web`环境中默认使用`tomcat`作为内置服务器，其实`SpringBoot`提供了4种内置服务器供我们选择（`Jetty`、`Netty`、`Tomcat`和`Undertow`），我们可以进行选择切换（我们只需导入不同服务器`Web`的坐标，就可以实现服务器的动态切换）
+
+使用`tomcat`作为内置服务器是需要引入相应的坐标的：
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-web</artifactId>
+</dependency>
+```
+
+切换其他内容`Web`服务器的方式：
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-web</artifactId>
+    <!--排除tomcat依赖-->
+    <exclusions>
+        <exclusion>
+            <artifactId>spring-boot-starter-tomcat</artifactId>
+            <groupId>org.springframework.boot</groupId>
+        </exclusion>
+    </exclusions>
+</dependency>
+
+<!--引入jetty的依赖-->
+<dependency>
+	<artifactId>spring-boot-starter-jetty</artifactId>
+    <groupId>org.springframework.boot</groupId>
+</dependency>
+```
+
+***
+
+### `@Enable*`注解
+
+在`SpringBoot`引导类中`@SpringBootApplication`注解的本质就是`Configuration`，意为着通过该注解修饰的类是一个配置类，是可以直接定义`Bean`的
+
+`@Enable*`注解表示以`@Enable`开头的一类注解
+
+问题思考：`SpringBoot`工程是否可以直接获取`jar`包（第三方）中定义的`Bean`?（不能直接获取）
+
+`SpringBoot`工程不能直接获取在其他工程中定义的`Bean`，原因是`@SpringBootApplication`注解只能扫描当前引导类所在的包及其子包，对于第三方包的简单构建：
+
+```java
+package com.jlc.domain;
+
+public class User {}
+```
+
+```java
+package com.jlc.config;
+
+import com.jlc.domain.User;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class UserConfig {
+    @Bean
+    public User user() {
+        return new User();
+    }
+}
+```
+
+在另一个工程中对这个`Bean`进行使用，首先需要在`pom.xml`中进行对第三方包的引入：
+
+```xml
+<dependency>
+    <groupId>com.jlc</groupId>
+    <artifactId>springboot-enable-other</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+</dependency>
+```
+
+对于不能直接获取在其他工程中定义的`Bean`问题，这种情况有以下几种解决方式：
+
+1. 使用`@ComponentScan`注解进行扫描我们要加载配置类所在的包
+
+   ```java
+   package com.jlc.springbootenable;
+   
+   import org.springframework.boot.autoconfigure.SpringBootApplication;
+   import org.springframework.boot.SpringApplication;
+   
+   @SpringBootApplication
+   @ComponentScan("com.jlc.config")
+   public class SpringbootEnableApplication {
+       public static void main(String[] args) {
+           ConfigurableApplicationContext context = SpringApplication.run(SpringbootInitApplication.class, args);
+           
+           // 获取Bean
+           Object user = context.getBean("user");
+           System.out.println(user);
+       }
+   }
+   ```
+
+   但是这种解决方法是不严谨的，是比较麻烦的，我们以后使用其他第三方的包是不可能使用这种方式的
+
+2. 使用`@Import`注解去加载类，这些类都会被`Spring`创建，并放入到`IOC`容器中
+
+   ```java
+   package com.jlc.springbootenable;
+   
+   import org.springframework.boot.autoconfigure.SpringBootApplication;
+   import org.springframework.boot.SpringApplication;
+   
+   @SpringBootApplication
+   @Import(UserConfig.class)
+   public class SpringbootEnableApplication {
+       public static void main(String[] args) {
+           ConfigurableApplicationContext context = SpringApplication.run(SpringbootInitApplication.class, args);
+           
+           // 获取Bean
+           Object user = context.getBean("user");
+           System.out.println(user);
+       }
+   }
+   ```
+
+   但是这样的方式也不是特别方便，我们需要记住类的具体名字
+
+3. 可以对`@Import`注解进行封装，在提供`Bean`的第三方中进行封装
+
+   ```java
+   package com.jlc.config;
+   
+   import org.springframework.context.annotation.Import;
+   import java.lang.annotation.*;
+   
+   @Target(ElementType.TYPE)
+   @Retention(RetentionPolicy.RUNTIME)
+   @Documented 
+   @Import(UserConfig.class)
+   public @interface EnableUser {}
+   ```
+
+   在第三方包中封装完后，我们在其他项目中通过`@EnableUser`注解配置，直接使用即可
+
+   ```java
+   package com.jlc.springbootenable;
+   
+   import org.springframework.boot.autoconfigure.SpringBootApplication;
+   import org.springframework.boot.SpringApplication;
+   
+   @SpringBootApplication
+   @EnableUser
+   public class SpringbootEnableApplication {
+       public static void main(String[] args) {
+           ConfigurableApplicationContext context = SpringApplication.run(SpringbootInitApplication.class, args);
+           
+           // 获取Bean
+           Object user = context.getBean("user");
+           System.out.println(user);
+       }
+   }
+   ```
+
+   在`SpringBoot`中提供了很多以`Enable`开头的注解，这些注解都是用于动态启用某些功能的。而其底层原理是使用`@Import`注解导入一些配置类，实现`Bean`的动态加载
+
+#### `@Import`注解
+
+`@Enable*`注解底层依赖于`@Import`注解导入一些类，使用`@Import`注解导入的类会被`Spring`加载到`IOC`容器中
+
+`@Import`提供了四种用法（导入方式）：
+
+- 直接导入`Bean`
+
+  ```java
+  package com.jlc.springbootenable;
+  
+  import org.springframework.boot.autoconfigure.SpringBootApplication;
+  import org.springframework.boot.SpringApplication;
+  
+  @SpringBootApplication
+  @Import(User.class)
+  public class SpringbootEnableApplication {
+      public static void main(String[] args) {
+          ConfigurableApplicationContext context = SpringApplication.run(SpringbootInitApplication.class, args);
+          
+          // 获取Bean
+          Object user = context.getBean(User.class);
+          System.out.println(user);
+          // 获取这个Bean的具体信息
+          Map<String, User> map = context.getBeansOfType(User.class);
+          System.out.println(map);
+      }
+  }
+  ```
+
+- 导入配置类（会将配置类中定义的所有`Bean`导入到`IOC`容器中）
+
+  ```java
+  package com.jlc.springbootenable;
+  
+  import org.springframework.boot.autoconfigure.SpringBootApplication;
+  import org.springframework.boot.SpringApplication;
+  
+  @SpringBootApplication
+  @Import(UserConfig.class)
+  public class SpringbootEnableApplication {
+      public static void main(String[] args) {
+          ConfigurableApplicationContext context = SpringApplication.run(SpringbootInitApplication.class, args);
+          
+          // 获取Bean
+          Object user = context.getBean(User.class);
+          System.out.println(user);
+      }
+  }
+  ```
+
+- 导入`importSelector`接口的实现类，一般用于加载配置文件中的类
+
+  在第三方包中编写`importSelector`接口的实现类，供后续导入使用：
+
+  ```java
+  package com.jlc.config;
+  
+  import org.springframework.context.annotation.ImportSelector;
+  import org.springframework.core.type.AnnotationMetadata;
+  
+  public class MyImportSelector implements importSelector {
+      @Override
+      public String[] selectImports(AnnotationMetadata importingClassMetadata) {
+          return new String[]{"com.jlc.domain.User"};
+      }
+  }
+  ```
+
+  导入`importSelector`实现类
+
+  ```java
+  package com.jlc.springbootenable;
+  
+  import org.springframework.boot.autoconfigure.SpringBootApplication;
+  import org.springframework.boot.SpringApplication;
+  
+  @SpringBootApplication
+  @Import(MyImportSelector.class)
+  public class SpringbootEnableApplication {
+      public static void main(String[] args) {
+          ConfigurableApplicationContext context = SpringApplication.run(SpringbootInitApplication.class, args);
+          
+          // 获取Bean
+          Object user = context.getBean(User.class);
+          System.out.println(user);
+      }
+  }
+  ```
+
+  这种方式进行导入，可以同时导入多个，而且可以将导入的内容写到配置文件中，进行动态的修改
+
+  系统提供的`@SpringBootApplication`是使用这种导入方式
+
+- 导入`ImportBeanDefinitionRegistrar`接口的实现类
+
+  在第三方包中编写`ImportBeanDefinitionRegistrar`接口的实现类，供后续导入使用：
+
+  ```java
+  package com.jlc.config;
+  
+  import org.springframework.context.annotation.ImportBeanDefinitionRegistrar;
+  import org.springframework.beans.factory.support.AbstractBeanDefinition;
+  import org.springframework.beans.factory.support.BeanDefinitionBuilder;
+  import org.springframework.beans.factory.support.BeanDefinitionRegistry;
+  import org.springframework.core.type.AnnotationMetadata;
+  
+  public class MyImportBeanDefinitionRegistrar implements ImportBeanDefinitionRegistrar {
+      @Override
+      public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
+          AbstractBeanDefinition beanDefinition = BeanDefinitionBuilder.rootBeanDefinition(User.class).getBeanDefinition();
+          registry.registerBeanDefinition("user", beanDefinition);
+      }
+  }
+  ```
+
+  导入`importSelector`实现类
+
+  ```java
+  package com.jlc.springbootenable;
+  
+  import org.springframework.boot.autoconfigure.SpringBootApplication;
+  import org.springframework.boot.SpringApplication;
+  
+  @SpringBootApplication
+  @Import(MyImportBeanDefinitionRegistrar.class)
+  public class SpringbootEnableApplication {
+      public static void main(String[] args) {
+          ConfigurableApplicationContext context = SpringApplication.run(SpringbootInitApplication.class, args);
+          
+          // 获取Bean
+          Object user = context.getBean(User.class);
+          System.out.println(user);
+      }
+  }
+  ```
+
+***
+
+### `@EnableAutoConfiguration`注解
+
+`@EnableAutoConfiguration`注解是`SpringBoot`自动配置的核心注解
+
+`@EnableAutoConfiguration`注解内部使用`@Import(AutoConfigurationImportSelector.class)`来加载配置类。配置文件位置：`META-INF/spring.factories`，该配置文件中定义了大量的配置类，当`SpringBoot`应用启动时，会自动加载这些配置类，初始化`Bean`
+
+不是所有的`Bean`都会被初始化，在配置类中使用`Condition`来加载满足条件的`Bean`
+
+***
+
+### 自定义起步依赖
+
+需求：自定义`redis-starter`，要求当导入`redis`坐标时，`SpringBoot`自动创建`Jedis`的`Bean`
+
+实现步骤：
+
+1. 创建`redis-sping-boot-autoconfigure`模块（`Modules`模块，用于编写核心的自动配置类）
+
+2. 在`redis-spring-boot-autoconfigure`模块中初始化`Jedis`的`Bean`，并定义`META-INF/spring.factories`文件
+
+   在`pom.xml`中引入`jedis`依赖：
+
+   ```xml
+   <dependency>
+       <groupId>redis.clients</groupId>
+       <artifactId>jedis</artifactId>
+   </dependency>
+   ```
+
+   编写一个核心的自动配置类：
+
+   ```java
+   package com.jlc.redis.config;
+   
+   import org.springframework.context.annotation.Configuration;
+   import org.springframework.context.annotation.ConditionalOnClass;
+   import org.springframework.context.annotation.ConditionalOnMissingBean;
+   import org.springframework.context.annotation.Bean;
+   import org.springframework.context.annotation.Configuration;
+   import redis.clients.jedis.Jedis;
+   
+   @Configuration
+   @ConditionalOnClass(Jedis.class)   // Jedis.class存在的时候才加载
+   @EnableConfigurationProperties(RedisProperties.class)
+   public class RedisAutoConfiguration {
+       // 提供Jedis的bean
+       @Bean
+       @ConditionalOnMissingBean(name = "jedis")  // 如果没有以jedis为名字的Bean时，我们才提供
+       public Jedis jedis(RedisProperties redisProperties) {
+           return new Jedis(redisProperties.getHost(), redisProperties.getPort());
+       }
+   }
+   ```
+
+   编写一个实体类，和配置文件进行绑定
+
+   ```java
+   package com.jlc.redis.config;
+   
+   import org.springframework.boot.context.properties.ConfigurationProperties;
+   
+   @ConfigurationProperties(prefix = "redis")
+   public class RedisProperties {
+       // 如果用户没有配置，默认使用本机的Ip和端口
+   	private String host = "localhost";
+       private int port = 6379;
+       
+       public String getHost() { return host; }
+       public void setHost(String host) { this.host = host; }
+       
+       public int getPort() { return port; }
+       public void setPort(int port) { this.port = port; }
+   }
+   ```
+
+   在配置文件`application.properties`中定义配置：
+
+   ```properties
+   redis.host=localhost
+   redis.port=6379
+   ```
+
+   在`resources`文件夹中创建`META-INF`文件夹，内部新建`spring.factories`文件，其内容为：
+
+   ```properties
+   org.springframework.boot.autoconfigure.EnableAutoConfiguration=com.jlc.redis.config.RedisAutoConfiguration
+   ```
+
+3. 创建`redis-spring-boot-starter`模块（进行依赖的整合），依赖`redis-spring-boot-autoconfigure`模块
+
+   对于该模块的依赖`pom.xml`，系统创建的依赖只留下核心的依赖即可：
+
+   ```xml
+   <dependency>
+       <groupId>org.springframework.boot</groupId>
+       <artifactId>spring-boot-starter</artifactId>
+   </dependency>
+   ```
+
+   同时引入我们自定义的`configure`
+
+   ```xml
+   <!--引入自定义的redis的starter-->
+   <dependency>
+   	<groupId>com.jlc</groupId>
+       <artifactId>redis-spring-boot-autoconfigure</artifactId>
+       <version>0.0.1-SNAPSHOT</version>
+   </dependency>
+   ```
+
+4. 在测试模块中引入自定义的`redis-starter`依赖，测试获取`Jedis`的`Bean`，操作`redis`
+
+   ```java
+   package com.jlc.springbootenable;
+   
+   import org.springframework.boot.autoconfigure.SpringBootApplication;
+   import org.springframework.boot.SpringApplication;
+   
+   @SpringBootApplication
+   public class SpringbootEnableApplication {
+       public static void main(String[] args) {
+           ConfigurableApplicationContext context = SpringApplication.run(SpringbootInitApplication.class, args);
+           
+           // 获取Bean
+           Jedis jedis = context.getBean(Jedis.class);
+           System.out.println(jedis);
+           jedis.set("name", "jlc");
+           
+           String name = jedis.get("name");
+           System.out.println(name);
+       }
+   }
+   ```
+
    
 
-实现自动配置，不需要我们进行手动的编写相应的`xml`配置文件
+## 监听机制原理分析
+
+`SpringBoot`的监听机制，本质上是对`Java`提供的事件监听机制的封装
+
+`Java`中事件的监听机制定义了以下几个角色：
+
+1. 事件：`Event`，继承`java.util.EventObject`类的对象
+2. 事件源：`Source`，任意对象`Object`
+3. 监听器：`Listener`：实现`java.util.EventListener`接口的对象
+
+`SpringBoot`在项目启动时，会对几个监听器进行回调，我们可以实现这些监听器接口，在项目启动时完成一些操作，有如下几个常见的监听器接口：
+
+- `ApplicationContextInitializer`
+
+  ```java
+  package com.jlc.springbootlistener.listener;
+  
+  import org.springframework.ApplicationContextInitializer;
+  
+  public class MyApplicationContextInitializer implements ApplicationContextInitializer {
+      // 在项目没有检测IOC容器时执行
+      @Override
+      public void initialize(ConfigurableApplicationContext applicationContext) {
+          System.out.println("ApplicationContextInitializer监听器正在执行...");
+      }
+  }
+  ```
+
+  执行监听器需要我们进行注册，在`resources`文件夹中创建`META-INF`文件夹，内部新建`spring.factories`文件，其配置内容为：
+
+  ```properties
+  org.springframework.ApplicationContextInitializer=com.jlc.springbootlistener.listener.MyApplicationContextInitializer
+  ```
+
+- `SpringApplicationRunListener`
+
+  ```java
+  package com.jlc.springbootlistener.listener;
+  
+  import org.springframework.boot.SpringApplicationRunListener;
+  import org.springframework.core.env.ConfigurableEnvironment;
+  import org.springframework.context.ConfigurableApplicationContext;
+  
+  // 在SpringBoot启动过程中的不同阶段，可以去监听不同的事件
+  public class MySpringApplicationRunListener implements SpringApplicationRunListener {
+      // 编写一个构造方法，如果不写，程序会报错
+      public MySpringApplicationRunListener(StringApplication application, String[] args) {}
+      
+      @Override
+      // 程序启动时执行
+      public void starting() {   
+          System.out.println("项目启动中...");
+      }
+      
+      @Override
+      // 环境准备前执行
+      public void environmentPrepared(ConfigurableEnvironment environment) {
+          System.out.println("环境对象开始准备...");
+      }
+      
+      @Override
+      // 上下文IOC容器准备前执行
+      public void contextPrepared(ConfigurableApplicationContext context) {
+          System.out.println("上下文对象开始准备...");
+      }
+      
+      @Override
+      // 上下文IOC容器开始加载执行
+      public void contextLoaded(ConfigurableApplicationContext context) {
+          System.out.println("上下文对象开始加载...");
+      }
+      
+      @Override
+      // 程序启动完成执行
+      public void started(ConfigurableApplicationContext context) {
+          System.out.println("上下文对象加载完成...");
+      }
+      
+      @Override
+      // 程序运行时执行
+      public void running(ConfigurableApplicationContext context) {
+          System.out.println("项目启动完成，开始运行...");
+      }
+      
+      @Override
+      // 程序运行失败执行
+      public void failed(ConfigurableApplicationContext context, Throwable exception) {
+          System.out.println("项目启动失败...");
+      }
+  }
+  ```
+
+  执行监听器需要我们进行注册，在`resources`文件夹中创建`META-INF`文件夹，内部新建`spring.factories`文件，其配置内容为：
+
+  ```properties
+  org.springframework.boot.SpringApplicationRunListener=com.jlc.springbootlistener.listener.MySpringApplicationRunListener
+  ```
+
+- `CommandLineRunner`
+
+  ```java
+  package com.jlc.springbootlistener.listener;
+  
+  import org.springframework.boot.CommandLineRunner;
+  import org.springframework.stereotype.Component;
+  
+  @Component   // 注册到Spring容器中
+  public class MyCommandLineRunner implements CommandLineRunner {
+      @Override
+      public void run(String... args) throws Exception {
+          System.out.println("CommandLineRunner run...");
+          // 同时可以打印命令行参数args
+          System.out.println(Arrays.asList(args));
+      }
+  }
+  ```
+
+  直接放到`IOC`容器中会自动的调用，在项目启动后执行对应的输出语句
+
+- `ApplicationRunner`
+
+  ```java
+  package com.jlc.springbootlistener.listener;
+  
+  import org.springframework.boot.ApplicationArguments;
+  import org.springframework.boot.ApplicationRunner;
+  import org.springframework.stereotype.Component;
+  
+  @Component   // 注册到Spring容器中
+  public class MyApplicationRunner implements ApplicationRunner {
+      @Override
+      public void run(ApplicationArguments args) throws Exception {
+          System.out.println("ApplicationRunner run...");
+          // 同时可以打印命令行参数args
+          System.out.println(Arrays.asList(args.getSourceArgs()));
+      }
+  }
+  ```
+
+  直接放到`IOC`容器中会自动的调用，在项目启动后执行对应的输出语句
+
+
+
+## 监控
+
+`SpringBoot`自带监控功能插件`Actuator`，可以帮助实现对程序内部运行情况的监控，如监控状态、`Bean`加载情况、配置属性和日志信息等。
+
+使用步骤：
+
+1. 导入依赖坐标（在搭建项目时，可以直接勾选`Ops`中的`Spring Boot Actuator`）
+
+   ```xml
+   <dependency>
+       <groupId>org.springframework.boot</groupId>
+       <artifactId>spring-boot-starter-actuator</artifactId>
+   </dependency>
+   ```
+
+2. 访问`http://localhost:8080/acruator`
+
+   基本使用：可以查看到健康相关（包括引入的第三方包也能健康检查）（`{"status": "up"}`表示程序运行状态健康）和信息`info`相关的功能（查看配置文件中以`info`开头的配置信息）
+
+   如果要开启健康检查的完整信息，我们需要在项目的配置文件中进行配置：
+
+   ```properties
+   # info相关的信息
+   info.name=jlc
+   info.age=25
+   
+   # 开启健康检查的完整信息
+   management.endpoint.health.show-details=always
+   ```
+
+高级使用需要我们进行配置的开启，才能使用
+
+```properties
+# 将所有的监控endpoint暴露出来
+management.endpoint.web.exposure.include=*
+```
+
+开启所有的功能后，我们可以看到`Bean`加载情况、配置文件的属性信息和当前所有的`url`路径信息等
+
+***
+
+### 图形化方式监控
+
+开源项目`Spring Boot Admin`提供了图形化的监控方式
+
+`Spring Boot Admin`有两个角色：客户端和服务端
+
+- 应用程序作为`Spring Boot Admin Client`向`Spring Boot Admin Server`注册
+- `Spring Boot Admin Server`的`UI`界面展示`Spring Boot Admin Client`的`Actuator Endpoint`上的一些监控信息
+
+使用步骤：
+
+- `admin-server`
+
+  1. 创建`admin-server`模块
+
+  2. 导入依赖坐标`admin-starter-server`（直接在创建`SpringBoot`项目时勾选`Web`中的`Spring Web`和`Ops`中的`Spring Boot Admin (Server)`）
+
+  3. 在引导类上启用监控功能`@EnableAdminServer`
+
+     ```java
+     package com.jlc.springbootadminserver;
+     
+     import org.springframework.boot.autoconfigure.SpringBootApplication;
+     import org.springframework.boot.SpringApplication;
+     
+     @SpringBootApplication
+     @EnableAdminServer   // 启动监控功能
+     public class SpringbootAdminserverApplication {
+         public static void main(String[] args) {
+             SpringApplication.run(SpringbootInitApplication.class, args);
+         }
+     }
+     ```
+
+- `admin-client`
+
+  1. 创建`admin-client`模块
+
+  2. 导入依赖坐标`admin-starter-client`（直接在创建`SpringBoot`项目时勾选`Web`中的`Spring Web`和`Ops`中的`Spring Boot Admin (Client)`）
+
+  3. 配置相关信息：`server`地址等
+
+     在`application.properties`中进行配置：
+
+     ```properties
+     # 执行admin.server的地址
+     spring.boot.admin.client.url=http://localhost:9000   # 具体的端口地址具体声明
+     
+     # 开启健康检查的完整信息
+     management.endpoint.health.show-details=always
+     
+     # 将所有的监控endpoint暴露出来
+     management.endpoint.web.exposure.include=*
+     ```
+
+  4. 启动`server`和`client`服务，访问`server`，访问`http://localhost:9000`
+
+
+
+## 打包部署
+
+`SpringBoot`项目开发完毕后，支持两种方式部署到服务器：
+
+- `jar`包（官方推荐）
+
+  选中这个项目，在`IDEA`右侧栏，点击`Maven Projects`--->选中我们要打包的项目--->点击`Lifecycle`下的`package`（默认是打`jar`包）
+
+  我们可以在项目的`pom.xml`中指定打包后包的名称
+
+  ```xml
+  <build>
+      <finalName>springbootProject</finalName>
+  </build>
+  ```
+
+  将打好的`jar`包放到服务器中，执行`jar`包即可，执行命令：
+
+  `java -jar .\springboot-deploy-0.0.1-SNAPSHOT.jar`
+
+- `war`包
+
+  首先需要在`pom.xml`中修改打包方式，添加：
+
+  ```xml
+  <packaging>war</packaging>
+  ```
+
+  在核心启动类进行修改，使其继承`SpringBootServletInitializer`，重写对应的方法
+
+  ```java
+  package com.jlc.springbootdeploy;
+  
+  import org.springframework.boot.autoconfigure.SpringBootApplication;
+  import org.springframework.boot.SpringApplication;
+  
+  @SpringBootApplication
+  public class SpringbootDeployApplication extends SpringBootServletInitializer {
+      public static void main(String[] args) {
+          SpringApplication.run(SpringbootInitApplication.class, args);
+          
+          @Override
+          protected SpringApplicationBuilder configure(SpringApplicationBuilder builder) {
+              return builder.sources(SpringbootDeployApplication.class);
+          }
+      }
+  }
+  ```
+
+  选中这个项目，在`IDEA`右侧栏，点击`Maven Projects`--->选中我们要打包的项目--->点击`Lifecycle`下的`package`（使用`war`打包）
+
+  将打包好的`war`包，直接放入到`Tomcat`软件中的`webapp`文件夹中，启动`Tomcat`即可启动项目
