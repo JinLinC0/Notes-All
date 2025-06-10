@@ -1305,7 +1305,7 @@ IAccountService as = ac.getBean("accountService", IAccountService.class);
 
 在一个具体的项目模块中，其具体的代码文件结构如下所示：
 
-![image-20250520154855058](D:\Myproject\develop-study-notes\images\image-20250520154855058-1747730519345-1.png)
+![image-20250520154855058](../images/image-20250520154855058.png)
 
 对于`Web`层，我们需要通过`Spring`与`Web`环境进行集成，因此，在`Web`层中，要使用相应的`Web`层组件，使用这些组件，我们首先需要进行坐标的添加，在`pom.xml`文件中添加：
 
@@ -1928,7 +1928,7 @@ public class UserServlet extends HttpServlet {  // 继承HttpServlet类
 >
 >   ```java
 >   package com.jlc.proxy.cglib;
->       
+>         
 >   public class Target {
 >       public void save() {
 >           System.out.println("save running...");
@@ -1940,7 +1940,7 @@ public class UserServlet extends HttpServlet {  // 继承HttpServlet类
 >
 >   ```java
 >   package com.jlc.proxy.cglib;
->       
+>         
 >   public class Advice {
 >       // 前置增强（在目标对象之前进行增强）
 >       public void beforeReturning() {
@@ -1957,7 +1957,7 @@ public class UserServlet extends HttpServlet {  // 继承HttpServlet类
 >
 >   ```java
 >   package com.jlc.proxy.cglib;
->       
+>         
 >   public class ProxyTest {
 >       public static void main(Stringp[] args) {
 >           // 创建目标对象
