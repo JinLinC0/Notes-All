@@ -43,3 +43,22 @@
 
 6. 在`IDEA`中配置`Maven 3.6.3`（为新项目配置`Maven`环境）（在设置里面）
 
+
+
+## `JDBC`数据库连接失败
+
+对于配置文件：
+
+```pr
+db.driver.name=com.mysql.cj.jdbc.Driver
+db.url=jdbc:mysql://localhost:3306/easypan?useUnicode=true&characterEncoding=utf8
+db.username=root
+db.password=552259
+```
+
+我们需要注意：检查 `MySQL` 驱动版本是否匹配
+
+- `MySQL 5.x` 使用 `com.mysql.jdbc.Driver`
+- `MySQL 8.x` 使用 `com.mysql.cj.jdbc.Driver`
+
+否则就会导致 `ClassNotFoundException` 或连接失败

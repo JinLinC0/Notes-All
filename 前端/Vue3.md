@@ -2464,7 +2464,7 @@ export default({
 </script>
 ```
 
-ref和reactive使用原则：
+`ref`和`reactive`使用原则：
 
 1. 若需要一个基本类型的响应式数据，必须使用`ref`
 2. 若需要一个响应式对象，层级不深，`ref`、`reactive`都可以
@@ -2814,7 +2814,7 @@ watch(
 
 `watchEffect`如果存在的话，在组件初始化时就会执行一次用以收集依赖（即进入页面后就会自动去执行一次其内部的函数方法）
 
-`watch`可以获取新值和旧值，但是`watchEffect`拿不到；`watchEffect`不需要指定监听器的属性，他会自动的收集依赖，只要我们回调中引用到了响应式的属性（如果函数体中使用了响应式数据，`watchEffect`监听器才会进行自动执行）,相比于watch监听器，不用明确指出监视的数据（函数中用到哪些属性, 那就监视哪些属性）
+`watch`可以获取新值和旧值，但是`watchEffect`拿不到；`watchEffect`不需要指定监听器的属性，他会自动的收集依赖，只要我们回调中引用到了响应式的属性（如果函数体中使用了响应式数据，`watchEffect`监听器才会进行自动执行），相比于watch监听器，不用明确指出监视的数据（函数中用到哪些属性, 那就监视哪些属性）
 
 监听计数器点击，当数小于0时，就不能在减小，使其值一直为0：
 
@@ -2893,7 +2893,7 @@ watchEffect(() => {
 
 使用时，需要对其进行引入组合式API：`import {shallowRef,shallowReactive} from 'vue'`
 
-shallowRef只处理基本类型的数据；shallowReactive只处理第一层的数据(对象中的第一层数据)
+`shallowRef`只处理基本类型的数据；`shallowReactive`只处理第一层的数据(对象中的第一层数据)
 
 ```vue
 <template>
